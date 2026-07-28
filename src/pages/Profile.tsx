@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import  { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -15,11 +15,11 @@ import {
   Phone, 
   MapPin, 
   Briefcase, 
-  Shield, 
+  // Shield, 
   Clock, 
   Pencil,
   User,
-  Calendar,
+  // Calendar,
   Heart,
   Stethoscope,
   Syringe,

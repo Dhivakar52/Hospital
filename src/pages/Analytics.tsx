@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { DataTable } from "@/common/Datatable"
 import TableSearch from "@/common/TableSearch"
-import { FilterTable } from "@/common/FilterTable"
+// import { FilterTable } from "@/common/FilterTable"
 import Pagination from "@/common/Pagination"
 import { ActionMenu } from "@/common/ActionMenu"
 import CustomPanel from "@/common/CustomPanel"
@@ -20,7 +20,7 @@ import {
   Loader2,
   X,
   CalendarIcon,
-  Menu,
+  // Menu,
   SlidersHorizontal,
   FileSpreadsheet,
   Printer,
@@ -668,7 +668,7 @@ export default function Analytics() {
                     <Calendar
                       mode="single"
                       selected={formData.lastVisit ? new Date(formData.lastVisit) : undefined}
-                      onSelect={(date) =>
+                      onSelect={(date : any) =>
                         setFormData({ ...formData, lastVisit: date ? format(date, "yyyy-MM-dd") : "" })
                       }
                     />
@@ -841,7 +841,7 @@ export default function Analytics() {
                     <Calendar
                       mode="single"
                       selected={formData.lastVisit ? new Date(formData.lastVisit) : undefined}
-                      onSelect={(date) =>
+                      onSelect={(date :any) =>
                         setFormData({ ...formData, lastVisit: date ? format(date, "yyyy-MM-dd") : "" })
                       }
                     />

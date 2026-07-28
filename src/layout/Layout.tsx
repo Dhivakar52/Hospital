@@ -21,7 +21,7 @@ interface LayoutProps {
 export function Layout({ 
   children, 
   user, 
-  notificationCount = 3,
+  // notificationCount = 3,
   breadcrumbItems = []
 }: LayoutProps) {
   const location = useLocation()
