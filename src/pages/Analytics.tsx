@@ -1,37 +1,30 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { DataTable } from "@/common/Datatable"
 import TableSearch from "@/common/TableSearch"
 import { FilterTable } from "@/common/FilterTable"
 import Pagination from "@/common/Pagination"
 import { ActionMenu } from "@/common/ActionMenu"
 import CustomPanel from "@/common/CustomPanel"
+import { DeleteConfirmationDialog } from "@/common/DeleteConfirmationDialog"
 import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { NativeSelect } from "@/components/ui/native-select"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 import type { ColumnDef } from "@tanstack/react-table"
-import { 
+import {
   UserPlus,
-  RefreshCw,
   Loader2,
+  X,
+  CalendarIcon,
+  Menu,
+  SlidersHorizontal,
+  FileSpreadsheet,
+  Printer,
   Filter,
-  X
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
@@ -57,14 +50,19 @@ export default function Analytics() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
-  
+
   // Dialog states
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  
+  const [isDeleting, setIsDeleting] = useState(false)
+
   // Panel states
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [panelMode, setPanelMode] = useState<PanelMode>(null)
-  
+
+  // ✅ Actions dropdown (Filter / Export / Print) - Accessories pattern
+  const [showActions, setShowActions] = useState(false)
+  const actionRef = useRef<HTMLDivElement>(null)
+
   // Form state
   const [formData, setFormData] = useState<PatientFormData>({
     name: "",
@@ -89,102 +87,35 @@ export default function Analytics() {
   const [filters, setFilters] = useState<Record<string, string>>({})
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
 
+  const hasActiveFilters = selectedFilters.length > 0
+
+  // ✅ Close actions dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (actionRef.current && !actionRef.current.contains(e.target as Node)) {
+        setShowActions(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   // Load data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       try {
         await new Promise(resolve => setTimeout(resolve, 1500))
-        
+
         const sampleData: Patient[] = [
-          {
-            id: "P001",
-            name: "John Doe",
-            age: 45,
-            gender: "Male",
-            condition: "Hypertension",
-            status: "Active",
-            lastVisit: "2024-01-15",
-            email: "john@example.com",
-            phone: "+1 234-567-8900",
-          },
-          {
-            id: "P002",
-            name: "Jane Smith",
-            age: 32,
-            gender: "Female",
-            condition: "Diabetes",
-            status: "Recovered",
-            lastVisit: "2024-01-10",
-            email: "jane@example.com",
-            phone: "+1 234-567-8901",
-          },
-          {
-            id: "P003",
-            name: "Robert Johnson",
-            age: 67,
-            gender: "Male",
-            condition: "Heart Disease",
-            status: "Critical",
-            lastVisit: "2024-01-20",
-            email: "robert@example.com",
-            phone: "+1 234-567-8902",
-          },
-          {
-            id: "P004",
-            name: "Emily Wilson",
-            age: 28,
-            gender: "Female",
-            condition: "Asthma",
-            status: "Active",
-            lastVisit: "2024-01-18",
-            email: "emily@example.com",
-            phone: "+1 234-567-8903",
-          },
-          {
-            id: "P005",
-            name: "Michael Brown",
-            age: 52,
-            gender: "Male",
-            condition: "Arthritis",
-            status: "Recovered",
-            lastVisit: "2024-01-12",
-            email: "michael@example.com",
-            phone: "+1 234-567-8904",
-          },
-          {
-            id: "P006",
-            name: "Sarah Davis",
-            age: 41,
-            gender: "Female",
-            condition: "Diabetes",
-            status: "Critical",
-            lastVisit: "2024-01-22",
-            email: "sarah@example.com",
-            phone: "+1 234-567-8905",
-          },
-          {
-            id: "P007",
-            name: "David Wilson",
-            age: 55,
-            gender: "Male",
-            condition: "Hypertension",
-            status: "Active",
-            lastVisit: "2024-01-19",
-            email: "david@example.com",
-            phone: "+1 234-567-8906",
-          },
-          {
-            id: "P008",
-            name: "Lisa Anderson",
-            age: 34,
-            gender: "Female",
-            condition: "Asthma",
-            status: "Recovered",
-            lastVisit: "2024-01-14",
-            email: "lisa@example.com",
-            phone: "+1 234-567-8907",
-          },
+          { id: "P001", name: "John Doe", age: 45, gender: "Male", condition: "Hypertension", status: "Active", lastVisit: "2024-01-15", email: "john@example.com", phone: "+1 234-567-8900" },
+          { id: "P002", name: "Jane Smith", age: 32, gender: "Female", condition: "Diabetes", status: "Recovered", lastVisit: "2024-01-10", email: "jane@example.com", phone: "+1 234-567-8901" },
+          { id: "P003", name: "Robert Johnson", age: 67, gender: "Male", condition: "Heart Disease", status: "Critical", lastVisit: "2024-01-20", email: "robert@example.com", phone: "+1 234-567-8902" },
+          { id: "P004", name: "Emily Wilson", age: 28, gender: "Female", condition: "Asthma", status: "Active", lastVisit: "2024-01-18", email: "emily@example.com", phone: "+1 234-567-8903" },
+          { id: "P005", name: "Michael Brown", age: 52, gender: "Male", condition: "Arthritis", status: "Recovered", lastVisit: "2024-01-12", email: "michael@example.com", phone: "+1 234-567-8904" },
+          { id: "P006", name: "Sarah Davis", age: 41, gender: "Female", condition: "Diabetes", status: "Critical", lastVisit: "2024-01-22", email: "sarah@example.com", phone: "+1 234-567-8905" },
+          { id: "P007", name: "David Wilson", age: 55, gender: "Male", condition: "Hypertension", status: "Active", lastVisit: "2024-01-19", email: "david@example.com", phone: "+1 234-567-8906" },
+          { id: "P008", name: "Lisa Anderson", age: 34, gender: "Female", condition: "Asthma", status: "Recovered", lastVisit: "2024-01-14", email: "lisa@example.com", phone: "+1 234-567-8907" },
         ]
         setData(sampleData)
         setFilteredData(sampleData)
@@ -315,13 +246,23 @@ export default function Analytics() {
     toast.success("Patient updated successfully!")
   }
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!selectedPatient) return
-    const updatedData = data.filter((patient) => patient.id !== selectedPatient.id)
-    setData(updatedData)
-    setIsDeleteOpen(false)
-    setSelectedPatient(null)
-    toast.success("Patient deleted successfully!")
+
+    setIsDeleting(true)
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      const updatedData = data.filter((patient) => patient.id !== selectedPatient.id)
+      setData(updatedData)
+      setIsDeleteOpen(false)
+      setSelectedPatient(null)
+      toast.success("Patient deleted successfully!")
+    } catch (error) {
+      toast.error("Failed to delete patient")
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   // Apply filters from panel
@@ -336,42 +277,28 @@ export default function Analytics() {
     }
   }
 
+  const handleCloseFilter = () => {
+    setFilters({})
+    setSelectedFilters([])
+    toast.info("Filters cleared")
+  }
+
   // Open filter panel
   const openFilterPanel = () => {
-    // Copy current filters to temp
     setTempFilters({ ...filters })
     setTempSelectedFilters([...selectedFilters])
     setPanelMode("filter")
     setIsPanelOpen(true)
+    setShowActions(false)
   }
 
   // Columns definition
   const columns: ColumnDef<Patient>[] = [
-    {
-      accessorKey: "id",
-      header: "Patient ID",
-      size: 100,
-    },
-    {
-      accessorKey: "name",
-      header: "Name",
-      size: 150,
-    },
-    {
-      accessorKey: "age",
-      header: "Age",
-      size: 80,
-    },
-    {
-      accessorKey: "gender",
-      header: "Gender",
-      size: 100,
-    },
-    {
-      accessorKey: "condition",
-      header: "Condition",
-      size: 150,
-    },
+    { accessorKey: "id", header: "Patient ID", size: 100 },
+    { accessorKey: "name", header: "Name", size: 150 },
+    { accessorKey: "age", header: "Age", size: 80 },
+    { accessorKey: "gender", header: "Gender", size: 100 },
+    { accessorKey: "condition", header: "Condition", size: 150 },
     {
       accessorKey: "status",
       header: "Status",
@@ -390,11 +317,7 @@ export default function Analytics() {
         )
       },
     },
-    {
-      accessorKey: "lastVisit",
-      header: "Last Visit",
-      size: 120,
-    },
+    { accessorKey: "lastVisit", header: "Last Visit", size: 120 },
     {
       id: "actions",
       header: "Actions",
@@ -431,6 +354,9 @@ export default function Analytics() {
     currentPage * itemsPerPage
   )
 
+  // ✅ Current page data (used for export) - Accessories pattern
+  const pagedData = useMemo(() => paginatedData, [paginatedData])
+
   const paginationTable = {
     getState: () => ({
       pagination: {
@@ -448,10 +374,79 @@ export default function Analytics() {
     getCanNextPage: () => currentPage < totalPages,
   }
 
+  // ✅ Export current page to CSV - Accessories pattern
+  const handleExportExcel = () => {
+    if (!pagedData.length) {
+      toast.error("No data to export on current page")
+      return
+    }
+
+    try {
+      const exportColumns: { key: keyof Patient; header: string }[] = [
+        { key: "id", header: "Patient ID" },
+        { key: "name", header: "Name" },
+        { key: "age", header: "Age" },
+        { key: "gender", header: "Gender" },
+        { key: "condition", header: "Condition" },
+        { key: "status", header: "Status" },
+        { key: "lastVisit", header: "Last Visit" },
+        { key: "email", header: "Email" },
+        { key: "phone", header: "Phone" },
+      ]
+
+      const exportData = pagedData.map((row, index) => {
+        const rowData: Record<string, string | number> = {
+          "S.No": (currentPage - 1) * itemsPerPage + index + 1,
+        }
+        exportColumns.forEach((col) => {
+          const value = row[col.key]
+          rowData[col.header] = value !== undefined && value !== null ? value : "-"
+        })
+        return rowData
+      })
+
+      const headers = Object.keys(exportData[0] || {})
+      const csvContent = [
+        headers.join(","),
+        ...exportData.map((row) =>
+          headers
+            .map((key) => {
+              const val = row[key]
+              if (typeof val === "string" && (val.includes(",") || val.includes('"') || val.includes("\n"))) {
+                return `"${val.replace(/"/g, '""')}"`
+              }
+              return val
+            })
+            .join(",")
+        ),
+      ].join("\n")
+
+      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+      link.href = URL.createObjectURL(blob)
+      link.download = `Patients_Page${currentPage}_${new Date().toISOString().split("T")[0]}.csv`
+      link.click()
+      URL.revokeObjectURL(link.href)
+
+      toast.success(`Exported ${pagedData.length} records from current page`)
+    } catch (error) {
+      console.error("Export error:", error)
+      toast.error("Failed to export data. Please try again.")
+    } finally {
+      setShowActions(false)
+    }
+  }
+
+  // ✅ Print current page - Accessories pattern
+  const handlePrint = () => {
+    setShowActions(false)
+    window.print()
+  }
+
   return (
     <div className="">
       <div className="bg-card shadow-lg border border-border rounded-lg p-6">
-     
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           {/* Title */}
           <div className="flex items-center gap-3">
@@ -461,10 +456,10 @@ export default function Analytics() {
             </Badge>
           </div>
 
-          {/* Search, Filter, and Actions - All in One Row */}
+          {/* Search, Menu Actions (Filter/Export/Print), Add - All in One Row */}
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             {/* Search */}
-            <div className="flex-1 sm:flex-none min-w-[200px]">
+            <div className="flex-1 sm:flex-none ">
               <TableSearch
                 placeholder="Search patients..."
                 value={search}
@@ -472,42 +467,71 @@ export default function Analytics() {
               />
             </div>
 
-            {/* Filter Button - Opens Custom Panel */}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={openFilterPanel}
-              className="shrink-0"
-            >
-              <Filter className="h-4 w-4 mr-1" />
-              Filters
-              {selectedFilters.length > 0 && (
-                <Badge variant="secondary" className="ml-1 text-xs">
-                  {selectedFilters.length}
-                </Badge>
-              )}
-            </Button>
-
-            {/* Add Button - Opens Custom Panel */}
+            {/* Add Button */}
             <Button onClick={handleAdd} size="sm" className="shrink-0">
               <UserPlus className="h-4 w-4 mr-1" />
               Add
             </Button>
 
-            {/* Refresh Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSearch("")
-                setFilters({})
-                setSelectedFilters([])
-                toast.info("Filters cleared")
-              }}
-              className="shrink-0"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+            {/* ✅ Menu → Filter / Export / Print dropdown - Accessories pattern */}
+            <div className="relative" ref={actionRef}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowActions(!showActions)}
+                className="shrink-0"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+
+              {hasActiveFilters && (
+                <button
+                  onClick={handleCloseFilter}
+                  title="Clear filters"
+                  className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center shadow-md hover:bg-blue-700"
+                >
+                  <SlidersHorizontal size={12} />
+                </button>
+              )}
+
+              {showActions && (
+                <div className="absolute right-0 mt-2 bg-card border border-border rounded-xl shadow-lg p-2 flex items-center gap-1 z-50">
+                  <button
+                    onClick={openFilterPanel}
+                    className={`p-2 rounded-lg hover:bg-blue-50 text-muted-foreground transition ${
+                      hasActiveFilters ? "bg-blue-100 text-blue-600" : ""
+                    }`}
+                    title="Filter"
+                  >
+                    <Filter size={18} />
+                    {selectedFilters.length > 0 && (
+                      <Badge variant="secondary" className="ml-1 text-xs align-middle">
+                        {selectedFilters.length}
+                      </Badge>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleExportExcel}
+                    className="p-2 rounded-lg hover:bg-green-50 text-muted-foreground hover:text-green-600 transition relative"
+                    title={`Export ${pagedData.length} records from current page`}
+                  >
+                    <FileSpreadsheet size={18} />
+                    {pagedData.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                        {pagedData.length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handlePrint}
+                    className="p-2 rounded-lg hover:bg-purple-50 text-muted-foreground hover:text-purple-600 transition"
+                    title="Print"
+                  >
+                    <Printer size={18} />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -584,22 +608,20 @@ export default function Analytics() {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-2 w-full">
                 <Label htmlFor="add-gender">Gender</Label>
-                <Select
+                <NativeSelect
+                  id="add-gender"
+                  className="w-full"
                   value={formData.gender}
-                  onValueChange={(value: string | null) => setFormData({ ...formData, gender: value || "" })}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="" disabled>Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </NativeSelect>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="add-condition">Condition</Label>
@@ -611,35 +633,50 @@ export default function Analytics() {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-2 w-full">
                 <Label htmlFor="add-status">Status</Label>
-                <Select
+                <NativeSelect
+                  id="add-status"
+                  className="w-full"
                   value={formData.status}
-                  onValueChange={(value: string | null) => setFormData({ ...formData, status: (value as "Active" | "Recovered" | "Critical") || "Active" })}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as "Active" | "Recovered" | "Critical" })}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Recovered">Recovered</SelectItem>
-                    <SelectItem value="Critical">Critical</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="Active">Active</option>
+                  <option value="Recovered">Recovered</option>
+                  <option value="Critical">Critical</option>
+                </NativeSelect>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 w-full">
                 <Label htmlFor="add-lastVisit">Last Visit</Label>
-                <Input
-                  id="add-lastVisit"
-                  type="date"
-                  value={formData.lastVisit}
-                  onChange={(e) => setFormData({ ...formData, lastVisit: e.target.value })}
-                />
+                <Popover>
+                  <PopoverTrigger >
+                    <Button
+                      id="add-lastVisit"
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.lastVisit && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.lastVisit ? format(new Date(formData.lastVisit), "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.lastVisit ? new Date(formData.lastVisit) : undefined}
+                      onSelect={(date) =>
+                        setFormData({ ...formData, lastVisit: date ? format(date, "yyyy-MM-dd") : "" })
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="add-email">Email</Label>
@@ -677,7 +714,7 @@ export default function Analytics() {
                 <p className="font-medium text-lg text-foreground">{selectedPatient.name}</p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-muted-foreground text-sm">Age</Label>
@@ -688,7 +725,7 @@ export default function Analytics() {
                 <p className="font-medium text-foreground">{selectedPatient.gender}</p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-muted-foreground text-sm">Condition</Label>
@@ -705,7 +742,7 @@ export default function Analytics() {
                 </Badge>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-muted-foreground text-sm">Last Visit</Label>
@@ -716,7 +753,7 @@ export default function Analytics() {
                 <p className="font-medium text-foreground">{selectedPatient.email || "N/A"}</p>
               </div>
             </div>
-            
+
             <div>
               <Label className="text-muted-foreground text-sm">Phone</Label>
               <p className="font-medium text-foreground">{selectedPatient.phone || "N/A"}</p>
@@ -746,22 +783,19 @@ export default function Analytics() {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-2 w-full">
                 <Label htmlFor="edit-gender">Gender</Label>
-                <Select
+                <NativeSelect
+                  id="edit-gender"
+                  className="w-full"
                   value={formData.gender}
-                  onValueChange={(value: string | null) => setFormData({ ...formData, gender: value || "" })}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </NativeSelect>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-condition">Condition</Label>
@@ -772,35 +806,50 @@ export default function Analytics() {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-2 w-full">
                 <Label htmlFor="edit-status">Status</Label>
-                <Select
+                <NativeSelect
+                  id="edit-status"
+                  className="w-full"
                   value={formData.status}
-                  onValueChange={(value: string | null) => setFormData({ ...formData, status: (value as "Active" | "Recovered" | "Critical") || "Active" })}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as "Active" | "Recovered" | "Critical" })}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Recovered">Recovered</SelectItem>
-                    <SelectItem value="Critical">Critical</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="Active">Active</option>
+                  <option value="Recovered">Recovered</option>
+                  <option value="Critical">Critical</option>
+                </NativeSelect>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 w-full">
                 <Label htmlFor="edit-lastVisit">Last Visit</Label>
-                <Input
-                  id="edit-lastVisit"
-                  type="date"
-                  value={formData.lastVisit}
-                  onChange={(e) => setFormData({ ...formData, lastVisit: e.target.value })}
-                />
+                <Popover>
+                  <PopoverTrigger >
+                    <Button
+                      id="edit-lastVisit"
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.lastVisit && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.lastVisit ? format(new Date(formData.lastVisit), "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.lastVisit ? new Date(formData.lastVisit) : undefined}
+                      onSelect={(date) =>
+                        setFormData({ ...formData, lastVisit: date ? format(date, "yyyy-MM-dd") : "" })
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-email">Email</Label>
@@ -835,9 +884,7 @@ export default function Analytics() {
                     onClick={() => {
                       setTempSelectedFilters(prev => {
                         if (prev.includes(option.id)) {
-                          // Remove filter
                           const newFilters = prev.filter(id => id !== option.id)
-                          // Update tempFilters
                           const newTempFilters: Record<string, string> = {}
                           newFilters.forEach(id => {
                             if (id === "active") newTempFilters.status = "Active"
@@ -849,7 +896,6 @@ export default function Analytics() {
                           setTempFilters(newTempFilters)
                           return newFilters
                         } else {
-                          // Add filter
                           const newFilters = [...prev, option.id]
                           const newTempFilters: Record<string, string> = {}
                           newFilters.forEach(id => {
@@ -902,24 +948,17 @@ export default function Analytics() {
         )}
       </CustomPanel>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the patient
-              "{selectedPatient?.name}" from the system.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmationDialog
+        isOpen={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        onConfirm={confirmDelete}
+        itemName={selectedPatient?.name || "this patient"}
+        title="Are you sure?"
+        description="This action cannot be undone. This will permanently delete"
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isDeleting={isDeleting}
+      />
     </div>
   )
 }

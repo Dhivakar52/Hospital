@@ -19,10 +19,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, LogOut, Settings, HelpCircle , Sun, Moon } from "lucide-react"
-import { useLocation } from "react-router-dom"
+import { User, LogOut, Settings, HelpCircle, Sun, Moon } from "lucide-react"
+import { useLocation, useNavigate } from "react-router-dom"
 import NotificationPanel from "./NotificationPanel"
 import { useTheme } from "@/context/ThemeContext"
+import { toast } from "sonner"
 
 interface HeaderProps {
   user?: {
@@ -45,9 +46,9 @@ export function Header({
   },
   breadcrumbItems = []
 }: HeaderProps) {
-    
-  const { theme, toggleTheme } = useTheme();  
-  const location = useLocation();
+  const { theme, toggleTheme } = useTheme()
+  const location = useLocation()
+  const navigate = useNavigate()
   const pathname = location.pathname.replace('/', '') || 'Dashboard'
   const pageName = pathname.charAt(0).toUpperCase() + pathname.slice(1)
 
@@ -57,6 +58,14 @@ export function Header({
   ]
 
   const items = breadcrumbItems.length > 0 ? breadcrumbItems : defaultBreadcrumbs
+
+  // ✅ Logout Handler
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated')
+    localStorage.removeItem('user')
+    toast.success('Logged out successfully')
+    navigate('/login')
+  }
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-6">
@@ -82,23 +91,26 @@ export function Header({
       </Breadcrumb>
 
       <div className="ml-auto flex items-center gap-4">
-         <button
-    type="button"
-    onClick={toggleTheme}
-    className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-    aria-label="Toggle theme"
-  >
-    {theme === "light" ? (
-      <Moon className="h-4 w-4" />
-    ) : (
-      <Sun className="h-4 w-4" />
-    )}
-  </button>
-        {/* ✅ Notification Panel */}
+        {/* Theme Toggle */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+          aria-label="Toggle theme"
+        >
+          {theme === "light" ? (
+            <Moon className="h-4 w-4" />
+          ) : (
+            <Sun className="h-4 w-4" />
+          )}
+        </button>
+
+        {/* Notification Panel */}
         <NotificationPanel />
 
         <Separator orientation="vertical" className="h-8" />
 
+        {/* Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -144,7 +156,11 @@ export function Header({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="text-red-600">
+              {/* ✅ Logout with handler */}
+              <DropdownMenuItem 
+                className="text-red-600 cursor-pointer"
+                onClick={handleLogout}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </DropdownMenuItem>

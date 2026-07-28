@@ -28,27 +28,32 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { LogOut, ChevronRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { NavLink, useLocation } from "react-router-dom"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { menuConfig } from "@/config/menu.config"
 import Logo from "@/assets/images/srm_logo.png"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 export function AppSidebar() {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const location = useLocation()
+  const navigate = useNavigate()
 
+  // ✅ Logout Handler
   const handleLogout = () => {
-    // TODO: wire up your actual logout logic here
-    console.log("Logout clicked")
+    localStorage.removeItem('isAuthenticated')
+    localStorage.removeItem('user')
+    toast.success('Logged out successfully')
+    navigate('/login')
   }
 
   // Checks if a url matches the current route
-  const isUrlActive = (url : any) => location.pathname === url
+  const isUrlActive = (url: string) => location.pathname === url
 
-  // Checks if any child of a parent item is active (used to highlight the parent trigger)
-  const isParentActive = (item : any) =>
-    item.items?.some((sub : any) => isUrlActive(sub.url))
+  // Checks if any child of a parent item is active
+  const isParentActive = (item: any) =>
+    item.items?.some((sub: any) => isUrlActive(sub.url))
 
   return (
     <Sidebar collapsible="icon">
@@ -66,18 +71,17 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuConfig.map((item) => {
-            
+                // No submenu — plain link
                 if (!item.items) {
                   const isActive = isUrlActive(item.url)
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
-                        
                         tooltip={item.title}
-                       className={cn(
-                        "px-4 py-[18px] mb-[5px]",
-                        isActive && "theme-color"
-                      )}
+                        className={cn(
+                          "px-4 py-[18px] mb-[5px]",
+                          isActive && "theme-color"
+                        )}
                       >
                         <NavLink to={item.url} className="flex items-center gap-2 w-full">
                           <item.icon className="h-4 w-4 shrink-0" />
@@ -169,7 +173,6 @@ export function AppSidebar() {
                             return (
                               <SidebarMenuSubItem key={sub.title}>
                                 <SidebarMenuSubButton
-                                  
                                   className={cn(subActive && "theme-color")}
                                 >
                                   <NavLink to={sub.url} className="flex items-center gap-2 w-full">
@@ -191,9 +194,14 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
+      {/* ✅ Sidebar Footer with Logout */}
       <SidebarFooter className="border-t p-4">
         <SidebarMenuItem className="list-none">
-          <SidebarMenuButton tooltip="Logout" onClick={handleLogout}>
+          <SidebarMenuButton 
+            tooltip="Logout" 
+            onClick={handleLogout}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50/10"
+          >
             <LogOut className="h-4 w-4 shrink-0" />
             <span className="group-data-[collapsible=icon]:hidden">Logout</span>
           </SidebarMenuButton>

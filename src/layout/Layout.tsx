@@ -1,10 +1,10 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "../components/app-sidebar"
 import { Header } from "../components/Header"
-import { useLocation } from "react-router-dom"
+import { Outlet, useLocation } from "react-router-dom"
 
 interface LayoutProps {
-  children: React.ReactNode
+  children?: React.ReactNode
   user?: {
     name: string
     email: string
@@ -45,7 +45,7 @@ export function Layout({
             breadcrumbItems={autoBreadcrumbs}
           />
 
-          <main className="flex-1 p-6 ">{children}</main>
+          <main className="flex-1 p-6 ">{children || <Outlet/>}</main>
 
           <footer className="border-t py-4 px-6 text-center text-sm text-muted-foreground bg-background">
             <p>© 2026 MyApp. All rights reserved.</p>
