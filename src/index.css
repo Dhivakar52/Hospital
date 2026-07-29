@@ -49,9 +49,12 @@
 }
 
 :root {
+  --blue-btn: linear-gradient(135deg, #2952CC 0%, #3E6EF5 100%);
+  --blue-text-color: #2952CC;
+   --side-menu :#E8F0FF;
   --medical-color:#147fc3;
   --bg-white: white;
-
+ --layer-bg: #f8fafc; 
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -87,8 +90,11 @@
 }
 
 .dark {
+    --layer-bg: oklch(0.145 0 0);
+   --medical-color:#147fc3;
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
+    
     --card: oklch(0.205 0 0);
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
@@ -120,9 +126,15 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+.layerBg{
+  background-color: var(--layer-bg);
+}
+
+
+
 .theme-color{
-  background-color: var(--medical-color);
-  color:   var(--bg-white);
+  background-color: var(--side-menu);
+  color:   var(--blue-text-color);
   
 }
 

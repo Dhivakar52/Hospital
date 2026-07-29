@@ -45,11 +45,11 @@ export function Layout({
             breadcrumbItems={autoBreadcrumbs}
           />
 
-          <main className="flex-1 p-6 ">{children || <Outlet/>}</main>
+          <main className="flex-1 p-6 layerBg">{children || <Outlet/>}</main>
 
-          <footer className="border-t py-4 px-6 text-center text-sm text-muted-foreground bg-background">
+          {/* <footer className="border-t py-4 px-6 text-center text-sm text-muted-foreground bg-background">
             <p>© 2026 MyApp. All rights reserved.</p>
-          </footer>
+          </footer> */}
         </SidebarInset>
       </div>
     </SidebarProvider>

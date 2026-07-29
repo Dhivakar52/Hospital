@@ -1,8 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom"
-import { Suspense, useEffect, useState } from "react"
+import { Suspense } from "react"
 import { routes } from "./routes.config"
 import ProtectedRoutes from "./ProtectedRoutes"
 import { Layout } from "@/layout/Layout"
+import { useAuth } from "@/context/AuthContext"
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -11,22 +12,11 @@ const PageLoader = () => (
 )
 
 export const AppRoutes = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
+ 
+  const { isAuthenticated } = useAuth()
 
-  useEffect(() => {
-    const auth = localStorage.getItem('isAuthenticated') === 'true'
-    setIsAuthenticated(auth)
-    setLoading(false)
-  }, [])
-
-  if (loading) {
-    return <PageLoader />
-  }
-
-  // Separate routes
-  const publicRoutes = routes.filter(route => !route.protected)
-  const protectedRoutes = routes.filter(route => route.protected)
+  const publicRoutes = routes.filter((route) => !route.protected)
+  const protectedRoutes = routes.filter((route) => route.protected)
 
   return (
     <Suspense fallback={<PageLoader />}>
@@ -58,15 +48,15 @@ export const AppRoutes = () => {
         </Route>
 
         {/* Redirect */}
-        <Route 
-          path="*" 
+        <Route
+          path="*"
           element={
             isAuthenticated ? (
               <Navigate to="/dashboard" replace />
             ) : (
-              <Navigate to="/login" replace />
+              <Navigate to="/" replace />
             )
-          } 
+          }
         />
       </Routes>
     </Suspense>

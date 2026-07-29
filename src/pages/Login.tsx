@@ -1,220 +1,262 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
+  User,
+  Lock,
+  Eye,
+  EyeOff,
   Loader2,
-  Shield,
-  Hospital
+  LogIn,
+  Hospital,
+  ShieldCheck,
+  LineChart,
+  Users,
+  Zap,
 } from "lucide-react"
-import { toast } from "sonner"
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext"
+import WhiteLogo from "@/assets/images/white-logo.png";
+import leftImage from "@/assets/images/left-image.png"
+
+const features = [
+  { icon: ShieldCheck, label: "Secure Access" },
+  { icon: LineChart, label: "Real-time Insights" },
+  { icon: Users, label: "Role Based Access" },
+  { icon: Zap, label: "Smart Workflows" },
+]
 
 const Login = () => {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const { login, isAuthenticated } = useAuth() // ✅ context hook
+  const [userId, setUserId] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+  const [errors, setErrors] = useState<{ userId?: string; password?: string }>({})
 
-  // ✅ Hardcoded credentials
-  const VALID_EMAIL = 'admin@gmail.com'
+  const VALID_USER_ID = 'admin@gmail.com'
   const VALID_PASSWORD = '123'
 
+  // ✅ Already logged in-na, login form kaatave koodadhu — direct dashboard-ku redirect.
+  // Idhu 2-tap login issue-oda symmetric fix: back button ah login page-kku vandhalum bounce aagum.
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />
+  }
+
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {}
-    
-    if (!email) {
-      newErrors.email = 'Email is required'
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Please enter a valid email'
+    const newErrors: { userId?: string; password?: string } = {}
+
+    if (!userId) {
+      newErrors.userId = 'User ID is required'
     }
-    
+
     if (!password) {
       newErrors.password = 'Password is required'
     } else if (password.length < 3) {
       newErrors.password = 'Password must be at least 3 characters'
     }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
-    
+
     setIsLoading(true)
-    
-    // Simulate API call
+
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Check credentials
-    if (email === VALID_EMAIL && password === VALID_PASSWORD) {
+
+    if (userId === VALID_USER_ID && password === VALID_PASSWORD) {
       toast.success('Welcome back! Redirecting...')
-      // Store login state
-      localStorage.setItem('isAuthenticated', 'true')
-      localStorage.setItem('user', JSON.stringify({ email, name: 'Admin' }))
+
+      // ❌ Pazhaya way (direct localStorage) — race condition create pannuchu:
+      // localStorage.setItem('isAuthenticated', 'true')
+      // localStorage.setItem('user', JSON.stringify({ userId, name: 'Admin' }))
+
+      // ✅ Puthu way — context state synchronous-a update aagum,
+      // AppRoutes uடனே correct isAuthenticated=true value-a paakum.
+      login({ userId, name: 'Admin' })
+
       navigate('/dashboard')
     } else {
-      toast.error('Invalid email or password. Please try again.')
+      toast.error('Invalid user ID or password. Please try again.')
       setPassword('')
     }
-    
+
     setIsLoading(false)
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
-      <div className="w-full max-w-md">
-        {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full theme-color mb-4">
-            <Hospital className="h-8 w-8 text-white" />
+    <div className="relative min-h-screen w-full flex flex-col lg:flex-row overflow-hidden bg-white">
+
+      {/* ================= LEFT HERO PANEL ================= */}
+      <div className="relative lg:flex lg:w-[56%] flex-col items-center justify-between overflow-hidden min-h-[40vh] lg:min-h-screen">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${leftImage})` }} 
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-800/50 via-blue-700/40 to-blue-900/85" />
+
+        {/* Logo + Title */}
+        <div className="relative z-10 flex flex-col items-center text-center px-4 sm:px-10 pt-8 sm:pt-16">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-3 sm:mb-4 shadow-lg">
+            <img src={WhiteLogo} alt="Logo" className="w-8 h-8 sm:w-12 sm:h-12" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Medical System</h1>
-          <p className="text-muted-foreground mt-2">Sign in to your account</p>
+          <h1 className="text-white text-lg sm:text-2xl xl:text-3xl font-bold leading-snug">
+            SRM Medical College Hospital
+            <br className="hidden sm:block" /> &amp; Research Centre
+          </h1>
+          <p className="text-blue-100/90 text-[10px] sm:text-[11px] tracking-[0.15em] sm:tracking-[0.25em] mt-2 sm:mt-3 font-semibold">
+            COMPASSIONATE &nbsp;•&nbsp; ADVANCED &nbsp;•&nbsp; TRUSTED
+          </p>
         </div>
 
-        {/* Login Card */}
-        <Card className="border-0 shadow-xl dark:shadow-gray-900/30">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
-            <CardDescription className="text-center">
-              Enter your credentials to access your account
-            </CardDescription>
-          </CardHeader>
-          
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              {/* Email Field */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@gmail.com"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value)
-                      setErrors(prev => ({ ...prev, email: undefined }))
-                    }}
-                    className={`pl-9 ${errors.email ? 'border-destructive' : ''}`}
-                    disabled={isLoading}
-                    autoComplete="email"
-                  />
+        {/* Feature strip - Responsive grid */}
+        <div className="relative z-10 w-full px-4 sm:px-8 pb-6 sm:pb-8 mt-4 sm:mt-8">
+          <div className="flex justify-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0 max-w-[560px] w-full rounded-xl bg-white/10 backdrop-blur-md border border-white/20 p-2 sm:p-4">
+              {features.map((f, i) => (
+                <div
+                  key={f.label}
+                  className={`flex flex-col items-center gap-1 sm:gap-1.5 text-white text-center px-2 sm:px-4 py-3 sm:py-4 ${
+                    i > 0 && i % 2 === 0 ? "sm:border-l-0" : ""
+                  } ${
+                    i >= 2 ? "border-t sm:border-t-0" : ""
+                  } ${
+                    i > 0 ? "sm:border-l border-white/20" : ""
+                  }`}
+                >
+                  <f.icon className="h-5 w-5 sm:h-7 sm:w-8 mb-1 sm:mb-2" />
+                  <span className="text-[11px] sm:text-[14px] leading-tight">{f.label}</span>
                 </div>
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email}</p>
-                )}
-              </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-              {/* Password Field */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Button
-                    variant="link"
-                    className="px-0 text-sm font-normal text-muted-foreground hover:text-primary"
-                    type="button"
-                  >
-                    Forgot password?
-                  </Button>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value)
-                      setErrors(prev => ({ ...prev, password: undefined }))
-                    }}
-                    className={`pl-9 pr-10 ${errors.password ? 'border-destructive' : ''}`}
-                    disabled={isLoading}
-                    autoComplete="current-password"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password}</p>
-                )}
-              </div>
+        {/* Mobile spacer to push content up */}
+        <div className="lg:hidden h-4" />
+      </div>
 
-              {/* Demo Credentials Info */}
-              <div className="rounded-lg bg-muted p-3 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Shield className="h-4 w-4" />
-                  <span>Demo Credentials:</span>
-                </div>
-                <div className="mt-1 grid grid-cols-2 gap-2 text-xs font-mono">
-                  <div>
-                    <span className="text-muted-foreground">Email:</span>
-                    <span className="ml-1 font-medium text-foreground">admin@gmail.com</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Password:</span>
-                    <span className="ml-1 font-medium text-foreground">123</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
+      {/* ================= RIGHT LOGIN PANEL ================= */}
+      <div className="relative flex-1 flex items-center justify-center bg-white px-4 sm:px-8 lg:px-16 py-8 sm:py-10 min-h-[60vh] lg:min-h-screen">
+        <div className="w-full max-w-sm">
+          {/* Header */}
+          <div className="mb-6 sm:mb-7">
+            <Hospital 
+              className="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" 
+              style={{ color: "var(--blue-text-color)" }}
+            />
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900">SRMMCH HIS Portal</h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Sign in to continue to your dashboard
+            </p>
+          </div>
 
-            <CardFooter className="flex flex-col space-y-4">
-              <Button 
-                type="submit" 
-                className="w-full theme-color hover:opacity-90 transition-opacity"
-                disabled={isLoading}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* User ID Field */}
+            <div className="space-y-1.5">
+              <Label htmlFor="userId" className="text-xs font-medium text-slate-600">
+                User ID
+              </Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  id="userId"
+                  type="text"
+                  placeholder="Enter your user id"
+                  value={userId}
+                  onChange={(e) => {
+                    setUserId(e.target.value)
+                    setErrors(prev => ({ ...prev, userId: undefined }))
+                  }}
+                  className={`pl-9 h-10 text-sm ${errors.userId ? 'border-destructive' : ''}`}
+                  disabled={isLoading}
+                  autoComplete="username"
+                />
+              </div>
+              {errors.userId && (
+                <p className="text-xs sm:text-sm text-destructive">{errors.userId}</p>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-xs font-medium text-slate-600">
+                Password
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    setErrors(prev => ({ ...prev, password: undefined }))
+                  }}
+                  className={`pl-9 pr-10 h-10 text-sm ${errors.password ? 'border-destructive' : ''}`}
+                  disabled={isLoading}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-xs sm:text-sm text-destructive">{errors.password}</p>
+              )}
+            </div>
+
+            {/* Forgot Password */}
+            <div className="flex justify-end">
+              <Button
+                variant="link"
+                type="button"
+                className="px-0 h-auto text-xs font-normal"
+                style={{ color: "var(--blue-text-color)" }}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
+                Forgot password?
               </Button>
-              
-              <p className="text-sm text-center text-muted-foreground">
-                Don't have an account?{' '}
-                <Button variant="link" className="px-0 font-semibold text-primary">
-                  Contact Admin
-                </Button>
-              </p>
-            </CardFooter>
+            </div>
+
+            {/* Sign In Button */}
+            <Button
+              type="submit"
+              className="w-full h-10 text-white text-sm"
+              disabled={isLoading}
+              style={{ 
+                background: "var(--blue-btn)", 
+                padding: "18px 18px" 
+              }}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Sign In
+                </>
+              )}
+            </Button>
           </form>
-        </Card>
+        </div>
       </div>
     </div>
   )

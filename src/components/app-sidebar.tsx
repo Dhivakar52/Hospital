@@ -30,7 +30,7 @@ import { LogOut, ChevronRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { menuConfig } from "@/config/menu.config"
-import Logo from "@/assets/images/srm_logo.png"
+import Logo from "@/assets/images/full-logo.png"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -57,7 +57,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="px-4 py-3 font-bold border-b flex justify-start items-start gap-2 overflow-hidden">
+      <SidebarHeader className="px-4 py-3 font-bold bg-[#14213D] border-b flex justify-start items-start gap-2 overflow-hidden"
+        >
         <div>
           <img src={Logo} className="w-auto h-[40px]" alt="" />
         </div>
