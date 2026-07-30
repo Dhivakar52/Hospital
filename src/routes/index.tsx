@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom"
+import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { Suspense } from "react"
 import { routes } from "./routes.config"
 import ProtectedRoutes from "./ProtectedRoutes"
@@ -12,15 +12,17 @@ const PageLoader = () => (
 )
 
 export const AppRoutes = () => {
- 
+  const location = useLocation()
+
+
   const { isAuthenticated } = useAuth()
 
-  const publicRoutes = routes.filter((route) => !route.protected)
-  const protectedRoutes = routes.filter((route) => route.protected)
+  const publicRoutes = routes.filter(route => !route.protected)
+  const protectedRoutes = routes.filter(route => route.protected)
 
   return (
     <Suspense fallback={<PageLoader />}>
-      <Routes>
+      <Routes location={location}>
         {/* Public Routes - No Layout */}
         {publicRoutes.map((route) => (
           <Route

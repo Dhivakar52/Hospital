@@ -19,52 +19,123 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, LogOut, Settings, HelpCircle, Sun, Moon } from "lucide-react"
+import {
+  Home,
+  UserPlus,
+  BookOpen,
+  FileText,
+  Phone,
+  LogOut,
+  ChevronDown,
+  Sun,
+  Moon,
+} from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import NotificationPanel from "./NotificationPanel"
 import { useTheme } from "@/context/ThemeContext"
+import { useAuth } from "@/context/AuthContext" // Import useAuth
 import { toast } from "sonner"
 
 interface HeaderProps {
-  user?: {
-    name: string
-    email: string
-    avatar?: string
-    initials?: string
-  }
   breadcrumbItems?: {
     label: string
     href?: string
   }[]
 }
 
+// Helper function to format breadcrumb labels
+const formatLabel = (str: string): string => {
+  return str
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
 export function Header({
-  user = {
-    name: "John Doe",
-    email: "john@example.com",
-    initials: "JD"
-  },
   breadcrumbItems = []
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme()
+  const { user, logout } = useAuth() // Get auth data
   const location = useLocation()
   const navigate = useNavigate()
-  const pathname = location.pathname.replace('/', '') || 'Dashboard'
-  const pageName = pathname.charAt(0).toUpperCase() + pathname.slice(1)
 
-  const defaultBreadcrumbs = [
-    { label: "Home", href: "/dashboard" },
-    { label: pageName }
+  // Parse the pathname and generate breadcrumbs
+  const generateBreadcrumbs = () => {
+    const pathSegments = location.pathname.split('/').filter(segment => segment !== '')
+
+    // If no segments, return just Dashboard
+    if (pathSegments.length === 0) {
+      return [{ label: "Dashboard", href: "/dashboard" }]
+    }
+
+    const breadcrumbs = []
+    let currentPath = ''
+
+    // Add Home/Dashboard as first item
+    breadcrumbs.push({ label: "Home", href: "/dashboard" })
+
+    // Process each segment
+    for (let i = 0; i < pathSegments.length; i++) {
+      const segment = pathSegments[i]
+      currentPath += `/${segment}`
+
+      // Format the label
+      let label = formatLabel(segment)
+
+      // Check if this is the last segment
+      const isLast = i === pathSegments.length - 1
+
+      breadcrumbs.push({
+        label: label,
+        href: isLast ? undefined : currentPath
+      })
+    }
+
+    return breadcrumbs
+  }
+
+  const items = breadcrumbItems.length > 0 ? breadcrumbItems : generateBreadcrumbs()
+
+  // ✅ Logout Handler using auth context
+  const handleLogout = () => {
+    logout() // Use logout from auth context
+    toast.success('Logged out successfully')
+    navigate('/')
+  }
+
+  // ✅ Menu items for the profile dropdown, matching the reference design
+  const profileMenuItems = [
+    { label: "Home", icon: Home, url: "/dashboard" },
+    { label: "Profile", icon: UserPlus, url: "/profile" },
+    { label: "User Manual", icon: BookOpen, url: "/user-manual" },
+    { label: "NABH", icon: FileText, url: "/nabh" },
+    { label: "Contact Us", icon: Phone, url: "/contact-us" },
   ]
 
-  const items = breadcrumbItems.length > 0 ? breadcrumbItems : defaultBreadcrumbs
+  // Get user initials from name or email
+  const getUserInitials = () => {
+    if (user?.name) {
+      return user.name
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    }
+    if (user?.userId) {
+      return user.userId.charAt(0).toUpperCase()
+    }
+    return 'U'
+  }
 
-  // ✅ Logout Handler
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated')
-    localStorage.removeItem('user')
-    toast.success('Logged out successfully')
-    navigate('/login')
+  // Get user display name
+  const getUserName = () => {
+    return user?.name || user?.userId || 'User'
+  }
+
+  // Get user email
+  const getUserEmail = () => {
+    return user?.userId || 'user@example.com'
   }
 
   return (
@@ -116,49 +187,59 @@ export function Header({
             render={
               <button
                 type="button"
-                className="relative h-8 w-8 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                className="flex items-center gap-2 rounded-md px-1.5 py-1 cursor-pointer hover:bg-accent transition-colors"
               >
                 <Avatar className="h-8 w-8">
                   <AvatarImage
-                    src={user.avatar || "https://github.com/shadcn.png"}
-                    alt={user.name}
+                    src={user?.avatar || ""}
+                    alt={getUserName()}
                   />
-                  <AvatarFallback>{user.initials || "JD"}</AvatarFallback>
+                  <AvatarFallback className="bg-blue-600 text-white">
+                    {getUserInitials()}
+                  </AvatarFallback>
                 </Avatar>
+                <span className="text-sm font-medium hidden sm:inline">
+                  {getUserName()}
+                </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </button>
             }
           />
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuGroup>
               <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.name}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user.email}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={user?.avatar || "https://github.com/shadcn.png"}
+                      alt={getUserName()}
+                    />
+                    <AvatarFallback className="bg-blue-600 text-white">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col space-y-0.5">
+                    <p className="text-sm font-medium leading-none">{getUserName()}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {getUserEmail()}
+                    </p>
+                  </div>
                 </div>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <HelpCircle className="mr-2 h-4 w-4" />
-                Help
-              </DropdownMenuItem>
+              {profileMenuItems.map((item) => (
+                <DropdownMenuItem key={item.label} onClick={() => navigate(item.url)}>
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.label}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              {/* ✅ Logout with handler */}
-              <DropdownMenuItem 
-                className="text-red-600 cursor-pointer"
+              <DropdownMenuItem
+                className="cursor-pointer"
                 onClick={handleLogout}
               >
                 <LogOut className="mr-2 h-4 w-4" />

@@ -33,19 +33,21 @@ import { menuConfig } from "@/config/menu.config"
 import Logo from "@/assets/images/full-logo.png"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useAuth } from "@/context/AuthContext"
 
 export function AppSidebar() {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const location = useLocation()
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
-  // ✅ Logout Handler
+  // ✅ Logout Handler - uses AuthContext so isAuthenticated updates
+  // immediately everywhere, instead of only in localStorage
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated')
-    localStorage.removeItem('user')
+    logout()
     toast.success('Logged out successfully')
-    navigate('/login')
+    navigate('/')
   }
 
   // Checks if a url matches the current route

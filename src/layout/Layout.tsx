@@ -20,7 +20,7 @@ interface LayoutProps {
 
 export function Layout({ 
   children, 
-  user, 
+  // user, 
   // notificationCount = 3,
   breadcrumbItems = []
 }: LayoutProps) {
@@ -40,7 +40,7 @@ export function Layout({
 
         <SidebarInset className="flex-1 flex flex-col min-h-screen w-0">
           <Header 
-            user={user}
+            // user={user}
             // notificationCount={notificationCount}
             breadcrumbItems={autoBreadcrumbs}
           />

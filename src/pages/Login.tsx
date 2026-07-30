@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,9 +17,9 @@ import {
   Zap,
 } from "lucide-react"
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext"
 import WhiteLogo from "@/assets/images/white-logo.png";
 import leftImage from "@/assets/images/left-image.png"
+import { useAuth } from "@/context/AuthContext"
 
 const features = [
   { icon: ShieldCheck, label: "Secure Access" },
@@ -30,7 +30,7 @@ const features = [
 
 const Login = () => {
   const navigate = useNavigate()
-  const { login, isAuthenticated } = useAuth() // ✅ context hook
+  const { login } = useAuth()
   const [userId, setUserId] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -39,12 +39,6 @@ const Login = () => {
 
   const VALID_USER_ID = 'admin@gmail.com'
   const VALID_PASSWORD = '123'
-
-  // ✅ Already logged in-na, login form kaatave koodadhu — direct dashboard-ku redirect.
-  // Idhu 2-tap login issue-oda symmetric fix: back button ah login page-kku vandhalum bounce aagum.
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />
-  }
 
   const validateForm = () => {
     const newErrors: { userId?: string; password?: string } = {}
@@ -74,15 +68,10 @@ const Login = () => {
 
     if (userId === VALID_USER_ID && password === VALID_PASSWORD) {
       toast.success('Welcome back! Redirecting...')
-
-      // ❌ Pazhaya way (direct localStorage) — race condition create pannuchu:
-      // localStorage.setItem('isAuthenticated', 'true')
-      // localStorage.setItem('user', JSON.stringify({ userId, name: 'Admin' }))
-
-      // ✅ Puthu way — context state synchronous-a update aagum,
-      // AppRoutes uடனே correct isAuthenticated=true value-a paakum.
-      login({ userId, name: 'Admin' })
-
+      // ✅ Goes through AuthContext instead of only writing to localStorage,
+      // so isAuthenticated updates immediately for every component that
+      // reads it via useAuth() — no reliance on a route change to notice.
+      login({ userId, name: 'HIS Admin' })
       navigate('/dashboard')
     } else {
       toast.error('Invalid user ID or password. Please try again.')
