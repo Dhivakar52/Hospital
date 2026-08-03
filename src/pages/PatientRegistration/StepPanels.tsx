@@ -1,6 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Field, TextField, SelectField, DateField } from "./FormPrimitives";
+import { Field, TextField, SelectField, DateField } from "../../components/FormPrimitives";
 import type { RegistrationDraft } from "./Registration";
 
 type DraftPanelProps = {
@@ -38,7 +38,7 @@ const OPTIONS = {
 export function StepPatientDetails({ data, onChange }: DraftPanelProps) {
   return (
     <>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-3">
       <Field label="Dr. App. Ref No">
         <TextField placeholder="Enter reference number" />
       </Field>

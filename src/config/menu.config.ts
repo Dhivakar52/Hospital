@@ -47,6 +47,11 @@ export const menuConfig: MenuItem[] = [
     url: "/registration", 
     icon: LayoutDashboard 
   },
+  { 
+    title: "Athena", 
+    url: "/athena", 
+    icon: LayoutDashboard 
+  },
 
 
 
@@ -115,6 +120,13 @@ export const getRoutes = () => {
       path: "/registration",
       name: "OP",
       component: lazy(() => import("@/pages/PatientRegistration/Registration")),
+      exact: true,
+      protected: true,
+    },
+     {
+      path: "/athena",
+      name: "Athena",
+      component: lazy(() => import("@/pages/AthenaRegistration/AthenaModule")),
       exact: true,
       protected: true,
     },
