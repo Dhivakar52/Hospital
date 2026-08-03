@@ -1,6 +1,12 @@
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Field, TextField, SelectField, DateField } from "./FormPrimitives";
+import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
+import type { RegistrationDraft } from "./Registration";
+
+type DraftPanelProps = {
+  data: RegistrationDraft;
+  onChange: (field: keyof RegistrationDraft, value: string) => void;
+};
 
 const OPTIONS = {
   title: ["Mr", "Mrs", "Ms", "Master", "Baby", "Dr"],
@@ -29,15 +35,15 @@ const OPTIONS = {
   nriRelationship: ["Self", "Spouse", "Child", "Parent", "Sibling"],
 } as const;
 
-export function StepPatientDetails() {
+export function StepPatientDetails({ data, onChange }: DraftPanelProps) {
   return (
     <>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-3">
       <Field label="Dr. App. Ref No">
         <TextField placeholder="Enter reference number" />
       </Field>
       <Field label="Mobile No" required>
-        <TextField placeholder="Enter mobile number" />
+        <TextField placeholder="Enter mobile number" value={data.mobile} onChange={(value) => onChange("mobile", value)} />
       </Field>
       <Field label="UHID No">
         <TextField placeholder="Auto Generate" disabled />
@@ -47,10 +53,10 @@ export function StepPatientDetails() {
       </Field>
 
       <Field label="Patient Name" required>
-        <TextField placeholder="Enter patient name" />
+        <TextField placeholder="Enter patient name" value={data.patientName} onChange={(value) => onChange("patientName", value)} />
       </Field>
       <Field label="Title">
-        <SelectField options={OPTIONS.title} />
+        <SelectField options={OPTIONS.title} value={data.title} onChange={(value) => onChange("title", value)} />
       </Field>
       <Field label="Gender">
         <SelectField options={OPTIONS.gender} />
@@ -67,7 +73,7 @@ export function StepPatientDetails() {
         </div>
       </Field>
       <Field label="Father / Husband / Wife Name">
-        <TextField placeholder="Enter Father / Wife name" />
+        <TextField placeholder="Enter Father / Wife name" value={data.fhwo} onChange={(value) => onChange("fhwo", value)} />
       </Field>
       <Field label="Marital Status">
         <SelectField options={OPTIONS.maritalStatus} />
@@ -97,7 +103,7 @@ export function StepPatientDetails() {
     </div>
      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
       <Field label="Email">
-        <TextField placeholder="Enter email" />
+        <TextField placeholder="Enter email" value={data.email} onChange={(value) => onChange("email", value)} />
       </Field>
 
       <Field label="ABHA ID">
@@ -107,9 +113,10 @@ export function StepPatientDetails() {
     />
     <Button
       variant="link"
-      className="absolute right-2  gap-1 whitespace-nowrap p-0 text-[8px] font-medium"
+      className="absolute right-2  gap-1 bg-background whitespace-nowrap p-0 text-[8px] font-medium"
       style={{
-        color:"var(--blue-text-color)"
+        color:"var(--blue-text-color)",
+       
       }}
     >
       Create ABHA ID
@@ -131,7 +138,7 @@ export function StepPatientDetails() {
   );
 }
 
-export function StepAddressContact() {
+export function StepAddressContact({ data, onChange }: DraftPanelProps) {
   return (
     <>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
@@ -145,11 +152,11 @@ export function StepAddressContact() {
         <TextField placeholder="Enter street" />
       </Field>
       <Field label="Area">
-        <TextField placeholder="Enter area" />
+        <TextField placeholder="Enter area" value={data.area} onChange={(value) => onChange("area", value)} />
       </Field>
 
       <Field label="City / Town">
-        <SelectField options={OPTIONS.cityTown} />
+        <SelectField options={OPTIONS.cityTown} value={data.city} onChange={(value) => onChange("city", value)} />
       </Field>
       <Field label="State">
         <SelectField options={OPTIONS.state} />
@@ -217,11 +224,11 @@ export function StepInsuranceDetails() {
   );
 }
 
-export function StepAdditionalInformation() {
+export function StepAdditionalInformation({ data, onChange }: DraftPanelProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
       <Field label="Department">
-        <SelectField options={OPTIONS.department} />
+        <SelectField options={OPTIONS.department} value={data.department} onChange={(value) => onChange("department", value)} />
       </Field>
       <Field label="Doctor">
         <SelectField options={OPTIONS.doctor} />

@@ -44,7 +44,14 @@ export const AppRoutes = () => {
             <Route
               key={route.path}
               path={route.path}
-              element={<route.component />}
+              element={
+                <ProtectedRoutes
+                  isAuthenticated={isAuthenticated}
+                  requiredRoles={(route as { roles?: string[] }).roles ?? []}
+                >
+                  <route.component />
+                </ProtectedRoutes>
+              }
             />
           ))}
         </Route>

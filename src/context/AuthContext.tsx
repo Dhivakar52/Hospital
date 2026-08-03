@@ -3,13 +3,16 @@ import { createContext, useContext, useState, type ReactNode } from "react"
 interface User {
   userId: string
   name: string
-  [key: string]: any
+  email?: string
+  avatar?: string
+  roles?: string[]
 }
 
 interface AuthContextType {
   isAuthenticated: boolean
   user: User | null
   login: (user: User) => void
+  updateUser: (changes: Partial<User>) => void
   logout: () => void
 }
 
@@ -43,8 +46,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAuthenticated(false)
   }
 
+  const updateUser = (changes: Partial<User>) => {
+    setUser((currentUser) => {
+      if (!currentUser) return currentUser
+      const updatedUser = { ...currentUser, ...changes }
+      localStorage.setItem("user", JSON.stringify(updatedUser))
+      return updatedUser
+    })
+  }
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   )

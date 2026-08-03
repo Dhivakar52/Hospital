@@ -28,7 +28,8 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { Field, TextField, SelectField, DateField } from "./FormPrimitives"
+import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives"
+import type { RegistrationDraft } from "./Registration"
 
 // ✅ Data model updated to match: UHID No, OP No, Title, Patient Name, F/H/W/O, Area, City, Department
 type Patient = {
@@ -48,7 +49,11 @@ type Patient = {
 type PatientFormData = Omit<Patient, 'id'>
 type PanelMode = "view" | "edit" | "add" | "filter" | null
 
-export default function RegisteredPatientsTable() {
+interface RegisteredPatientsTableProps {
+  newPatient?: RegistrationDraft | null
+}
+
+export default function RegisteredPatientsTable({ newPatient }: RegisteredPatientsTableProps) {
   const [data, setData] = useState<Patient[]>([])
   const [filteredData, setFilteredData] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,7 +95,7 @@ export default function RegisteredPatientsTable() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Filters
   const [filters, setFilters] = useState<Record<string, string>>({})
@@ -107,6 +112,25 @@ export default function RegisteredPatientsTable() {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  useEffect(() => {
+    if (!newPatient) return
+    const id = `${Date.now()}`
+    const patient: Patient = {
+      id,
+      opNo: id,
+      title: newPatient.title || "Mr",
+      patientName: newPatient.patientName,
+      fhwo: newPatient.fhwo,
+      area: newPatient.area,
+      city: newPatient.city,
+      department: newPatient.department || "General Medicine",
+      registrationDate: format(new Date(), "yyyy-MM-dd"),
+      email: newPatient.email,
+      phone: newPatient.mobile,
+    }
+    setData((current) => [patient, ...current])
+  }, [newPatient])
 
   // Load data
   useEffect(() => {
@@ -368,7 +392,8 @@ export default function RegisteredPatientsTable() {
     }),
     setPageIndex: (index: number) => setCurrentPage(index + 1),
     setPageSize: (size: number) => {
-      console.log("Page size changed to:", size)
+      setItemsPerPage(size)
+      setCurrentPage(1)
     },
     previousPage: () => setCurrentPage(prev => Math.max(prev - 1, 1)),
     nextPage: () => setCurrentPage(prev => Math.min(prev + 1, totalPages)),
@@ -448,7 +473,7 @@ export default function RegisteredPatientsTable() {
 
   return (
     <div className="">
-      <div className="bg-card shadow-lg border border-border rounded-lg p-6">
+      <div className="bg-card  border border-border rounded-md p-6">
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           {/* Title */}

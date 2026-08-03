@@ -1,33 +1,34 @@
 import { cn } from "@/lib/utils";
 
-type StepKey = 1 | 2 | 3 | 4;
+type StepKey = 1 | 2 | 3 | 4 | 5;
 
 interface StepDef {
   key: StepKey;
   label: string;
+  shortLabel: string;
 }
 
 const STEPS: StepDef[] = [
-  { key: 1, label: "Patient Details" },
-  { key: 2, label: "Address & Contact" },
-  { key: 3, label: "Insurance Details" },
-  { key: 4, label: "Additional Information" },
+  { key: 1, label: "Patient Details", shortLabel: "Details" },
+  { key: 2, label: "Visit Details", shortLabel: "Visit" },
+  { key: 3, label: "Category & Insurance", shortLabel: "Category" },
+  { key: 4, label: "Payment Details", shortLabel: "Payment" },
+  { key: 5, label: "Referral & Visit Mode", shortLabel: "Referral" },
 ];
 
-export function Stepper({ current }: { current: StepKey }) {
+export function RevisitStepper({ current }: { current: StepKey }) {
   const total = STEPS.length;
-  const labels = STEPS.map((s) => s.label);
 
   return (
     <div className="flex items-center px-4 sm:px-6 py-4 sm:py-5 overflow-x-auto">
-      {labels.map((label, i) => {
+      {STEPS.map((step, i) => {
         const stepNum = i + 1;
         const isActive = stepNum === current;
         const isCompleted = stepNum < current;
-        
+
         return (
-          <div 
-            key={label} 
+          <div
+            key={step.label}
             className="flex flex-1 items-center last:flex-none min-w-fit"
           >
             <div className="flex items-center gap-1 sm:gap-2">
@@ -47,8 +48,8 @@ export function Stepper({ current }: { current: StepKey }) {
                 }
                 className={cn(
                   "flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full text-[11px] sm:text-[14px] font-semibold transition-all duration-200",
-                  isActive 
-                    ? "text-white shadow-md" 
+                  isActive
+                    ? "text-white shadow-md"
                     : isCompleted
                     ? "text-white"
                     : "border border-slate-300 text-slate-400"
@@ -67,8 +68,8 @@ export function Stepper({ current }: { current: StepKey }) {
               <span
                 className={cn(
                   "whitespace-nowrap text-[11px] sm:text-[13px] transition-all duration-200",
-                  isActive 
-                    ? "font-semibold" 
+                  isActive
+                    ? "font-semibold"
                     : isCompleted
                     ? "font-medium text-slate-500"
                     : "font-medium text-slate-400"
@@ -82,19 +83,14 @@ export function Stepper({ current }: { current: StepKey }) {
                 }
               >
                 {/* Show short label on mobile, full label on larger screens */}
-                <span className="hidden sm:inline">{label}</span>
-                <span className="sm:hidden">
-                  {label === "Patient Details" ? "Details" :
-                   label === "Address & Contact" ? "Address" :
-                   label === "Insurance Details" ? "Insurance" :
-                   "Additional"}
-                </span>
+                <span className="hidden sm:inline">{step.label}</span>
+                <span className="sm:hidden">{step.shortLabel}</span>
               </span>
             </div>
 
             {/* Connector Line */}
             {stepNum !== total && (
-              <div 
+              <div
                 className={cn(
                   "mx-1 sm:mx-3 h-px flex-1 transition-all duration-300",
                   isCompleted ? "bg-blue-500" : "bg-slate-200"

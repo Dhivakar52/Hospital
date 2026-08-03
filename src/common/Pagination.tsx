@@ -1,7 +1,17 @@
 import React from "react";
 
+interface PaginationTable {
+  getState: () => { pagination: { pageIndex: number; pageSize: number } };
+  setPageIndex: (index: number) => void;
+  setPageSize: (size: number) => void;
+  previousPage: () => void;
+  nextPage: () => void;
+  getCanPreviousPage: () => boolean;
+  getCanNextPage: () => boolean;
+}
+
 interface PaginationProps {
-  table: any;
+  table: PaginationTable;
   totalCount: number;
 }
 

@@ -58,7 +58,7 @@ export function TextField({
       value={value}
       defaultValue={defaultValue}
       onChange={(e) => onChange?.(e.target.value)}
-      className="h-9 text-[13px]"
+      className="h-9 text-[13px] rounded-[4px]"
     />
   );
 }
@@ -79,7 +79,7 @@ export function SelectField({
     <NativeSelect
       value={value ?? ""}
       onChange={(e) => onChange?.(e.target.value)}
-      className="h-9 text-[13px] w-full"
+      className="h-9 text-[13px] w-full "
     >
       <option value="">{placeholder}</option>
       {options.map((opt) => (
@@ -120,11 +120,11 @@ export function DateField({
         <Button
           variant="outline"
           className={cn(
-            "h-9 w-full justify-start px-3 text-left text-[13px] font-normal text-slate-700",
+            "h-9 w-full justify-start px-3 text-left text-[13px] font-normal text-slate-700 rounded-[4px]", // ✅ Added rounded-[4px]
             !date && !defaultLabel && "text-slate-400"
           )}
         >
-          <CalendarIcon className="mr-2 h-3.5 w-3.5 shrink-0 " />
+          <CalendarIcon className="mr-2 h-3.5 w-3.5 shrink-0" />
           {date ? format(date, "dd-MM-yyyy") : defaultLabel ?? placeholder}
         </Button>
       </PopoverTrigger>
