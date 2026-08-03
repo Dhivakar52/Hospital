@@ -50,7 +50,8 @@ export function AppSidebar() {
   const isUrlActive = (url: string) => {
     if (location.pathname === url) return true;
     if (url === "/registered-patients" && location.pathname.startsWith("/op/registration")) return true;
-    if (url === "/revisit-records" && location.pathname.startsWith("/op/revisit")) return true;
+    if (url === "/revisit-records" && (location.pathname === "/op/revisit" || location.pathname.startsWith("/op/revisit/"))) return true;
+    if (url === "/op/revisit-cancellation" && location.pathname.startsWith("/op/revisit-cancellation")) return true;
     if (url === "/registered-anc-records" && location.pathname.startsWith("/antenatal-registration")) return true;
     if (url === "/hospital-master-records" && location.pathname.startsWith("/hospital-master")) return true;
     if (url === "/referral-master-records" && location.pathname.startsWith("/referral-master")) return true;
