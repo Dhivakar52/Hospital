@@ -1,6 +1,12 @@
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, TextField, SelectField, DateField } from "./FormPrimitives";
+import type { RegistrationDraft } from "./Registration";
+
+export interface StepPanelProps {
+  data?: RegistrationDraft;
+  onChange?: (field: keyof RegistrationDraft, value: string) => void;
+}
 
 const OPTIONS = {
   title: ["Mr", "Mrs", "Ms", "Master", "Baby", "Dr"],
@@ -29,143 +35,164 @@ const OPTIONS = {
   nriRelationship: ["Self", "Spouse", "Child", "Parent", "Sibling"],
 } as const;
 
-export function StepPatientDetails() {
+export function StepPatientDetails({ data, onChange }: StepPanelProps = {}) {
   return (
     <>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
-      <Field label="Dr. App. Ref No">
-        <TextField placeholder="Enter reference number" />
-      </Field>
-      <Field label="Mobile No" required>
-        <TextField placeholder="Enter mobile number" />
-      </Field>
-      <Field label="UHID No">
-        <TextField placeholder="Auto Generate" disabled />
-      </Field>
-      <Field label="OP No">
-        <TextField placeholder="Auto Generate" disabled />
-      </Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
+        <Field label="Dr. App. Ref No">
+          <TextField placeholder="Enter reference number" />
+        </Field>
+        <Field label="Mobile No" required>
+          <TextField
+            value={data?.mobile}
+            onChange={(v) => onChange?.("mobile", v)}
+            placeholder="Enter mobile number"
+          />
+        </Field>
+        <Field label="UHID No">
+          <TextField placeholder="Auto Generate" disabled />
+        </Field>
+        <Field label="OP No">
+          <TextField placeholder="Auto Generate" disabled />
+        </Field>
 
-      <Field label="Patient Name" required>
-        <TextField placeholder="Enter patient name" />
-      </Field>
-      <Field label="Title">
-        <SelectField options={OPTIONS.title} />
-      </Field>
-      <Field label="Gender">
-        <SelectField options={OPTIONS.gender} />
-      </Field>
-      <Field label="DOB">
-        <DateField />
-      </Field>
+        <Field label="Patient Name" required>
+          <TextField
+            value={data?.patientName}
+            onChange={(v) => onChange?.("patientName", v)}
+            placeholder="Enter patient name"
+          />
+        </Field>
+        <Field label="Title">
+          <SelectField
+            value={data?.title}
+            onChange={(v) => onChange?.("title", v)}
+            options={OPTIONS.title}
+          />
+        </Field>
+        <Field label="Gender">
+          <SelectField options={OPTIONS.gender} />
+        </Field>
+        <Field label="DOB">
+          <DateField />
+        </Field>
 
-      <Field label="Age / Month / Day">
-        <div className="grid grid-cols-3 gap-2">
-          <TextField />
-          <TextField />
-          <TextField />
-        </div>
-      </Field>
-      <Field label="Father / Husband / Wife Name">
-        <TextField placeholder="Enter Father / Wife name" />
-      </Field>
-      <Field label="Marital Status">
-        <SelectField options={OPTIONS.maritalStatus} />
-      </Field>
-      <Field label="Blood Group">
-        <SelectField options={OPTIONS.bloodGroup} />
-      </Field>
+        <Field label="Age / Month / Day">
+          <div className="grid grid-cols-3 gap-2">
+            <TextField />
+            <TextField />
+            <TextField />
+          </div>
+        </Field>
+        <Field label="Father / Husband / Wife Name">
+          <TextField
+            value={data?.fhwo}
+            onChange={(v) => onChange?.("fhwo", v)}
+            placeholder="Enter Father / Wife name"
+          />
+        </Field>
+        <Field label="Marital Status">
+          <SelectField options={OPTIONS.maritalStatus} />
+        </Field>
+        <Field label="Blood Group">
+          <SelectField options={OPTIONS.bloodGroup} />
+        </Field>
 
-      <Field label="Religion">
-        <SelectField options={OPTIONS.religion} />
-      </Field>
-      <Field label="Nationality">
-        <SelectField options={OPTIONS.nationality} />
-      </Field>
-      <Field label="Contact No 1">
-        <TextField placeholder="Enter contact number" />
-      </Field>
-      <Field label="Contact No 2">
-        <TextField placeholder="Enter alternative number" />
-      </Field>
+        <Field label="Religion">
+          <SelectField options={OPTIONS.religion} />
+        </Field>
+        <Field label="Nationality">
+          <SelectField options={OPTIONS.nationality} />
+        </Field>
+        <Field label="Contact No 1">
+          <TextField placeholder="Enter contact number" />
+        </Field>
+        <Field label="Contact No 2">
+          <TextField placeholder="Enter alternative number" />
+        </Field>
 
-      
-      <div />
-      <div />
+        <div />
+        <div />
+      </div>
 
-     
-    </div>
-     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
-      <Field label="Email">
-        <TextField placeholder="Enter email" />
-      </Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
+        <Field label="Email">
+          <TextField
+            value={data?.email}
+            onChange={(v) => onChange?.("email", v)}
+            placeholder="Enter email"
+          />
+        </Field>
 
-      <Field label="ABHA ID">
-  <div className="relative flex items-center">
-    <TextField 
-      placeholder="Enter ABHA ID" 
-    />
-    <Button
-      variant="link"
-      className="absolute right-2  gap-1 whitespace-nowrap p-0 text-[8px] font-medium"
-      style={{
-        color:"var(--blue-text-color)"
-      }}
-    >
-      Create ABHA ID
-      <ExternalLink className="size-2.5" />
-    </Button>
-  </div>
-</Field>
-      <Field label="Reg Date">
-        <DateField defaultLabel="28-07-2026 04:40 PM" />
-      </Field>
+        <Field label="ABHA ID">
+          <div className="relative flex items-center">
+            <TextField placeholder="Enter ABHA ID" />
+            <Button
+              variant="link"
+              className="absolute right-2 gap-1 whitespace-nowrap p-0 text-[8px] font-medium"
+              style={{
+                color: "var(--blue-text-color)",
+              }}
+            >
+              Create ABHA ID
+              <ExternalLink className="size-2.5" />
+            </Button>
+          </div>
+        </Field>
+        <Field label="Reg Date">
+          <DateField defaultLabel="28-07-2026 04:40 PM" />
+        </Field>
 
-       
-      <div />
-      <div />
-
-     
-    </div>
+        <div />
+        <div />
+      </div>
     </>
   );
 }
 
-export function StepAddressContact() {
+export function StepAddressContact({ data, onChange }: StepPanelProps = {}) {
   return (
     <>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
-      <Field label="Door No">
-        <TextField placeholder="Enter door no" />
-      </Field>
-      <Field label="Building Name">
-        <TextField placeholder="Enter building name" />
-      </Field>
-      <Field label="Street">
-        <TextField placeholder="Enter street" />
-      </Field>
-      <Field label="Area">
-        <TextField placeholder="Enter area" />
-      </Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
+        <Field label="Door No">
+          <TextField placeholder="Enter door no" />
+        </Field>
+        <Field label="Building Name">
+          <TextField placeholder="Enter building name" />
+        </Field>
+        <Field label="Street">
+          <TextField placeholder="Enter street" />
+        </Field>
+        <Field label="Area">
+          <TextField
+            value={data?.area}
+            onChange={(v) => onChange?.("area", v)}
+            placeholder="Enter area"
+          />
+        </Field>
 
-      <Field label="City / Town">
-        <SelectField options={OPTIONS.cityTown} />
-      </Field>
-      <Field label="State">
-        <SelectField options={OPTIONS.state} />
-      </Field>
-      <Field label="Country">
-        <SelectField options={OPTIONS.country} />
-      </Field>
-      <Field label="PIN Code">
-        <TextField placeholder="Enter pin code" />
-      </Field>
-    </div>
+        <Field label="City / Town">
+          <SelectField
+            value={data?.city}
+            onChange={(v) => onChange?.("city", v)}
+            options={OPTIONS.cityTown}
+          />
+        </Field>
+        <Field label="State">
+          <SelectField options={OPTIONS.state} />
+        </Field>
+        <Field label="Country">
+          <SelectField options={OPTIONS.country} />
+        </Field>
+        <Field label="PIN Code">
+          <TextField placeholder="Enter pin code" />
+        </Field>
+      </div>
     </>
   );
 }
 
-export function StepInsuranceDetails() {
+export function StepInsuranceDetails(_props: StepPanelProps = {}) {
   return (
     <div className="grid grid-cols-4 gap-x-5 gap-y-5">
       <Field label="Patient Category">
@@ -217,11 +244,15 @@ export function StepInsuranceDetails() {
   );
 }
 
-export function StepAdditionalInformation() {
+export function StepAdditionalInformation({ data, onChange }: StepPanelProps = {}) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
       <Field label="Department">
-        <SelectField options={OPTIONS.department} />
+        <SelectField
+          value={data?.department}
+          onChange={(v) => onChange?.("department", v)}
+          options={OPTIONS.department}
+        />
       </Field>
       <Field label="Doctor">
         <SelectField options={OPTIONS.doctor} />
