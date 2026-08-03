@@ -115,7 +115,7 @@ const Login = () => {
                 <div
                   key={f.label}
                   className={`flex flex-col items-center gap-1 sm:gap-1.5 text-white text-center px-2 sm:px-4 py-3 sm:py-4 ${
-                    i > 0 && i % 2 === 0 ? "sm:border-l-0" : ""
+                    i > 0 && i % 2 === 0 ? "sm:border-l-0 md:border-l" : ""
                   } ${
                     i >= 2 ? "border-t sm:border-t-0" : ""
                   } ${

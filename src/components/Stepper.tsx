@@ -15,8 +15,8 @@ const STEPS: StepDef[] = [
 ];
 
 export function Stepper({ current }: { current: StepKey }) {
-  const total = 5;
-  const labels = [...STEPS.map((s) => s.label), "Review & Confirm"];
+  const total = STEPS.length;
+  const labels = STEPS.map((s) => s.label);
 
   return (
     <div className="flex items-center px-4 sm:px-6 py-4 sm:py-5 overflow-x-auto">
@@ -87,8 +87,7 @@ export function Stepper({ current }: { current: StepKey }) {
                   {label === "Patient Details" ? "Details" :
                    label === "Address & Contact" ? "Address" :
                    label === "Insurance Details" ? "Insurance" :
-                   label === "Additional Information" ? "Additional" :
-                   "Review"}
+                   "Additional"}
                 </span>
               </span>
             </div>

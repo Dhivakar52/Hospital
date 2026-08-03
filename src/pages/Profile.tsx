@@ -29,6 +29,7 @@ import {
   Activity
 } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/context/AuthContext"
 
 type ProfileData = {
   firstName: string
@@ -59,6 +60,7 @@ const activityLog = [
 ]
 
 const Profile = () => {
+  const { user, updateUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState<ProfileData>({
     firstName: "",
@@ -80,24 +82,16 @@ const Profile = () => {
     emergencyContact: "+91 98765 43211",
   })
 
-  // Load user data from localStorage on mount
+  // Keep the profile synchronized with the authenticated user.
   useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser)
-        const nameParts = userData.name?.split(' ') || ['User', '']
-        setFormData(prev => ({
-          ...prev,
-          firstName: nameParts[0] || '',
-          lastName: nameParts.slice(1).join(' ') || '',
-          email: userData.email || prev.email,
-        }))
-      } catch (e) {
-        console.error('Error parsing user data', e)
-      }
-    }
-  }, [])
+    const nameParts = user?.name?.split(' ') || ['User', '']
+    setFormData(prev => ({
+      ...prev,
+      firstName: nameParts[0] || '',
+      lastName: nameParts.slice(1).join(' ') || '',
+      email: user?.email || user?.userId || prev.email,
+    }))
+  }, [user])
 
   const handleChange = (field: keyof ProfileData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -106,17 +100,7 @@ const Profile = () => {
   const handleSave = () => {
     setIsEditing(false)
     const fullName = `${formData.firstName} ${formData.lastName}`.trim()
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser)
-        userData.name = fullName
-        userData.email = formData.email
-        localStorage.setItem('user', JSON.stringify(userData))
-      } catch (e) {
-        console.error('Error saving user data', e)
-      }
-    }
+    updateUser({ name: fullName, email: formData.email })
     toast.success("Profile updated successfully")
   }
 

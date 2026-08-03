@@ -130,7 +130,13 @@
   background-color: var(--layer-bg);
 }
 
-
+input,
+select,
+button,
+button[role="combobox"] {
+  border-radius: 4px !important;
+  font-size: 12px;
+}
 
 .theme-color{
   background-color: var(--side-menu);

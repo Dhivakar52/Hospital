@@ -22,9 +22,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Home,
   UserPlus,
-  BookOpen,
-  FileText,
-  Phone,
   LogOut,
   ChevronDown,
   Sun,
@@ -96,20 +93,15 @@ export function Header({
 
   const items = breadcrumbItems.length > 0 ? breadcrumbItems : generateBreadcrumbs()
 
-  // ✅ Logout Handler using auth context
   const handleLogout = () => {
-    logout() // Use logout from auth context
+    logout()
     toast.success('Logged out successfully')
     navigate('/')
   }
 
-  // ✅ Menu items for the profile dropdown, matching the reference design
   const profileMenuItems = [
     { label: "Home", icon: Home, url: "/dashboard" },
     { label: "Profile", icon: UserPlus, url: "/profile" },
-    { label: "User Manual", icon: BookOpen, url: "/user-manual" },
-    { label: "NABH", icon: FileText, url: "/nabh" },
-    { label: "Contact Us", icon: Phone, url: "/contact-us" },
   ]
 
   // Get user initials from name or email
