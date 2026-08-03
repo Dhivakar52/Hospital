@@ -121,7 +121,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      {/* ✅ Menu search — hidden when the sidebar is collapsed to icons */}
+  
       <div className="px-3 pt-3 group-data-[collapsible=icon]:hidden">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

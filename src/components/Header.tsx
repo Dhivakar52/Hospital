@@ -3,7 +3,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -93,8 +92,6 @@ const formatLabel = (str: string): string => {
   }
   
   // Default: capitalize first letter
-  // For "registration" → "Registration"
-  // For "diagnosis" → "Diagnosis"
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
@@ -112,22 +109,17 @@ export function Header({
 
     // If no segments, we're at the root — show Dashboard only
     if (pathSegments.length === 0) {
-      return [{ label: "Dashboard", href: undefined }]
+      return [{ label: "Dashboard" }] // ✅ href இல்லை
     }
 
-    const breadcrumbs: { label: string; href?: string }[] = []
-    let currentPath = ''
+    const breadcrumbs: { label: string }[] = [] // ✅ href இல்லை
 
     for (let i = 0; i < pathSegments.length; i++) {
       const segment = pathSegments[i]
-      currentPath += `/${segment}`
-
       const label = formatLabel(segment)
-      const isLast = i === pathSegments.length - 1
 
       breadcrumbs.push({
         label,
-        href: isLast ? undefined : currentPath,
       })
     }
 
@@ -183,11 +175,9 @@ export function Header({
             <Fragment key={index}>
               <BreadcrumbItem>
                 {index === items.length - 1 ? (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                  <BreadcrumbPage className="font-semibold">{item.label}</BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink href={item.href || "/"}>
-                    {item.label}
-                  </BreadcrumbLink>
+                  <span className="text-muted-foreground">{item.label}</span>
                 )}
               </BreadcrumbItem>
               {index < items.length - 1 && <BreadcrumbSeparator />}
