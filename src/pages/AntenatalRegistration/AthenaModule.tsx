@@ -1,90 +1,21 @@
 import * as React from "react";
-import { type ColumnDef } from "@tanstack/react-table";
-import { Baby, ClipboardList, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/common/Datatable";
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
-
-interface AncRecord {
-  ancNo: string;
-  ancDate: string;
-  uhidNo: string;
-  patientName: string;
-  age: number;
-  gender: string;
-  department: string;
-}
-
-const MOCK_DATA: AncRecord[] = [
-  { ancNo: "263208", ancDate: "31 Jul 2026 14:04", uhidNo: "4282176", patientName: "AMUTHA", age: 26, gender: "Female", department: "Obstetrics" },
-  { ancNo: "263207", ancDate: "31 Jul 2026 13:52", uhidNo: "4285500", patientName: "MANJUPRIYA", age: 32, gender: "Female", department: "Obstetrics" },
-  { ancNo: "263206", ancDate: "31 Jul 2026 13:51", uhidNo: "4285330", patientName: "AFRIJA KHATUN", age: 23, gender: "Female", department: "Obstetrics" },
-  { ancNo: "263205", ancDate: "31 Jul 2026 13:33", uhidNo: "4285299", patientName: "BHAVANI M", age: 31, gender: "Female", department: "General Surgery" },
-  { ancNo: "263204", ancDate: "31 Jul 2026 13:18", uhidNo: "4285342", patientName: "RUPA GUPTA", age: 27, gender: "Female", department: "Obstetrics" },
-];
+import { notify } from "@/lib/notify";
 
 const DEPARTMENTS = ["Obstetrics", "General Surgery", "General Medicine"] as const;
 const DOCTORS = ["Dr. Kavitha R", "Dr. Sundar M", "Dr. Priya S"] as const;
 const UNITS = ["Unit 1", "Unit 2", "Unit 3"] as const;
 
-const columns: ColumnDef<AncRecord>[] = [
-  {
-    accessorKey: "ancNo",
-    header: "ANC No",
-    cell: ({ row }) => (
-      <span
-        className="cursor-pointer font-medium hover:underline"
-        style={{ color: "var(--blue-text-color)" }}
-      >
-        {row.original.ancNo}
-      </span>
-    ),
-  },
-  { accessorKey: "ancDate", header: "ANC Date" },
-  { accessorKey: "uhidNo", header: "UHID No" },
-  { accessorKey: "patientName", header: "Patient Name" },
-  { accessorKey: "age", header: "Age" },
-  { accessorKey: "gender", header: "Gender" },
-  { accessorKey: "department", header: "Department" },
-  {
-    id: "status",
-    header: "Status",
-    cell: () => (
-      <Badge variant="destructive" className="rounded-full font-medium">
-        De-Activate
-      </Badge>
-    ),
-  },
-  {
-    id: "actions",
-    header: "Actions",
-    cell: () => (
-      <Badge className="rounded-full bg-indigo-100 font-medium text-indigo-700 hover:bg-indigo-100">
-        Barcode
-      </Badge>
-    ),
-  },
-];
-
 export default function AntenatalRegistration() {
+  const navigate = useNavigate();
   const [lmp, setLmp] = React.useState<Date | undefined>();
   const [edd, setEdd] = React.useState<Date | undefined>();
   const [department, setDepartment] = React.useState<string>("");
   const [doctor, setDoctor] = React.useState<string>("");
   const [unit, setUnit] = React.useState<string>("");
-  const [search, setSearch] = React.useState("");
-
-  const filteredData = React.useMemo(() => {
-    if (!search) return MOCK_DATA;
-    const q = search.toLowerCase();
-    return MOCK_DATA.filter(
-      (r) =>
-        r.patientName.toLowerCase().includes(q) ||
-        r.uhidNo.includes(q) ||
-        r.ancNo.includes(q)
-    );
-  }, [search]);
 
   return (
     <div>
@@ -104,19 +35,19 @@ export default function AntenatalRegistration() {
           <div>
             <h1 className="text-[17px] font-semibold">Antenatal Registration</h1>
             <p className="text-[12.5px] text-muted-foreground">
-              Register and manage antenatal care records
+              Register new antenatal care details
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <Button
-            variant="outline"
-            className="gap-2 text-[13px] border-blue-200"
-            style={{ color: "var(--blue-text-color)" }}
+            onClick={() => navigate("/registered-anc-records")}
+            className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
+            style={{ background: "var(--blue-btn)" }}
           >
-            <ClipboardList className="h-4 w-4" />
-            ANC Statistics
+            <Baby className="h-4 w-4" />
+            View Registered ANC Records
           </Button>
         </div>
       </div>
@@ -150,20 +81,20 @@ export default function AntenatalRegistration() {
           <h2 className="mb-4 mt-6 text-[13.5px] font-semibold">Patient details</h2>
           <div className="grid grid-cols-4 gap-4">
             <Field label="Patient Name">
-              <TextField disabled placeholder="—" />
+              <TextField placeholder="Enter patient name" />
             </Field>
             <Field label="Age">
-              <TextField disabled placeholder="—" />
+              <TextField placeholder="Enter age" />
             </Field>
             <Field label="Gender">
-              <TextField disabled placeholder="—" />
+              <TextField placeholder="Enter gender" />
             </Field>
             <Field label="Category">
-              <TextField disabled placeholder="—" />
+              <TextField placeholder="Enter category" />
             </Field>
 
             <Field label="Address" span={2}>
-              <TextField disabled placeholder="—" />
+              <TextField placeholder="Enter address" />
             </Field>
             <Field label="Department">
               <SelectField options={DEPARTMENTS} value={department} onChange={setDepartment} />
@@ -197,29 +128,18 @@ export default function AntenatalRegistration() {
             <Button variant="outline" className="text-[13px] font-medium text-slate-600">
               Clear
             </Button>
-            {/* <Button
-              className="gap-1.5 text-white text-[13px]"
+            <Button
+              onClick={() => {
+                notify.saveSuccess("Record saved successfully.");
+                navigate("/registered-anc-records");
+              }}
+              className="gap-1.5 text-white text-[13px] cursor-pointer"
               style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
             >
-              Save & Next
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Button> */}
+              Save ANC Registration
+            </Button>
           </div>
         </div>
-      </div>
-
-      {/* Registered records */}
-      <div className="my-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[14.5px] font-semibold">Registered ANC records</h2>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search patient / UHID"
-            className="h-9 w-60 rounded-[4px] border border-input bg-slate-50 px-3 text-[13px] outline-none focus:border-slate-400"
-          />
-        </div>
-        <DataTable columns={columns} data={filteredData} />
       </div>
     </div>
   );

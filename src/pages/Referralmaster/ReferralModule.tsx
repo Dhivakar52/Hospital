@@ -1,41 +1,15 @@
 import * as React from "react";
-import { type ColumnDef } from "@tanstack/react-table";
-import { UserPlus, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/common/Datatable";
 import { Field, TextField, SelectField } from "@/components/FormPrimitives";
-
-interface ReferralRow {
-  referralName: string;
-  designation: string;
-  hospitalName: string;
-  contactNo: string;
-}
+import { notify } from "@/lib/notify";
 
 const DESIGNATIONS = ["Consultant", "General Practitioner", "Surgeon", "Specialist"] as const;
 
-const MOCK_REFERRALS: ReferralRow[] = [
-  { referralName: "Dr. Meena Kumar", designation: "Consultant", hospitalName: "Apollo Speciality", contactNo: "9840012345" },
-  { referralName: "Dr. Arjun Nair", designation: "General Practitioner", hospitalName: "SRM Global Hospitals", contactNo: "9884023456" },
-  { referralName: "Dr. Sathish Babu", designation: "Surgeon", hospitalName: "Fortis Malar", contactNo: "9445034567" },
-];
-
-const columns: ColumnDef<ReferralRow>[] = [
-  { accessorKey: "referralName", header: "Referral Name" },
-  { accessorKey: "designation", header: "Designation" },
-  { accessorKey: "hospitalName", header: "Hospital Name" },
-  { accessorKey: "contactNo", header: "Contact No" },
-];
-
 export default function ReferralModule() {
+  const navigate = useNavigate();
   const [designation, setDesignation] = React.useState<string>("");
-  const [searchTerm, setSearchTerm] = React.useState("");
-
-  const filteredData = React.useMemo(() => {
-    if (!searchTerm) return MOCK_REFERRALS;
-    const q = searchTerm.toLowerCase();
-    return MOCK_REFERRALS.filter((r) => r.referralName.toLowerCase().includes(q));
-  }, [searchTerm]);
 
   return (
     <div>
@@ -51,10 +25,19 @@ export default function ReferralModule() {
           <div>
             <h1 className="text-[17px] font-semibold">Referral Master</h1>
             <p className="text-[12.5px] text-muted-foreground">
-              Manage referring doctor details
+              Add new referring doctor details
             </p>
           </div>
         </div>
+
+        <Button
+          onClick={() => navigate("/referral-master-records")}
+          className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
+          style={{ background: "var(--blue-btn)" }}
+        >
+          <UserPlus className="h-4 w-4" />
+          View Referral Master
+        </Button>
       </div>
 
       {/* Form card */}
@@ -81,36 +64,17 @@ export default function ReferralModule() {
               Clear
             </Button>
             <Button
-              className="text-white text-[13px]"
+              onClick={() => {
+                notify.saveSuccess("Record saved successfully.");
+                navigate("/referral-master-records");
+              }}
+              className="text-white text-[13px] cursor-pointer"
               style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
             >
-              Save
+              Save Referral
             </Button>
           </div>
         </div>
-      </div>
-
-      {/* Search + results */}
-      <div className="my-4">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="max-w-sm flex-1">
-            <Field label="Referral Name">
-              <TextField
-                placeholder="Search referral"
-                value={searchTerm}
-                onChange={setSearchTerm}
-              />
-            </Field>
-          </div>
-          <Button
-            className="gap-1.5 text-white text-[13px]"
-            style={{ background: "var(--blue-btn)", marginTop: "22px" }}
-          >
-            <Search className="h-3.5 w-3.5" />
-            Search
-          </Button>
-        </div>
-        <DataTable columns={columns} data={filteredData} />
       </div>
     </div>
   );

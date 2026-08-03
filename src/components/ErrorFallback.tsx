@@ -1,4 +1,7 @@
-import {type FallbackProps } from 'react-error-boundary'
+export interface FallbackProps {
+  error: unknown
+  resetErrorBoundary: (...args: unknown[]) => void
+}
 
 // Type guard function
 function isError(error: unknown): error is Error {

@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
+import { notify } from "@/lib/notify"
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives"
 import type { RegistrationDraft } from "./Registration"
 
@@ -53,12 +54,21 @@ interface RegisteredPatientsTableProps {
   newPatient?: RegistrationDraft | null
 }
 
+import { BarcodePreviewModal } from "@/components/BarcodePreviewModal"
+import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal"
+
 export default function RegisteredPatientsTable({ newPatient }: RegisteredPatientsTableProps) {
   const [data, setData] = useState<Patient[]>([])
   const [filteredData, setFilteredData] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+
+  // Print & Barcode preview states
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false)
+  const [selectedPrintPatient, setSelectedPrintPatient] = useState<Patient | null>(null)
+  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState(false)
+  const [selectedBarcodePatient, setSelectedBarcodePatient] = useState<Patient | null>(null)
 
   // Dialog states
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -151,10 +161,9 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
         ]
         setData(sampleData)
         setFilteredData(sampleData)
-        toast.success("Data loaded successfully!")
       } catch (error) {
         console.error("Error fetching data:", error)
-        toast.error("Failed to load patient data")
+        notify.serverError("Failed to load patient data")
       } finally {
         setLoading(false)
       }
@@ -167,14 +176,15 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
   useEffect(() => {
     let result = data
 
-    if (search) {
-      const searchLower = search.toLowerCase()
+    if (search.trim()) {
+      const searchLower = search.trim().toLowerCase()
       result = result.filter((patient) =>
         patient.patientName.toLowerCase().includes(searchLower) ||
         patient.id.toLowerCase().includes(searchLower) ||
         patient.opNo.toLowerCase().includes(searchLower) ||
+        (patient.phone && patient.phone.toLowerCase().includes(searchLower)) ||
         patient.department.toLowerCase().includes(searchLower) ||
-        patient.email?.toLowerCase().includes(searchLower)
+        (patient.email && patient.email.toLowerCase().includes(searchLower))
       )
     }
 
@@ -279,7 +289,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
     }
     setData([newPatient, ...data])
     handlePanelClose()
-    toast.success("Patient added successfully!")
+    notify.saveSuccess("Record saved successfully.")
   }
 
   const confirmEdit = () => {
@@ -291,7 +301,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
     )
     setData(updatedData)
     handlePanelClose()
-    toast.success("Patient updated successfully!")
+    notify.updateSuccess("Record updated successfully.")
   }
 
   const confirmDelete = async () => {
@@ -305,9 +315,9 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
       setData(updatedData)
       setIsDeleteOpen(false)
       setSelectedPatient(null)
-      toast.success("Patient deleted successfully!")
+      notify.deleteSuccess("Record deleted successfully.")
     } catch (error) {
-      toast.error("Failed to delete patient")
+      notify.serverError("Failed to delete the record. Please try again.")
     } finally {
       setIsDeleting(false)
     }
@@ -361,6 +371,14 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
               item={patient}
               onView={handleView}
               onEdit={handleEdit}
+              onPrint={(p) => {
+                setSelectedPrintPatient(p)
+                setIsPrintModalOpen(true)
+              }}
+              onBarcode={(p) => {
+                setSelectedBarcodePatient(p)
+                setIsBarcodeModalOpen(true)
+              }}
               onDelete={handleDelete}
             />
           </div>
@@ -1156,6 +1174,26 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
         confirmLabel="Delete"
         cancelLabel="Cancel"
         isDeleting={isDeleting}
+      />
+
+      {/* Patient Print Preview Modal */}
+      <PatientPrintPreviewModal
+        patient={selectedPrintPatient}
+        isOpen={isPrintModalOpen}
+        onClose={() => {
+          setIsPrintModalOpen(false)
+          setSelectedPrintPatient(null)
+        }}
+      />
+
+      {/* Barcode & QR Code Preview Modal */}
+      <BarcodePreviewModal
+        patient={selectedBarcodePatient}
+        isOpen={isBarcodeModalOpen}
+        onClose={() => {
+          setIsBarcodeModalOpen(false)
+          setSelectedBarcodePatient(null)
+        }}
       />
     </div>
   )

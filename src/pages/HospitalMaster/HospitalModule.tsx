@@ -1,40 +1,11 @@
-import * as React from "react";
-import { type ColumnDef } from "@tanstack/react-table";
-import { Building2, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/common/Datatable";
 import { Field, TextField } from "@/components/FormPrimitives";
-
-interface HospitalRow {
-  hospital: string;
-  areaName: string;
-  cityName: string;
-  contactNo: string;
-  state: string;
-}
-
-const MOCK_HOSPITALS: HospitalRow[] = [
-  { hospital: "SRM Global Hospitals", areaName: "Vadapalani", cityName: "Chennai", contactNo: "044-45923000", state: "Tamil Nadu" },
-  { hospital: "Apollo Speciality", areaName: "Vanagaram", cityName: "Chennai", contactNo: "044-40200000", state: "Tamil Nadu" },
-  { hospital: "Fortis Malar", areaName: "Adyar", cityName: "Chennai", contactNo: "044-42892222", state: "Tamil Nadu" },
-];
-
-const columns: ColumnDef<HospitalRow>[] = [
-  { accessorKey: "hospital", header: "Hospital" },
-  { accessorKey: "areaName", header: "Area Name" },
-  { accessorKey: "cityName", header: "City Name" },
-  { accessorKey: "contactNo", header: "Contact No" },
-  { accessorKey: "state", header: "State" },
-];
+import { notify } from "@/lib/notify";
 
 export default function HospitalModule() {
-  const [searchTerm, setSearchTerm] = React.useState("");
-
-  const filteredData = React.useMemo(() => {
-    if (!searchTerm) return MOCK_HOSPITALS;
-    const q = searchTerm.toLowerCase();
-    return MOCK_HOSPITALS.filter((r) => r.hospital.toLowerCase().includes(q));
-  }, [searchTerm]);
+  const navigate = useNavigate();
 
   return (
     <div>
@@ -50,39 +21,45 @@ export default function HospitalModule() {
           <div>
             <h1 className="text-[17px] font-semibold">Hospital Master</h1>
             <p className="text-[12.5px] text-muted-foreground">
-              Manage referring hospital details
+              Register referring hospital details
             </p>
           </div>
         </div>
+
+        <Button
+          onClick={() => navigate("/hospital-master-records")}
+          className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
+          style={{ background: "var(--blue-btn)" }}
+        >
+          <Building2 className="h-4 w-4" />
+          View Hospital Master Records
+        </Button>
       </div>
 
       {/* Form card */}
       <div className="rounded-md border border-slate-200" style={{ background: "var(--background)" }}>
         <div className="px-6 py-6">
           <div className="grid grid-cols-3 gap-4">
-            <Field label="Hospital" required>
+            <Field label="Hospital Name" required>
               <TextField placeholder="Enter hospital name" />
             </Field>
-            <Field label="Street">
-              <TextField placeholder="Enter street" />
-            </Field>
-            <Field label="Location">
-              <TextField placeholder="Enter location" />
-            </Field>
-
             <Field label="Area Name">
               <TextField placeholder="Enter area name" />
             </Field>
-            <Field label="PIN Code">
-              <TextField placeholder="Enter PIN code" />
-            </Field>
-            <Field label="Contact No" required>
-              <TextField placeholder="Enter contact number" />
-            </Field>
-
-            <Field label="City Name" required>
+            <Field label="City Name">
               <TextField placeholder="Enter city name" />
             </Field>
+
+            <Field label="Contact No">
+              <TextField placeholder="Enter contact number" />
+            </Field>
+            <Field label="Pincode">
+              <TextField placeholder="Enter pincode" />
+            </Field>
+            <Field label="District">
+              <TextField placeholder="Enter district" />
+            </Field>
+
             <Field label="State">
               <TextField placeholder="Enter state" />
             </Field>
@@ -96,36 +73,17 @@ export default function HospitalModule() {
               Clear
             </Button>
             <Button
-              className="text-white text-[13px]"
+              onClick={() => {
+                notify.saveSuccess("Record saved successfully.");
+                navigate("/hospital-master-records");
+              }}
+              className="text-white text-[13px] cursor-pointer"
               style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
             >
-              Save
+              Save Hospital
             </Button>
           </div>
         </div>
-      </div>
-
-      {/* Search + results */}
-      <div className="my-4">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="max-w-sm flex-1">
-            <Field label="Hospital Name">
-              <TextField
-                placeholder="Search hospital"
-                value={searchTerm}
-                onChange={setSearchTerm}
-              />
-            </Field>
-          </div>
-          <Button
-            className="gap-1.5 text-white text-[13px]"
-            style={{ background: "var(--blue-btn)", marginTop: "22px" }}
-          >
-            <Search className="h-3.5 w-3.5" />
-            Search
-          </Button>
-        </div>
-        <DataTable columns={columns} data={filteredData} />
       </div>
     </div>
   );

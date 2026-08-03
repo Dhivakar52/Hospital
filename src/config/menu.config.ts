@@ -1,20 +1,13 @@
 import {
   LayoutDashboard,
-  // BarChart,
-  // Users,
-  // UserPlus,
-  // UserCog,
-  // Settings,
-  // Bell,
-  // Palette,
-  // LogIn,
-  // FileText,
-  // Calendar,
-  // MessageSquare,
-  // Activity,
-  // User,
-  // Shield,
-  // UserCircle,
+  Users,
+  UsersRound,
+  Stethoscope,
+  CalendarClock,
+  CalendarX,
+  Baby,
+  Building2,
+  UserCheck,
   type LucideIcon,
 } from "lucide-react"
 import { lazy } from "react"
@@ -35,48 +28,36 @@ export interface MenuItem {
 
 // ✅ Menu data for sidebar
 export const menuConfig: MenuItem[] = [
-
-    { 
+  { 
     title: "Dashboard", 
     url: "/dashboard", 
     icon: LayoutDashboard 
   },
-
-  // { 
-  //   title: "OP", 
-  //   url: "/registration", 
-  //   icon: LayoutDashboard 
-  // },
-
-{
+  {
     title: "OP",
     url: "/op",
-    icon: LayoutDashboard,
+    icon: Users,
     items: [
-      { title: "Registration", url: "/op/registration", icon: LayoutDashboard },
-      { title: "Diagnosis Entry", url: "/op/diagnosisentry", icon: LayoutDashboard },
-       { title: "Revisit", url: "/op/revisit", icon: LayoutDashboard },
-      { title: "Revisit Cancellation", url: "/op/revisit-cancellation", icon: LayoutDashboard },
-      // { title: "Appearance", url: "/settings/appearance", icon: LayoutDashboard },
+      { title: "Registration", url: "/registered-patients", icon: UsersRound },
+      { title: "Diagnosis Entry", url: "/op/diagnosisentry", icon: Stethoscope },
+      { title: "Revisit", url: "/revisit-records", icon: CalendarClock },
+      { title: "Revisit Cancellation", url: "/op/revisit-cancellation", icon: CalendarX },
     ],
   },
-
-
-
   { 
     title: "AntenatalRegistration", 
-    url: "/antenatal-registration", 
-    icon: LayoutDashboard 
+    url: "/registered-anc-records", 
+    icon: Baby 
   },
-   { 
+  { 
     title: "Hospital Master", 
-    url: "/hospital-master", 
-    icon: LayoutDashboard 
+    url: "/hospital-master-records", 
+    icon: Building2 
   },
-    { 
+  { 
     title: "Referral Master", 
-    url: "/referral-master", 
-    icon: LayoutDashboard 
+    url: "/referral-master-records", 
+    icon: UserCheck 
   },
 
   //     { 
@@ -151,8 +132,15 @@ export const getRoutes = () => {
   // OP Screen
      {
       path: "/op/registration",
-      name: "Registrtaion",
+      name: "Registration",
       component: lazy(() => import("@/pages/OP/Registration/Registration")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/registered-patients",
+      name: "Registered Patients",
+      component: lazy(() => import("@/pages/OP/Registration/RegisteredPatientsPage")),
       exact: true,
       protected: true,
     },
@@ -170,10 +158,24 @@ export const getRoutes = () => {
       exact: true,
       protected: true,
     },
-     {
+    {
+      path: "/revisit-records",
+      name: "Revisit Records",
+      component: lazy(() => import("@/pages/OP/Revisit/RevisitRecordsPage")),
+      exact: true,
+      protected: true,
+    },
+    {
       path: "/op/revisit-cancellation",
       name: "Revisit Cancellation",
       component: lazy(() => import("@/pages/OP/RevisitCancellation/RevisitCancelModule")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/op/revisit-cancellation/new",
+      name: "New Revisit Cancellation",
+      component: lazy(() => import("@/pages/OP/RevisitCancellation/RevisitCancelFormPage")),
       exact: true,
       protected: true,
     },
@@ -186,6 +188,13 @@ export const getRoutes = () => {
       exact: true,
       protected: true,
     },
+    {
+      path: "/registered-anc-records",
+      name: "Registered ANC Records",
+      component: lazy(() => import("@/pages/AntenatalRegistration/AncRecordsPage")),
+      exact: true,
+      protected: true,
+    },
      {
       path: "/hospital-master",
       name: "Athena",
@@ -194,9 +203,30 @@ export const getRoutes = () => {
       protected: true,
     },
     {
+      path: "/hospital-master-records",
+      name: "Hospital Master Records",
+      component: lazy(() => import("@/pages/HospitalMaster/HospitalMasterPage")),
+      exact: true,
+      protected: true,
+    },
+    {
       path: "/referral-master",
       name: "Referral Master",
       component: lazy(() => import("@/pages/Referralmaster/ReferralModule")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/referral-master-records",
+      name: "Referral Master Records",
+      component: lazy(() => import("@/pages/Referralmaster/ReferralMasterPage")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/notifications",
+      name: "Notifications",
+      component: lazy(() => import("@/pages/Notifications/NotificationsPage")),
       exact: true,
       protected: true,
     },
