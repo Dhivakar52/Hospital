@@ -1,6 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Field, TextField, SelectField, DateField } from "../../components/FormPrimitives";
+import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
 import type { RegistrationDraft } from "./Registration";
 
 type DraftPanelProps = {

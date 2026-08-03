@@ -28,7 +28,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { Field, TextField, SelectField, DateField } from "../../components/FormPrimitives"
+import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives"
 import type { RegistrationDraft } from "./Registration"
 
 // ✅ Data model updated to match: UHID No, OP No, Title, Patient Name, F/H/W/O, Area, City, Department

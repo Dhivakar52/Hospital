@@ -42,16 +42,49 @@ export const menuConfig: MenuItem[] = [
     icon: LayoutDashboard 
   },
 
+  // { 
+  //   title: "OP", 
+  //   url: "/registration", 
+  //   icon: LayoutDashboard 
+  // },
+
+{
+    title: "OP",
+    url: "/op",
+    icon: LayoutDashboard,
+    items: [
+      { title: "Registration", url: "/op/registration", icon: LayoutDashboard },
+      { title: "Diagnosis Entry", url: "/op/diagnosisentry", icon: LayoutDashboard },
+       { title: "Revisit", url: "/op/revisit", icon: LayoutDashboard },
+      { title: "Revisit Cancellation", url: "/op/revisit-cancellation", icon: LayoutDashboard },
+      // { title: "Appearance", url: "/settings/appearance", icon: LayoutDashboard },
+    ],
+  },
+
+
+
   { 
-    title: "OP", 
-    url: "/registration", 
+    title: "AntenatalRegistration", 
+    url: "/antenatal-registration", 
     icon: LayoutDashboard 
   },
-  { 
-    title: "Athena", 
-    url: "/athena", 
+   { 
+    title: "Hospital Master", 
+    url: "/hospital-master", 
     icon: LayoutDashboard 
   },
+    { 
+    title: "Referral Master", 
+    url: "/referral-master", 
+    icon: LayoutDashboard 
+  },
+
+  //     { 
+  //   title: "Referral Master", 
+  //   url: "/referral-master", 
+  //   icon: LayoutDashboard 
+  // },
+
 
 
 
@@ -115,18 +148,55 @@ export const getRoutes = () => {
       exact: true,
       protected: true,
     },
-
+  // OP Screen
      {
-      path: "/registration",
-      name: "OP",
-      component: lazy(() => import("@/pages/PatientRegistration/Registration")),
+      path: "/op/registration",
+      name: "Registrtaion",
+      component: lazy(() => import("@/pages/OP/Registration/Registration")),
       exact: true,
       protected: true,
     },
      {
-      path: "/athena",
+      path: "/op/diagnosisentry",
+      name: "OP",
+      component: lazy(() => import("@/pages/OP/Diagnosisentry/DiagnoModule")),
+      exact: true,
+      protected: true,
+    },
+{
+      path: "/op/revisit",
+      name: "Revisit",
+      component: lazy(() => import("@/pages/OP/Revisit/RevisitModule")),
+      exact: true,
+      protected: true,
+    },
+     {
+      path: "/op/revisit-cancellation",
+      name: "Revisit Cancellation",
+      component: lazy(() => import("@/pages/OP/RevisitCancellation/RevisitCancelModule")),
+      exact: true,
+      protected: true,
+    },
+
+
+     {
+      path: "/antenatal-registration",
+      name: "AntenatalRegistration",
+      component: lazy(() => import("@/pages/AntenatalRegistration/AthenaModule")),
+      exact: true,
+      protected: true,
+    },
+     {
+      path: "/hospital-master",
       name: "Athena",
-      component: lazy(() => import("@/pages/AthenaRegistration/AthenaModule")),
+      component: lazy(() => import("@/pages/HospitalMaster/HospitalModule")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/referral-master",
+      name: "Referral Master",
+      component: lazy(() => import("@/pages/Referralmaster/ReferralModule")),
       exact: true,
       protected: true,
     },

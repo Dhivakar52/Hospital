@@ -30,7 +30,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom"
 import NotificationPanel from "./NotificationPanel"
 import { useTheme } from "@/context/ThemeContext"
-import { useAuth } from "@/context/AuthContext" // Import useAuth
+import { useAuth } from "@/context/AuthContext"
 import { toast } from "sonner"
 
 interface HeaderProps {
@@ -40,19 +40,69 @@ interface HeaderProps {
   }[]
 }
 
+// ✅ Segments that should render fully uppercase instead of
+// Title-Case (HIS module abbreviations). Add more as needed.
+const ACRONYMS = new Set(["op", "ip", "mrd", "anc", "uhid", "abha", "vip", "kin", "opd", "ipd"])
+
 // Helper function to format breadcrumb labels
 const formatLabel = (str: string): string => {
-  return str
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+  // First, convert to lowercase for checking
+  const lowerStr = str.toLowerCase()
+  
+  // Check if it's an acronym (case insensitive)
+  if (ACRONYMS.has(lowerStr)) {
+    return str.toUpperCase() // "op" → "OP", "Op" → "OP"
+  }
+  
+  // Direct mapping for common combined words
+  const wordMap: Record<string, string> = {
+    'diagnosisentry': 'Diagnosis Entry',
+    'patientregistration': 'Patient Registration',
+    'appointmentschedule': 'Appointment Schedule',
+    'billingreport': 'Billing Report',
+    'labtest': 'Lab Test',
+    'bloodtest': 'Blood Test',
+    'opconsultation': 'OP Consultation',
+    'ippatient': 'IP Patient',
+    'mrdrecord': 'MRD Record',
+    'registration': 'Registration',
+    'diagnosis': 'Diagnosis',
+    'entry': 'Entry',
+    'patient': 'Patient',
+    'appointment': 'Appointment',
+    'billing': 'Billing',
+    'report': 'Report',
+  }
+  
+  if (wordMap[lowerStr]) {
+    return wordMap[lowerStr]
+  }
+  
+  // Split by '-' if any
+  const parts = str.split('-')
+  if (parts.length > 1) {
+    return parts
+      .map(part => {
+        const partLower = part.toLowerCase()
+        if (ACRONYMS.has(partLower)) {
+          return part.toUpperCase()
+        }
+        return part.charAt(0).toUpperCase() + part.slice(1)
+      })
+      .join(' ')
+  }
+  
+  // Default: capitalize first letter
+  // For "registration" → "Registration"
+  // For "diagnosis" → "Diagnosis"
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 export function Header({
   breadcrumbItems = []
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme()
-  const { user, logout } = useAuth() // Get auth data
+  const { user, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -60,31 +110,24 @@ export function Header({
   const generateBreadcrumbs = () => {
     const pathSegments = location.pathname.split('/').filter(segment => segment !== '')
 
-    // If no segments, return just Dashboard
+    // If no segments, we're at the root — show Dashboard only
     if (pathSegments.length === 0) {
-      return [{ label: "Dashboard", href: "/dashboard" }]
+      return [{ label: "Dashboard", href: undefined }]
     }
 
-    const breadcrumbs = []
+    const breadcrumbs: { label: string; href?: string }[] = []
     let currentPath = ''
 
-    // Add Home/Dashboard as first item
-    breadcrumbs.push({ label: "Home", href: "/dashboard" })
-
-    // Process each segment
     for (let i = 0; i < pathSegments.length; i++) {
       const segment = pathSegments[i]
       currentPath += `/${segment}`
 
-      // Format the label
-      let label = formatLabel(segment)
-
-      // Check if this is the last segment
+      const label = formatLabel(segment)
       const isLast = i === pathSegments.length - 1
 
       breadcrumbs.push({
-        label: label,
-        href: isLast ? undefined : currentPath
+        label,
+        href: isLast ? undefined : currentPath,
       })
     }
 
