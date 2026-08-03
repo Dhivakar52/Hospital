@@ -18,20 +18,94 @@ interface LayoutProps {
   }[]
 }
 
+// Acronyms that should be uppercase
+const ACRONYMS = new Set(["op", "ip", "mrd", "anc", "uhid", "abha", "vip", "kin", "opd", "ipd"])
+
+// Format label function
+const formatLabel = (str: string): string => {
+  const lowerStr = str.toLowerCase()
+  
+  // Check if it's an acronym
+  if (ACRONYMS.has(lowerStr)) {
+    return str.toUpperCase()
+  }
+  
+  // Check for combined words like "diagnosisentry"
+  const wordMap: Record<string, string> = {
+    'diagnosisentry': 'Diagnosis Entry',
+    'patientregistration': 'Patient Registration',
+    'appointmentschedule': 'Appointment Schedule',
+    'billingreport': 'Billing Report',
+    'labtest': 'Lab Test',
+    'bloodtest': 'Blood Test',
+    'opconsultation': 'OP Consultation',
+    'ippatient': 'IP Patient',
+    'mrdrecord': 'MRD Record',
+    'registration': 'Registration',
+    'register': 'Register',
+    'diagnosis': 'Diagnosis',
+    'entry': 'Entry',
+    'patient': 'Patient',
+    'appointment': 'Appointment',
+    'billing': 'Billing',
+    'report': 'Report',
+  }
+  
+  if (wordMap[lowerStr]) {
+    return wordMap[lowerStr]
+  }
+  
+  // Split by '-' if any
+  const parts = str.split('-')
+  if (parts.length > 1) {
+    return parts
+      .map(part => {
+        const partLower = part.toLowerCase()
+        if (ACRONYMS.has(partLower)) {
+          return part.toUpperCase()
+        }
+        return part.charAt(0).toUpperCase() + part.slice(1)
+      })
+      .join(' ')
+  }
+  
+  // Default: capitalize first letter
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
 export function Layout({ 
   children, 
-  // user, 
-  // notificationCount = 3,
   breadcrumbItems = []
 }: LayoutProps) {
   const location = useLocation()
-  const pathname = location.pathname.replace('/', '') || 'Dashboard'
-  const pageName = pathname.charAt(0).toUpperCase() + pathname.slice(1)
-
-  const autoBreadcrumbs = breadcrumbItems.length > 0 ? breadcrumbItems : [
-    { label: "Home", href: "/dashboard" },
-    { label: pageName }
-  ]
+  
+  // Generate breadcrumbs from path (without href/links)
+  const generateBreadcrumbs = () => {
+    const pathSegments = location.pathname.split('/').filter(segment => segment !== '')
+    
+    // If no segments, show Dashboard
+    if (pathSegments.length === 0) {
+      return [{ label: "Dashboard" }]
+    }
+    
+    const breadcrumbs: { label: string }[] = []
+    
+    for (let i = 0; i < pathSegments.length; i++) {
+      const segment = pathSegments[i]
+      const label = formatLabel(segment)
+      
+      breadcrumbs.push({
+        label,
+      })
+    }
+    
+    return breadcrumbs
+  }
+  
+  // Use provided breadcrumbItems or auto-generate from path
+  const autoBreadcrumbs = breadcrumbItems.length > 0 
+    ? breadcrumbItems 
+    : generateBreadcrumbs()
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -39,17 +113,9 @@ export function Layout({
         <AppSidebar />
 
         <SidebarInset className="flex-1 flex flex-col min-h-screen w-0">
-          <Header 
-            // user={user}
-            // notificationCount={notificationCount}
-            breadcrumbItems={autoBreadcrumbs}
-          />
+          <Header breadcrumbItems={autoBreadcrumbs} />
 
           <main className="flex-1 p-6 layerBg">{children || <Outlet/>}</main>
-
-          {/* <footer className="border-t py-4 px-6 text-center text-sm text-muted-foreground bg-background">
-            <p>© 2026 MyApp. All rights reserved.</p>
-          </footer> */}
         </SidebarInset>
       </div>
     </SidebarProvider>
