@@ -5,13 +5,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import {  SquareChartGantt, Pencil, Trash2, Menu } from "lucide-react"
+import { SquareChartGantt, Pencil, Trash2, Menu, Printer, Barcode } from "lucide-react"
 
 type ActionMenuProps<T> = {
   item: T;
   onView?: (item: T) => void;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+  onPrint?: (item: T) => void;
+  onBarcode?: (item: T) => void;
   onAuditLog?: (item: T) => void;
   onCollect?: (item: T) => void;
   onAck?: (item: T) => void;
@@ -24,6 +26,8 @@ export function ActionMenu<T>({
   
   onView,
   onEdit,
+  onPrint,
+  onBarcode,
   onDelete,
   onAuditLog,
   onCollect,
@@ -38,7 +42,7 @@ export function ActionMenu<T>({
           <Menu className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-30">
+      <DropdownMenuContent align="end" className="w-40">
         {onView && (
           <DropdownMenuItem onClick={() => onView(item)}>
             <SquareChartGantt className="mr-2 h-4 w-4" />
@@ -49,6 +53,18 @@ export function ActionMenu<T>({
           <DropdownMenuItem onClick={() => onEdit(item)}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit
+          </DropdownMenuItem>
+        )}
+        {onPrint && (
+          <DropdownMenuItem onClick={() => onPrint(item)}>
+            <Printer className="mr-2 h-4 w-4 text-blue-600" />
+            Print
+          </DropdownMenuItem>
+        )}
+        {onBarcode && (
+          <DropdownMenuItem onClick={() => onBarcode(item)}>
+            <Barcode className="mr-2 h-4 w-4 text-purple-600" />
+            Generate Barcode
           </DropdownMenuItem>
         )}
         {onAuditLog && (

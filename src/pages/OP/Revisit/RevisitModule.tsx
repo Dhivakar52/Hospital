@@ -1,61 +1,12 @@
 import * as React from "react";
-import { type ColumnDef } from "@tanstack/react-table";
-import { CalendarClock, BarChart3, Search, ArrowRight, ArrowLeft , ExternalLink } from "lucide-react";
+import { CalendarClock, Search, ArrowRight, ArrowLeft , ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RevisitStepper } from "./Revisitstepper";
-import { DataTable } from "@/common/Datatable";
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
 import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 
 type StepKey = 1 | 2 | 3 | 4 | 5;
-
-interface RevisitRow {
-  uhidNo: string;
-  opNo: string;
-  title: string;
-  patientName: string;
-  fhwo: string;
-  area: string;
-  city: string;
-  department: string;
-}
-
-const MOCK_DATA: RevisitRow[] = [
-  { uhidNo: "3995988", opNo: "26602286", title: "Mr", patientName: "NITESH KUMAR", fhwo: "Self", area: "", city: "Chennai", department: "General Medicine" },
-  { uhidNo: "3489205", opNo: "26602285", title: "Mrs", patientName: "SUVETHA", fhwo: "DHEENA DHAYALAN", area: "", city: "Chengalpattu", department: "Urology" },
-  { uhidNo: "4137281", opNo: "26602284", title: "Miss", patientName: "ERGAMREDDY SHARMILA", fhwo: "D/O SIVASHANKARAREDDY", area: "Potheri", city: "Chengalpattu", department: "Psychiatry" },
-  { uhidNo: "3709448", opNo: "26602281", title: "Mr", patientName: "PRIYANSHU PANDA", fhwo: "S/O PRASATH PANDA", area: "Potheri", city: "Chengalpattu", department: "Dermatology" },
-  { uhidNo: "2879469", opNo: "26602280", title: "Mr", patientName: "MURUGESAN", fhwo: "S/O VEERASAMY", area: "Kancheepuram", city: "Kancheepuram", department: "Family Medicine" },
-];
-
-const columns: ColumnDef<RevisitRow>[] = [
-  { accessorKey: "uhidNo", header: "UHID No" },
-  { accessorKey: "opNo", header: "OP No" },
-  { accessorKey: "title", header: "Title" },
-  { accessorKey: "patientName", header: "Patient Name" },
-  { accessorKey: "fhwo", header: "F/H/W/O" },
-  { accessorKey: "area", header: "Area" },
-  { accessorKey: "city", header: "City" },
-  { accessorKey: "department", header: "Department" },
-  {
-    id: "print",
-    header: "",
-    cell: () => (
-      <span className="cursor-pointer text-[13px] font-medium hover:underline" style={{ color: "var(--blue-text-color)" }}>
-        Print
-      </span>
-    ),
-  },
-  {
-    id: "barcode",
-    header: "",
-    cell: () => (
-      <span className="cursor-pointer text-[13px] font-medium hover:underline" style={{ color: "var(--blue-text-color)" }}>
-        Barcode
-      </span>
-    ),
-  },
-];
 
 const DEPARTMENTS = ["General Medicine", "General Surgery", "Urology", "Psychiatry", "Dermatology", "Family Medicine"] as const;
 const DOCTORS = ["Dr. Kavitha R", "Dr. Sundar M", "Dr. Priya S"] as const;
@@ -72,7 +23,10 @@ const MODE_OF_PAY = ["Cash", "Card", "UPI", "Net Banking"] as const;
 const BANK_NAME = ["Select", "SBI", "HDFC", "ICICI"] as const;
 const KIN_RELATIONSHIP = ["Spouse", "Parent", "Child", "Sibling", "Other"] as const;
 
+import { useNavigate } from "react-router-dom";
+
 export default function OPRevisit() {
+  const navigate = useNavigate();
   const [step, setStep] = React.useState<StepKey>(1);
   const [insurance, setInsurance] = React.useState<"No" | "Yes">("No");
   const [payType, setPayType] = React.useState<"Paid" | "Free">("Paid");
@@ -88,12 +42,13 @@ export default function OPRevisit() {
       return;
     }
     if (!uhidNo.trim() || !patientName.trim() || !contactNo1.trim()) {
-      toast.error("UHID No, Patient Name and Contact No-I are required.");
+      notify.validationError("Please fill all mandatory fields.");
       setStep(1);
       return;
     }
-    toast.success("OP re-visit registered successfully.");
+    notify.saveSuccess("Record saved successfully.");
     setStep(1);
+    navigate("/revisit-records");
   };
   const goBack = () => setStep((s) => (s > 1 ? ((s - 1) as StepKey) : s));
   const clearDraft = () => {
@@ -392,12 +347,12 @@ export default function OPRevisit() {
             OP Search
           </Button>
           <Button
-            variant="outline"
-            className="gap-2 text-[13px] border-blue-200"
-            style={{ color: "var(--blue-text-color)" }}
+            onClick={() => navigate("/revisit-records")}
+            className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
+            style={{ background: "var(--blue-btn)" }}
           >
-            <BarChart3 className="h-4 w-4" />
-            OP Statistics
+            <CalendarClock className="h-4 w-4" />
+            View Revisit Records
           </Button>
         </div>
       </div>
@@ -428,37 +383,6 @@ export default function OPRevisit() {
             </Button>
           </div>
         </div>
-      </div>
-
-      {/* View and Edit */}
-      <div className="mt-4 rounded-md border border-slate-200" style={{ background: "var(--background)" }}>
-        <div className="px-6 py-5">
-          <h2 className="mb-4 text-[13.5px] font-semibold">View and Edit</h2>
-          <div className="grid grid-cols-4 items-end gap-4">
-            <Field label="UHID No">
-              <TextField placeholder="Enter UHID number" />
-            </Field>
-            <Field label="OP No">
-              <TextField placeholder="Enter OP number" />
-            </Field>
-            <Field label="No. Of Records">
-              <TextField defaultValue="5" />
-            </Field>
-            <Button
-              variant="outline"
-              className="h-9 text-[13px]"
-              style={{ color: "var(--blue-text-color)" }}
-            >
-              Get Details
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* View and Print */}
-      <div className="my-4">
-        <h2 className="mb-3 text-[14.5px] font-semibold">View and Print</h2>
-        <DataTable columns={columns} data={MOCK_DATA} />
       </div>
     </div>
   );
