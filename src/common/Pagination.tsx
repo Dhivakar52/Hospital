@@ -27,40 +27,39 @@ const Pagination: React.FC<PaginationProps> = ({ table, totalCount }) => {
   const start = pageIndex * pageSize + 1;
   const end = Math.min((pageIndex + 1) * pageSize, totalCount);
 
-  // ✅ Ellipsis Pagination Logic
-  const getPages = () => {
+  const getVisiblePages = () => {
     const pages: (number | string)[] = [];
-    const maxVisible = 2;
 
-    // 👉 First pages (1,2,3)
-    for (let i = 1; i <= Math.min(maxVisible, totalPages); i++) {
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+      return pages;
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    pages.push(1);
+
+    if (start > 2) {
+      pages.push("...");
+    }
+
+    for (let i = start; i <= end; i++) {
       pages.push(i);
     }
 
-    // 👉 Show dots after first block
-    if (currentPage > 4 && totalPages > 6) {
+    if (end < totalPages - 1) {
       pages.push("...");
     }
 
-    // 👉 Middle current page (if not near start/end)
-    if (currentPage > 3 && currentPage < totalPages - 2) {
-      pages.push(currentPage);
-    }
+    pages.push(totalPages);
 
-    // 👉 Show dots before last
-    if (currentPage < totalPages - 3 && totalPages > 6) {
-      pages.push("...");
-    }
-
-    // 👉 Last page
-    if (totalPages > maxVisible) {
-      pages.push(totalPages);
-    }
-
-    return pages;
+    return pages.filter((page, index, arr) => arr.indexOf(page) === index);
   };
 
-  const pages = getPages();
+  const pages = getVisiblePages();
 
   return (
     <div className="flex items-center justify-between mt-4">

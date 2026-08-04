@@ -55,7 +55,12 @@ export const PatientPrintPreviewModal: React.FC<PatientPrintPreviewModalProps> =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-xl border border-slate-200">
+      <DialogContent 
+        className="p-0 rounded-xl border border-slate-200"
+        style={{
+          maxWidth: "55%",
+        }}
+      >
         <DialogHeader className="bg-slate-50 px-6 py-4 border-b border-slate-100 print:hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-slate-900">

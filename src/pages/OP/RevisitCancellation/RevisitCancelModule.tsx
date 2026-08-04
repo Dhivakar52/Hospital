@@ -1,77 +1,45 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { CalendarX, Plus, FileText, Pencil } from "lucide-react";
+import { CalendarX, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
-import { Badge } from "@/components/ui/badge";
 import { ActionMenu } from "@/common/ActionMenu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-
-interface CancelledVisitRow {
-  uhidNo: string;
-  opNo: string;
-  patientName: string;
-  revisitNo: string;
-  cancelledDate: string;
-  reason: string;
-  status: string;
-  createdBy: string;
-}
-
-const MOCK_CANCELLED: CancelledVisitRow[] = [
-  {
-    uhidNo: "3995988",
-    opNo: "26602286",
-    patientName: "NITESH KUMAR",
-    revisitNo: "RV-1092",
-    cancelledDate: "03 Aug 2026 17:30",
-    reason: "Patient unavailable for consultation",
-    status: "Cancelled",
-    createdBy: "OP Receptionist",
-  },
-  {
-    uhidNo: "3489205",
-    opNo: "26602285",
-    patientName: "SUVETHA",
-    revisitNo: "RV-1088",
-    cancelledDate: "02 Aug 2026 14:15",
-    reason: "Duplicate registration entry",
-    status: "Cancelled",
-    createdBy: "Sister Mary",
-  },
-  {
-    uhidNo: "4137281",
-    opNo: "26602284",
-    patientName: "ERGAMREDDY SHARMILA",
-    revisitNo: "RV-1076",
-    cancelledDate: "01 Aug 2026 11:20",
-    reason: "Doctor emergency surgery delay",
-    status: "Cancelled",
-    createdBy: "Dr. Kavitha R",
-  },
-  {
-    uhidNo: "3709448",
-    opNo: "26602281",
-    patientName: "PRIYANSHU PANDA",
-    revisitNo: "RV-1065",
-    cancelledDate: "31 Jul 2026 09:45",
-    reason: "Transferred to Casualty Emergency",
-    status: "Cancelled",
-    createdBy: "Staff Nurse",
-  },
-];
+import Status from "@/common/Status";
+import type { CancelledVisitRow } from "@/types/revisitCancellation";
+import { mockRevisitCancellations } from "@/data/mockRevisitCancellations";
+import CustomPanel from "@/common/CustomPanel";
 
 export default function RevisitCancelModule() {
   const navigate = useNavigate();
-  const [data] = useState<CancelledVisitRow[]>(MOCK_CANCELLED);
+  const location = useLocation();
+  const [data, setData] = useState<CancelledVisitRow[]>(mockRevisitCancellations);
   const [viewingRecord, setViewingRecord] = useState<CancelledVisitRow | null>(null);
+
+  useEffect(() => {
+    const newRecord = (location.state as { newRecord?: CancelledVisitRow } | null)?.newRecord;
+    const editedRecord = (location.state as { editedRecord?: CancelledVisitRow; originalRevisitNo?: string } | null)?.editedRecord;
+    const originalRevisitNo = (location.state as { originalRevisitNo?: string } | null)?.originalRevisitNo;
+
+    if (newRecord) {
+      setData((current) => {
+        const exists = current.some((item) => item.revisitNo === newRecord.revisitNo);
+        return exists ? current : [newRecord, ...current];
+      });
+    }
+
+    if (editedRecord && originalRevisitNo) {
+      setData((current) =>
+        current.map((item) =>
+          item.revisitNo === originalRevisitNo ? { ...item, ...editedRecord } : item,
+        ),
+      );
+    }
+
+    if (newRecord || editedRecord) {
+      navigate("/op/revisit-cancellation", { replace: true, state: undefined });
+    }
+  }, [location.state, navigate]);
 
   const columns: ColumnDef<CancelledVisitRow>[] = [
     { accessorKey: "uhidNo", header: "UHID No" },
@@ -83,11 +51,10 @@ export default function RevisitCancelModule() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => (
-        <Badge variant="destructive" className="font-semibold text-[11px] px-2 py-0.5">
-          {row.original.status}
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const status = row.original.status || 'cancelled';
+        return <Status status={status} size="sm" />;
+      },
     },
     { accessorKey: "createdBy", header: "Created By" },
     {
@@ -97,7 +64,7 @@ export default function RevisitCancelModule() {
         <ActionMenu
           item={row.original}
           onView={(item) => setViewingRecord(item)}
-          onEdit={() => navigate("/op/revisit-cancellation/new")}
+          onEdit={(item) => navigate("/op/revisit-cancellation/new", { state: { record: item } })}
           onPrint={() => window.print()}
           onBarcode={() => {}}
         />
@@ -143,81 +110,55 @@ export default function RevisitCancelModule() {
         searchField={(r) => `${r.patientName} ${r.uhidNo} ${r.opNo} ${r.reason}`}
       />
 
-      {/* View Record Details Dialog */}
-      <Dialog open={Boolean(viewingRecord)} onOpenChange={() => setViewingRecord(null)}>
-        <DialogContent className="max-w-md p-0 overflow-hidden rounded-xl border border-slate-200 shadow-xl">
-          <DialogHeader className="bg-slate-50 px-6 py-4 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              <DialogTitle className="text-base font-bold text-slate-900">
-                Revisit Cancellation Details
-              </DialogTitle>
-            </div>
-            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-              Detailed view of selected cancellation record
-            </DialogDescription>
-          </DialogHeader>
-
-          {viewingRecord && (
-            <div className="p-6 space-y-4 text-xs text-slate-700 bg-white">
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <div>
-                  <span className="text-[11px] text-slate-500 block">UHID Number</span>
-                  <span className="font-bold text-slate-900 text-sm font-mono">{viewingRecord.uhidNo}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">OP Number</span>
-                  <span className="font-bold text-slate-900 text-sm font-mono">{viewingRecord.opNo}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-[11px] text-slate-500 block">Patient Name</span>
-                  <span className="font-bold text-slate-900 text-base">{viewingRecord.patientName}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Revisit Number</span>
-                  <span className="font-semibold text-slate-800">{viewingRecord.revisitNo}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Status</span>
-                  <Badge variant="destructive" className="mt-0.5 text-[10.5px]">
-                    {viewingRecord.status}
-                  </Badge>
-                </div>
-                <div className="col-span-2 border-t border-slate-200/80 pt-2">
-                  <span className="text-[11px] text-slate-500 block">Cancellation Reason</span>
-                  <span className="font-medium text-slate-800 text-[13px]">{viewingRecord.reason}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Cancelled Date</span>
-                  <span className="font-medium text-slate-700">{viewingRecord.cancelledDate}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Created By</span>
-                  <span className="font-medium text-slate-700">{viewingRecord.createdBy}</span>
-                </div>
+      <CustomPanel
+        isOpen={Boolean(viewingRecord)}
+        title="Revisit Cancellation Details"
+        onClose={() => setViewingRecord(null)}
+        onSave={() => setViewingRecord(null)}
+        saveLabel="Close"
+        width="620px"
+      >
+        {viewingRecord && (
+          <div className="space-y-5 text-sm text-slate-700">
+            <div className="grid grid-cols-2 gap-4 rounded-lg border border-slate-100 bg-slate-50 p-4">
+              <div>
+                <span className="text-[11px] text-slate-500 block">UHID Number</span>
+                <span className="font-bold text-slate-900 text-sm font-mono">{viewingRecord.uhidNo}</span>
               </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => setViewingRecord(null)}>
-                  Close
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setViewingRecord(null);
-                    navigate("/op/revisit-cancellation/new");
-                  }}
-                  className="text-white text-xs gap-1.5"
-                  style={{ background: "var(--blue-btn)" }}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit Record
-                </Button>
+              <div>
+                <span className="text-[11px] text-slate-500 block">OP Number</span>
+                <span className="font-bold text-slate-900 text-sm font-mono">{viewingRecord.opNo}</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-[11px] text-slate-500 block">Patient Name</span>
+                <span className="font-bold text-slate-900 text-base">{viewingRecord.patientName}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Revisit Number</span>
+                <span className="font-semibold text-slate-800">{viewingRecord.revisitNo}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Status</span>
+                <Status status={viewingRecord.status || "cancelled"} size="sm" />
+              </div>
+              <div className="col-span-2 border-t border-slate-200/80 pt-2">
+                <span className="text-[11px] text-slate-500 block">Cancellation Reason</span>
+                <span className="font-medium text-slate-800 text-[13px]">{viewingRecord.reason}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Cancelled Date</span>
+                <span className="font-medium text-slate-700">{viewingRecord.cancelledDate}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Created By</span>
+                <span className="font-medium text-slate-700">{viewingRecord.createdBy}</span>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+
+           
+          </div>
+        )}
+      </CustomPanel>
     </div>
   );
 }

@@ -86,42 +86,48 @@ export default function DiagnoModule() {
       {/* Form card */}
       <div className="rounded-md border border-slate-200" style={{ background: "var(--background)" }}>
         <div className="px-6 py-6">
-          <div className="grid grid-cols-3 items-end gap-4">
-            <Field label="Date" required>
+          <div className="grid grid-cols-12 items-end gap-4">
+            <Field label="Date" required span={4}>
               <DateField value={date} onChange={setDate} placeholder="Pick a date" />
             </Field>
-            <Field label="Department" required>
+            <Field label="Department" required span={4}>
               <SelectField options={DEPARTMENTS} value={department} onChange={setDepartment} />
             </Field>
-            <Button
-              variant="outline"
-              className="h-9 text-[13px]"
-              style={{ color: "var(--blue-text-color)" }}
-            >
-              Get Details
-            </Button>
+            <div className="col-span-4 flex items-end">
+              <Button
+                variant="outline"
+                className="h-9 w-full max-w-45 text-[13px]"
+                style={{
+                  background: "var(--blue-btn)",
+                  color: "white",
+                  borderColor: "var(--blue-btn)",
+                }}
+              >
+                Get Details
+              </Button>
+            </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-4 items-end gap-4">
-            <Field label="Diagnosis Code">
+          <div className="mt-6 grid grid-cols-12 items-end gap-4">
+            <Field label="Diagnosis Code" span={3}>
               <TextField placeholder="Enter code" value={code} onChange={setCode} />
             </Field>
-            <Field label="Diagnosis Name" span={2}>
+            <Field label="Diagnosis Name" span={5}>
               <TextField placeholder="Enter diagnosis name" value={name} onChange={setName} />
             </Field>
-            <Field label="Count">
+            <Field label="Count" span={2}>
               <TextField placeholder="1" value={count} onChange={setCount} />
             </Field>
-          </div>
-          <div className="mt-3 flex justify-end">
-            <Button
-              onClick={handleAdd}
-              className="gap-1.5 text-white text-[13px]"
-              style={{ background: "var(--blue-btn)" }}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add
-            </Button>
+            <div className="col-span-2 flex items-end">
+              <Button
+                onClick={handleAdd}
+                className="h-9 gap-1.5 text-white text-[13px]"
+                style={{ background: "var(--blue-btn)" }}
+              >
+                <span>Add</span>
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
 
           <div className="mt-5">
@@ -132,12 +138,15 @@ export default function DiagnoModule() {
           </div>
 
           <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
-            <Button variant="outline" className="text-[13px] font-medium text-slate-600">
+            <Button
+              variant="outline"
+              className="h-9 min-w-30 text-[13px] font-medium text-slate-600"
+            >
               Clear
             </Button>
             <Button
-              className="text-white text-[13px]"
-              style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
+              className="h-9 min-w-30 text-[13px] text-white"
+              style={{ background: "var(--blue-btn)", borderRadius: "8px" }}
             >
               Save
             </Button>

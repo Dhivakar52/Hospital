@@ -1,10 +1,11 @@
 import * as React from "react";
-import { CalendarClock, Search, ArrowRight, ArrowLeft , ExternalLink } from "lucide-react";
+import { CalendarClock, Search, ArrowRight, ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RevisitStepper } from "./Revisitstepper";
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
 import { toast } from "sonner";
 import { notify } from "@/lib/notify";
+import { useLocation, useNavigate } from "react-router-dom";
 
 type StepKey = 1 | 2 | 3 | 4 | 5;
 
@@ -23,10 +24,11 @@ const MODE_OF_PAY = ["Cash", "Card", "UPI", "Net Banking"] as const;
 const BANK_NAME = ["Select", "SBI", "HDFC", "ICICI"] as const;
 const KIN_RELATIONSHIP = ["Spouse", "Parent", "Child", "Sibling", "Other"] as const;
 
-import { useNavigate } from "react-router-dom";
-
 export default function OPRevisit() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editingRecord = (location.state as { record?: any } | null)?.record;
+
   const [step, setStep] = React.useState<StepKey>(1);
   const [insurance, setInsurance] = React.useState<"No" | "Yes">("No");
   const [payType, setPayType] = React.useState<"Paid" | "Free">("Paid");
@@ -36,22 +38,44 @@ export default function OPRevisit() {
   const [patientName, setPatientName] = React.useState("");
   const [contactNo1, setContactNo1] = React.useState("");
 
+  React.useEffect(() => {
+    if (!editingRecord) return;
+
+    setUhidNo(editingRecord.uhidNo || "");
+    setPatientName(editingRecord.patientName || "");
+    setContactNo1(editingRecord.contactNo1 || "");
+  }, [editingRecord]);
+
   const goNext = () => {
     if (step < 5) {
       setStep((s) => (s + 1) as StepKey);
       return;
     }
-    if (!uhidNo.trim() || !patientName.trim() || !contactNo1.trim()) {
-      notify.validationError("Please fill all mandatory fields.");
-      setStep(1);
-      return;
-    }
-    notify.saveSuccess("Record saved successfully.");
+
+    const updatedRecord = {
+      uhidNo: uhidNo.trim() || `UH-${Date.now().toString().slice(-6)}`,
+      opNo: `OP-${Date.now().toString().slice(-6)}`,
+      title: TITLES[0],
+      patientName: patientName.trim() || "New Revisit Patient",
+      fhwo: "Self",
+      area: "N/A",
+      city: "N/A",
+      department: DEPARTMENTS[0],
+    };
+
+    notify.saveSuccess(editingRecord ? "Record updated successfully." : "Record saved successfully.");
     setStep(1);
-    navigate("/revisit-records");
+    navigate("/revisit-records", {
+      state: editingRecord
+        ? { editedRecord: updatedRecord, originalUhidNo: editingRecord.uhidNo, originalOpNo: editingRecord.opNo }
+        : { newRecord: updatedRecord },
+    });
   };
+
   const goBack = () => setStep((s) => (s > 1 ? ((s - 1) as StepKey) : s));
+
   const clearDraft = () => {
+    setStep(1);
     setUhidNo("");
     setPatientName("");
     setContactNo1("");
@@ -64,19 +88,24 @@ export default function OPRevisit() {
 
   const stepPatientDetails = (
     <div className="grid grid-cols-4 items-end gap-4">
-      <Field label="UHID No" required>
+      <Field label="UHID No">
         <TextField placeholder="Enter UHID number" value={uhidNo} onChange={setUhidNo} />
+      </Field>
+       <Field label="Visit Count">
+        <TextField disabled placeholder="—" />
       </Field>
       <Button
         variant="outline"
-        className="h-9 text-[13px]"
-        style={{ color: "var(--blue-text-color)" }}
+        className="h-9 text-[13px]  w-[30%]"
+        style={{
+                  background: "var(--blue-btn)",
+                  color: "white",
+                  borderColor: "var(--blue-btn)",
+                }}
       >
         Get Details
       </Button>
-      <Field label="Visit Count">
-        <TextField disabled placeholder="—" />
-      </Field>
+     
       <div />
 
       <Field label="Reg. Date">
@@ -115,7 +144,7 @@ export default function OPRevisit() {
       <Field label="State">
         <TextField placeholder="Enter state" />
       </Field>
-      <Field label="Contact No-I" required>
+      <Field label="Contact No-I">
         <TextField placeholder="Primary contact number" value={contactNo1} onChange={setContactNo1} />
       </Field>
       <Field label="Contact No-II">
@@ -132,7 +161,7 @@ export default function OPRevisit() {
         <textarea
           rows={2}
           placeholder="Enter permanent address"
-          className="w-full resize-none rounded-[4px] border border-input px-3 py-2 text-[13px] outline-none focus:border-slate-400 focus:bg-white"
+          className="w-full resize-none rounded-lg border border-input px-3 py-2 text-[13px] outline-none focus:border-slate-400 focus:bg-white"
         />
       </Field>
       <Field label="ID Card">
@@ -365,20 +394,28 @@ export default function OPRevisit() {
 
           <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
             {step > 1 && (
-              <Button variant="outline" onClick={goBack} className="gap-1.5 text-[13px] font-medium text-slate-600">
+              <Button
+                variant="outline"
+                onClick={goBack}
+                className="h-9 min-w-30 gap-1.5 text-[13px] font-medium text-slate-600"
+              >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Back
               </Button>
             )}
-            <Button variant="outline" onClick={clearDraft} className="text-[13px] font-medium text-slate-600">
+            <Button
+              variant="outline"
+              onClick={clearDraft}
+              className="h-9 min-w-30 text-[13px] font-medium text-slate-600"
+            >
               Clear
             </Button>
             <Button
               onClick={goNext}
-              className="gap-1.5 text-white text-[13px]"
-              style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
+              className="h-9 min-w-30 gap-1.5 text-white text-[13px]"
+              style={{ background: "var(--blue-btn)", borderRadius: "8px" }}
             >
-              {step === 5 ? "Save" : "Save & Next"}
+              {step === 5 ? (editingRecord ? "Update" : "Save") : "Save & Next"}
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { UsersRound, BarChart3, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Stepper } from "@/components/Stepper";
@@ -7,10 +7,14 @@ import { StepPatientDetails, StepAddressContact, StepInsuranceDetails, StepAddit
 import { toast } from "sonner";
 import { notify } from "@/lib/notify";
 import { OpStatisticsModal } from "@/components/OpStatisticsModal";
+import type { Patient } from "@/types/op_register";
 
 type StepKey = 1 | 2 | 3 | 4;
 
 export type RegistrationDraft = {
+  uhidNo: string;
+  opNo: string;
+  registrationDate: string;
   mobile: string;
   patientName: string;
   title: string;
@@ -22,6 +26,9 @@ export type RegistrationDraft = {
 };
 
 const emptyDraft: RegistrationDraft = {
+  uhidNo: "",
+  opNo: "",
+  registrationDate: "",
   mobile: "",
   patientName: "",
   title: "",
@@ -32,10 +39,32 @@ const emptyDraft: RegistrationDraft = {
   department: "",
 };
 
+type RegistrationLocationState = {
+  patient?: Patient;
+};
+
+const patientToDraft = (patient: Patient): RegistrationDraft => ({
+  uhidNo: patient.id,
+  opNo: patient.opNo,
+  registrationDate: patient.registrationDate,
+  mobile: patient.phone ?? "",
+  patientName: patient.patientName,
+  title: patient.title,
+  fhwo: patient.fhwo,
+  email: patient.email ?? "",
+  area: patient.area,
+  city: patient.city,
+  department: patient.department,
+});
+
 export default function Registration() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editingPatient = (location.state as RegistrationLocationState | null)?.patient;
   const [step, setStep] = React.useState<StepKey>(1);
-  const [draft, setDraft] = React.useState<RegistrationDraft>(emptyDraft);
+  const [draft, setDraft] = React.useState<RegistrationDraft>(() =>
+    editingPatient ? patientToDraft(editingPatient) : emptyDraft
+  );
   const [_savedPatient, setSavedPatient] = React.useState<RegistrationDraft | null>(null);
   const [isStatsOpen, setIsStatsOpen] = React.useState(false);
 
@@ -94,7 +123,7 @@ export default function Registration() {
               Patient Registration
             </h1>
             <p className="text-[12.5px] text-muted-foreground">
-              Register new patient details and manage information
+              {editingPatient ? "Edit registered patient details" : "Register new patient details and manage information"}
             </p>
           </div>
         </div>

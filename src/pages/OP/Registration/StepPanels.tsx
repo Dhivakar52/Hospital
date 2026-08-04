@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
 import type { RegistrationDraft } from "./Registration";
@@ -46,10 +47,10 @@ export function StepPatientDetails({ data, onChange }: DraftPanelProps) {
         <TextField placeholder="Enter mobile number" value={data.mobile} onChange={(value) => onChange("mobile", value)} />
       </Field>
       <Field label="UHID No">
-        <TextField placeholder="Auto Generate" disabled />
+        <TextField placeholder="Auto Generate" value={data.uhidNo} disabled />
       </Field>
       <Field label="OP No">
-        <TextField placeholder="Auto Generate" disabled />
+        <TextField placeholder="Auto Generate" value={data.opNo} disabled />
       </Field>
 
       <Field label="Patient Name" required>
@@ -125,7 +126,11 @@ export function StepPatientDetails({ data, onChange }: DraftPanelProps) {
   </div>
 </Field>
       <Field label="Reg Date">
-        <DateField defaultLabel="28-07-2026 04:40 PM" />
+        <DateField
+          defaultLabel="28-07-2026 04:40 PM"
+          value={data.registrationDate ? new Date(`${data.registrationDate}T00:00:00`) : undefined}
+          onChange={(date) => onChange("registrationDate", date ? format(date, "yyyy-MM-dd") : "")}
+        />
       </Field>
 
        

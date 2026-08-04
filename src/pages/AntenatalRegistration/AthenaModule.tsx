@@ -11,6 +11,13 @@ const UNITS = ["Unit 1", "Unit 2", "Unit 3"] as const;
 
 export default function AntenatalRegistration() {
   const navigate = useNavigate();
+  const [ancNo, setAncNo] = React.useState("");
+  const [uhidNo, setUhidNo] = React.useState("");
+  const [patientName, setPatientName] = React.useState("");
+  const [age, setAge] = React.useState("");
+  const [gender, setGender] = React.useState("");
+  const [category, setCategory] = React.useState("");
+  const [address, setAddress] = React.useState("");
   const [lmp, setLmp] = React.useState<Date | undefined>();
   const [edd, setEdd] = React.useState<Date | undefined>();
   const [department, setDepartment] = React.useState<string>("");
@@ -61,10 +68,10 @@ export default function AntenatalRegistration() {
           <h2 className="mb-4 text-[13.5px] font-semibold">Patient lookup</h2>
           <div className="grid grid-cols-4 items-end gap-4">
             <Field label="ANC No">
-              <TextField placeholder="Enter ANC number" />
+              <TextField placeholder="Enter ANC number" value={ancNo} onChange={setAncNo} />
             </Field>
             <Field label="UHID No">
-              <TextField placeholder="Enter UHID number" />
+              <TextField placeholder="Enter UHID number" value={uhidNo} onChange={setUhidNo} />
             </Field>
             <Field label="IP No">
               <TextField placeholder="Enter IP number" />
@@ -81,20 +88,20 @@ export default function AntenatalRegistration() {
           <h2 className="mb-4 mt-6 text-[13.5px] font-semibold">Patient details</h2>
           <div className="grid grid-cols-4 gap-4">
             <Field label="Patient Name">
-              <TextField placeholder="Enter patient name" />
+              <TextField placeholder="Enter patient name" value={patientName} onChange={setPatientName} />
             </Field>
             <Field label="Age">
-              <TextField placeholder="Enter age" />
+              <TextField placeholder="Enter age" value={age} onChange={setAge} />
             </Field>
             <Field label="Gender">
-              <TextField placeholder="Enter gender" />
+              <TextField placeholder="Enter gender" value={gender} onChange={setGender} />
             </Field>
             <Field label="Category">
-              <TextField placeholder="Enter category" />
+              <TextField placeholder="Enter category" value={category} onChange={setCategory} />
             </Field>
 
             <Field label="Address" span={2}>
-              <TextField placeholder="Enter address" />
+              <TextField placeholder="Enter address" value={address} onChange={setAddress} />
             </Field>
             <Field label="Department">
               <SelectField options={DEPARTMENTS} value={department} onChange={setDepartment} />
@@ -125,15 +132,31 @@ export default function AntenatalRegistration() {
           </div>
 
           <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
-            <Button variant="outline" className="text-[13px] font-medium text-slate-600">
+            <Button variant="outline" className="text-[13px] h-10 w-28 font-medium text-slate-600">
               Clear
             </Button>
             <Button
               onClick={() => {
+                const newRecord = {
+                  ancNo: ancNo || `ANC-${Date.now().toString().slice(-6)}`,
+                  ancDate: new Date().toLocaleString("en-GB", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }),
+                  uhidNo: uhidNo || `UH-${Date.now().toString().slice(-6)}`,
+                  patientName: patientName || "NEW ANC PATIENT",
+                  age: Number(age) || 0,
+                  gender: gender || "Female",
+                  department: department || "Obstetrics",
+                };
+
                 notify.saveSuccess("Record saved successfully.");
-                navigate("/registered-anc-records");
+                navigate("/registered-anc-records", { state: { newRecord } });
               }}
-              className="gap-1.5 text-white text-[13px] cursor-pointer"
+              className="gap-1.5 h-10  text-white text-[13px] cursor-pointer"
               style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
             >
               Save ANC Registration

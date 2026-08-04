@@ -42,7 +42,12 @@ export const BarcodePreviewModal: React.FC<BarcodePreviewModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md p-0 overflow-hidden rounded-xl border border-slate-200">
+      <DialogContent 
+        className="p-0 w-full rounded-xl border border-slate-200"
+        style={{
+          maxWidth: "35%",
+        }}
+      >
         <DialogHeader className="bg-slate-50 px-6 py-4 border-b border-slate-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-slate-900">

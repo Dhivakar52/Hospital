@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, TextField, SelectField } from "@/components/FormPrimitives";
@@ -9,7 +9,22 @@ const DESIGNATIONS = ["Consultant", "General Practitioner", "Surgeon", "Speciali
 
 export default function ReferralModule() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editingRecord = (location.state as { record?: any } | null)?.record;
+
+  const [referralName, setReferralName] = React.useState("");
   const [designation, setDesignation] = React.useState<string>("");
+  const [hospitalName, setHospitalName] = React.useState("");
+  const [contactNo, setContactNo] = React.useState("");
+
+  React.useEffect(() => {
+    if (!editingRecord) return;
+
+    setReferralName(editingRecord.referralName || "");
+    setDesignation(editingRecord.designation || "");
+    setHospitalName(editingRecord.hospitalName || "");
+    setContactNo(editingRecord.contactNo || "");
+  }, [editingRecord]);
 
   return (
     <div>
@@ -45,33 +60,49 @@ export default function ReferralModule() {
         <div className="px-6 py-6">
           <div className="grid grid-cols-2 gap-4">
             <Field label="Referral Name" required>
-              <TextField placeholder="Enter referral name" />
+              <TextField placeholder="Enter referral name" value={referralName} onChange={setReferralName} />
             </Field>
             <Field label="Designation">
               <SelectField options={DESIGNATIONS} value={designation} onChange={setDesignation} />
             </Field>
 
             <Field label="Hospital Name" required>
-              <TextField placeholder="Enter hospital name" />
+              <TextField placeholder="Enter hospital name" value={hospitalName} onChange={setHospitalName} />
             </Field>
             <Field label="Contact No" required>
-              <TextField placeholder="Enter contact number" />
+              <TextField placeholder="Enter contact number" value={contactNo} onChange={setContactNo} />
             </Field>
           </div>
 
           <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
-            <Button variant="outline" className="text-[13px] font-medium text-slate-600">
+            <Button
+              variant="outline"
+              className="h-10 w-28 text-[13px] font-medium text-slate-600"
+            >
               Clear
             </Button>
             <Button
               onClick={() => {
-                notify.saveSuccess("Record saved successfully.");
-                navigate("/referral-master-records");
+                const updatedRecord = {
+                  referralName: referralName.trim() || "New Referral",
+                  designation: designation || "Consultant",
+                  hospitalName: hospitalName.trim() || "N/A",
+                  contactNo: contactNo.trim() || "N/A",
+                };
+
+                notify.saveSuccess(editingRecord ? "Record updated successfully." : "Record saved successfully.");
+                navigate("/referral-master-records", {
+                  state: {
+                    ...(editingRecord
+                      ? { editedRecord: updatedRecord, originalReferralName: editingRecord.referralName }
+                      : { newRecord: updatedRecord }),
+                  },
+                });
               }}
-              className="text-white text-[13px] cursor-pointer"
-              style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
+              className="h-10 w-28 cursor-pointer text-[13px] text-white"
+              style={{ background: "var(--blue-btn)", borderRadius: "8px" }}
             >
-              Save Referral
+              {editingRecord ? "Update Referral" : "Save Referral"}
             </Button>
           </div>
         </div>

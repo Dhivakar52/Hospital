@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
 import { DataTable } from "@/common/Datatable"
 import TableSearch from "@/common/TableSearch"
 // import { FilterTable } from "@/common/FilterTable"
@@ -32,32 +33,19 @@ import { notify } from "@/lib/notify"
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives"
 import type { RegistrationDraft } from "./Registration"
 
-// ✅ Data model updated to match: UHID No, OP No, Title, Patient Name, F/H/W/O, Area, City, Department
-type Patient = {
-  id: string // UHID No
-  opNo: string
-  title: string
-  patientName: string
-  fhwo: string // F/H/W/O
-  area: string
-  city: string
-  department: string
-  registrationDate: string // used for the From Date -> To Date header filter
-  email?: string
-  phone?: string
-}
+// ✅ Import types and mock data
+import type { Patient, PatientFormData } from "@/types/op_register"
+import { mockPatients } from "@/data/mockPatients"
 
-type PatientFormData = Omit<Patient, 'id'>
-type PanelMode = "view" | "edit" | "add" | "filter" | null
+import { BarcodePreviewModal } from "@/components/BarcodePreviewModal"
+import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal"
 
 interface RegisteredPatientsTableProps {
   newPatient?: RegistrationDraft | null
 }
 
-import { BarcodePreviewModal } from "@/components/BarcodePreviewModal"
-import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal"
-
 export default function RegisteredPatientsTable({ newPatient }: RegisteredPatientsTableProps) {
+  const navigate = useNavigate()
   const [data, setData] = useState<Patient[]>([])
   const [filteredData, setFilteredData] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
@@ -112,6 +100,8 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
 
   const hasActiveFilters = Object.keys(filters).length > 0 || Boolean(fromDate) || Boolean(toDate)
 
+  type PanelMode = "view" | "edit" | "add" | "filter" | null
+
   // ✅ Close actions dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -123,6 +113,29 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  // Load data - using mock data from separate file
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        // Use mock data from the separate file
+        setData(mockPatients)
+        setFilteredData(mockPatients)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+        notify.serverError("Failed to load patient data")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Handle new patient from registration
   useEffect(() => {
     if (!newPatient) return
     const id = `${Date.now()}`
@@ -141,36 +154,6 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
     }
     setData((current) => [patient, ...current])
   }, [newPatient])
-
-  // Load data
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1500))
-
-        const sampleData: Patient[] = [
-          { id: "26588922", opNo: "26588922", title: "Mrs", patientName: "SEETHALAKSHMI", fhwo: "SOUNDARARAJAN", area: "Maraimalainagar", city: "Maraimalainagar", department: "Neurology", registrationDate: "2024-01-15", email: "seethalakshmi@example.com", phone: "+91 98765-43210" },
-          { id: "26588923", opNo: "26588923", title: "Mr", patientName: "RAJENDRAN", fhwo: "MURUGAN", area: "Chengalpattu", city: "Chengalpattu", department: "Cardiology", registrationDate: "2024-01-10", email: "rajendran@example.com", phone: "+91 98765-43211" },
-          { id: "26588924", opNo: "26588924", title: "Ms", patientName: "PRIYA", fhwo: "KUMAR", area: "Tambaram", city: "Chennai", department: "Orthopedics", registrationDate: "2024-01-20", email: "priya@example.com", phone: "+91 98765-43212" },
-          { id: "26588925", opNo: "26588925", title: "Mrs", patientName: "KAMALA DEVI", fhwo: "VENKATESAN", area: "Maraimalainagar", city: "Maraimalainagar", department: "Neurology", registrationDate: "2024-01-18", email: "kamala@example.com", phone: "+91 98765-43213" },
-          { id: "26588926", opNo: "26588926", title: "Mr", patientName: "SURESH BABU", fhwo: "RAMASAMY", area: "Singaperumal Koil", city: "Chengalpattu", department: "General Medicine", registrationDate: "2024-01-12", email: "suresh@example.com", phone: "+91 98765-43214" },
-          { id: "26588927", opNo: "26588927", title: "Dr", patientName: "ANITHA", fhwo: "GOVINDARAJ", area: "Vandalur", city: "Chennai", department: "Cardiology", registrationDate: "2024-01-22", email: "anitha@example.com", phone: "+91 98765-43215" },
-          { id: "26588928", opNo: "26588928", title: "Mr", patientName: "MANIKANDAN", fhwo: "SELVAM", area: "Maraimalainagar", city: "Maraimalainagar", department: "Orthopedics", registrationDate: "2024-01-19", email: "manikandan@example.com", phone: "+91 98765-43216" },
-          { id: "26588929", opNo: "26588929", title: "Mrs", patientName: "LAKSHMI PRIYA", fhwo: "NATARAJAN", area: "Guduvancherry", city: "Chengalpattu", department: "Neurology", registrationDate: "2024-01-14", email: "lakshmipriya@example.com", phone: "+91 98765-43217" },
-        ]
-        setData(sampleData)
-        setFilteredData(sampleData)
-      } catch (error) {
-        console.error("Error fetching data:", error)
-        notify.serverError("Failed to load patient data")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
 
   // Filter and search data
   useEffect(() => {
@@ -252,21 +235,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
   }
 
   const handleEdit = (patient: Patient) => {
-    setSelectedPatient(patient)
-    setFormData({
-      opNo: patient.opNo,
-      title: patient.title,
-      patientName: patient.patientName,
-      fhwo: patient.fhwo,
-      area: patient.area,
-      city: patient.city,
-      department: patient.department,
-      registrationDate: patient.registrationDate,
-      email: patient.email || "",
-      phone: patient.phone || "",
-    })
-    setPanelMode("edit")
-    setIsPanelOpen(true)
+    navigate("/op/registration", { state: { patient } })
   }
 
   const handleDelete = (patient: Patient) => {
@@ -501,8 +470,6 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
               {filteredData.length} patients
             </Badge>
           </div>
-
-
 
           {/* Search, From Date -> To Date (NEW), Menu Actions (Filter/Export/Print), Add - All in One Row */}
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">

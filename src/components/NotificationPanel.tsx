@@ -121,7 +121,8 @@ export const NotificationPanel: React.FC = () => {
         {/* Custom Side Panel (Drawer Overlay from Right) */}
         <SheetContent
           side="right"
-          className="w-full sm:max-w-[420px] flex flex-col p-0 h-screen rounded-l-2xl shadow-2xl border-l"
+          className="w-full flex flex-col p-0 h-screen rounded-l-2xl shadow-2xl border-l"
+           style={{ maxWidth: "min(560px, 90vw)" }}
         >
           {/* Header */}
           <SheetHeader className="border-b px-5 py-4 shrink-0 bg-slate-50/80">

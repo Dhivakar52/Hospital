@@ -1,17 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Building2, Plus, FileText, Pencil } from "lucide-react";
+import { Building2, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import CustomPanel from "@/common/CustomPanel";
 
 interface HospitalRow {
   hospital: string;
@@ -29,7 +23,37 @@ const MOCK_HOSPITALS: HospitalRow[] = [
 
 export default function HospitalMasterPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [records, setRecords] = useState<HospitalRow[]>(MOCK_HOSPITALS);
   const [selectedHospital, setSelectedHospital] = useState<HospitalRow | null>(null);
+
+  useEffect(() => {
+    const newRecord = (location.state as { newRecord?: HospitalRow } | null)?.newRecord;
+    const editedRecord = (location.state as { editedRecord?: HospitalRow; originalHospital?: string } | null)?.editedRecord;
+    const originalHospital = (location.state as { originalHospital?: string } | null)?.originalHospital;
+
+    if (newRecord) {
+      setRecords((current) => {
+        const exists = current.some(
+          (item) => item.hospital === newRecord.hospital && item.contactNo === newRecord.contactNo,
+        );
+
+        return exists ? current : [newRecord, ...current];
+      });
+    }
+
+    if (editedRecord && originalHospital) {
+      setRecords((current) =>
+        current.map((item) =>
+          item.hospital === originalHospital ? { ...item, ...editedRecord } : item,
+        ),
+      );
+    }
+
+    if (newRecord || editedRecord) {
+      navigate("/hospital-master-records", { replace: true, state: undefined });
+    }
+  }, [location.state, navigate]);
 
   const columns: ColumnDef<HospitalRow>[] = [
     { accessorKey: "hospital", header: "Hospital" },
@@ -86,72 +110,47 @@ export default function HospitalMasterPage() {
         title="Hospital Master Records"
         searchPlaceholder="Search hospital, area, city..."
         columns={columns}
-        data={MOCK_HOSPITALS}
+        data={records}
         searchField={(r) => `${r.hospital} ${r.areaName} ${r.cityName} ${r.state}`}
       />
 
-      {/* View Details Dialog */}
-      <Dialog open={Boolean(selectedHospital)} onOpenChange={() => setSelectedHospital(null)}>
-        <DialogContent className="max-w-md p-0 overflow-hidden rounded-xl border border-slate-200 shadow-xl">
-          <DialogHeader className="bg-slate-50 px-6 py-4 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              <DialogTitle className="text-base font-bold text-slate-900">
-                Hospital Master Details
-              </DialogTitle>
-            </div>
-            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-              Detailed information for referring hospital
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedHospital && (
-            <div className="p-6 space-y-4 text-xs text-slate-700 bg-white">
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <div className="col-span-2">
-                  <span className="text-[11px] text-slate-500 block">Hospital Name</span>
-                  <span className="font-bold text-slate-900 text-base">{selectedHospital.hospital}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Area Name</span>
-                  <span className="font-semibold text-slate-800">{selectedHospital.areaName}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">City Name</span>
-                  <span className="font-semibold text-slate-800">{selectedHospital.cityName}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Contact No</span>
-                  <span className="font-medium text-slate-700 font-mono">{selectedHospital.contactNo}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">State</span>
-                  <span className="font-medium text-slate-700">{selectedHospital.state}</span>
-                </div>
+      <CustomPanel
+        isOpen={Boolean(selectedHospital)}
+        title="Hospital Master Details"
+        onClose={() => setSelectedHospital(null)}
+        onSave={() => setSelectedHospital(null)}
+        saveLabel="Close"
+        width="620px"
+      >
+        {selectedHospital && (
+          <div className="space-y-5 text-sm text-slate-700">
+            <div className="grid grid-cols-2 gap-4 rounded-lg border border-slate-100 bg-slate-50 p-4">
+              <div className="col-span-2">
+                <span className="text-[11px] text-slate-500 block">Hospital Name</span>
+                <span className="font-bold text-slate-900 text-base">{selectedHospital.hospital}</span>
               </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => setSelectedHospital(null)}>
-                  Close
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const rec = selectedHospital;
-                    setSelectedHospital(null);
-                    navigate("/hospital-master", { state: { record: rec } });
-                  }}
-                  className="text-white text-xs gap-1.5"
-                  style={{ background: "var(--blue-btn)" }}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit Hospital
-                </Button>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Area Name</span>
+                <span className="font-semibold text-slate-800">{selectedHospital.areaName}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">City Name</span>
+                <span className="font-semibold text-slate-800">{selectedHospital.cityName}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Contact No</span>
+                <span className="font-medium text-slate-700 font-mono">{selectedHospital.contactNo}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">State</span>
+                <span className="font-medium text-slate-700">{selectedHospital.state}</span>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+
+
+          </div>
+        )}
+      </CustomPanel>
     </div>
   );
 }

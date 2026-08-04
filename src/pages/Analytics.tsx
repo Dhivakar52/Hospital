@@ -81,7 +81,12 @@ export default function Analytics() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(filteredData.length / itemsPerPage) || 1)
+    setCurrentPage((prev) => Math.min(prev, maxPage))
+  }, [filteredData.length, itemsPerPage])
 
   // Filters
   const [filters, setFilters] = useState<Record<string, string>>({})
@@ -366,7 +371,8 @@ export default function Analytics() {
     }),
     setPageIndex: (index: number) => setCurrentPage(index + 1),
     setPageSize: (size: number) => {
-      console.log("Page size changed to:", size)
+      setItemsPerPage(size)
+      setCurrentPage(1)
     },
     previousPage: () => setCurrentPage(prev => Math.max(prev - 1, 1)),
     nextPage: () => setCurrentPage(prev => Math.min(prev + 1, totalPages)),

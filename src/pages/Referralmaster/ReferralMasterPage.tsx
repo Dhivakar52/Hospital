@@ -1,17 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { UserCheck, Plus, FileText, Pencil } from "lucide-react";
+import { UserCheck, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import CustomPanel from "@/common/CustomPanel";
 
 interface ReferralRow {
   referralName: string;
@@ -28,7 +22,37 @@ const MOCK_REFERRALS: ReferralRow[] = [
 
 export default function ReferralMasterPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [records, setRecords] = useState<ReferralRow[]>(MOCK_REFERRALS);
   const [selectedReferral, setSelectedReferral] = useState<ReferralRow | null>(null);
+
+  useEffect(() => {
+    const newRecord = (location.state as { newRecord?: ReferralRow } | null)?.newRecord;
+    const editedRecord = (location.state as { editedRecord?: ReferralRow; originalReferralName?: string } | null)?.editedRecord;
+    const originalReferralName = (location.state as { originalReferralName?: string } | null)?.originalReferralName;
+
+    if (newRecord) {
+      setRecords((current) => {
+        const exists = current.some(
+          (item) => item.referralName === newRecord.referralName && item.contactNo === newRecord.contactNo,
+        );
+
+        return exists ? current : [newRecord, ...current];
+      });
+    }
+
+    if (editedRecord && originalReferralName) {
+      setRecords((current) =>
+        current.map((item) =>
+          item.referralName === originalReferralName ? { ...item, ...editedRecord } : item,
+        ),
+      );
+    }
+
+    if (newRecord || editedRecord) {
+      navigate("/referral-master-records", { replace: true, state: undefined });
+    }
+  }, [location.state, navigate]);
 
   const columns: ColumnDef<ReferralRow>[] = [
     { accessorKey: "referralName", header: "Referral Name" },
@@ -84,68 +108,43 @@ export default function ReferralMasterPage() {
         title="Referral Master Records"
         searchPlaceholder="Search referral name, designation..."
         columns={columns}
-        data={MOCK_REFERRALS}
+        data={records}
         searchField={(r) => `${r.referralName} ${r.designation} ${r.hospitalName}`}
       />
 
-      {/* View Details Dialog */}
-      <Dialog open={Boolean(selectedReferral)} onOpenChange={() => setSelectedReferral(null)}>
-        <DialogContent className="max-w-md p-0 overflow-hidden rounded-xl border border-slate-200 shadow-xl">
-          <DialogHeader className="bg-slate-50 px-6 py-4 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              <DialogTitle className="text-base font-bold text-slate-900">
-                Referral Doctor Details
-              </DialogTitle>
-            </div>
-            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-              Detailed information for referring consultant doctor
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedReferral && (
-            <div className="p-6 space-y-4 text-xs text-slate-700 bg-white">
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <div className="col-span-2">
-                  <span className="text-[11px] text-slate-500 block">Referral Name</span>
-                  <span className="font-bold text-slate-900 text-base">{selectedReferral.referralName}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Designation</span>
-                  <span className="font-semibold text-slate-800">{selectedReferral.designation}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Hospital Name</span>
-                  <span className="font-semibold text-slate-800">{selectedReferral.hospitalName}</span>
-                </div>
-                <div className="col-span-2 border-t border-slate-200/80 pt-2">
-                  <span className="text-[11px] text-slate-500 block">Contact No</span>
-                  <span className="font-medium text-slate-700 font-mono">{selectedReferral.contactNo}</span>
-                </div>
+      <CustomPanel
+        isOpen={Boolean(selectedReferral)}
+        title="Referral Doctor Details"
+        onClose={() => setSelectedReferral(null)}
+        onSave={() => setSelectedReferral(null)}
+        saveLabel="Close"
+        width="620px"
+      >
+        {selectedReferral && (
+          <div className="space-y-5 text-sm text-slate-700">
+            <div className="grid grid-cols-2 gap-4 rounded-lg border border-slate-100 bg-slate-50 p-4">
+              <div className="col-span-2">
+                <span className="text-[11px] text-slate-500 block">Referral Name</span>
+                <span className="font-bold text-slate-900 text-base">{selectedReferral.referralName}</span>
               </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => setSelectedReferral(null)}>
-                  Close
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const rec = selectedReferral;
-                    setSelectedReferral(null);
-                    navigate("/referral-master", { state: { record: rec } });
-                  }}
-                  className="text-white text-xs gap-1.5"
-                  style={{ background: "var(--blue-btn)" }}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit Referral
-                </Button>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Designation</span>
+                <span className="font-semibold text-slate-800">{selectedReferral.designation}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Hospital Name</span>
+                <span className="font-semibold text-slate-800">{selectedReferral.hospitalName}</span>
+              </div>
+              <div className="col-span-2 border-t border-slate-200/80 pt-2">
+                <span className="text-[11px] text-slate-500 block">Contact No</span>
+                <span className="font-medium text-slate-700 font-mono">{selectedReferral.contactNo}</span>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+
+            
+          </div>
+        )}
+      </CustomPanel>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { CalendarX, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, TextField } from "@/components/FormPrimitives";
@@ -7,6 +7,9 @@ import { notify } from "@/lib/notify";
 
 export default function RevisitCancelFormPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editingRecord = (location.state as { record?: any } | null)?.record;
+
   const [uhid, setUhid] = useState("");
   const [opNo, setOpNo] = useState("");
   const [reason, setReason] = useState("");
@@ -14,6 +17,18 @@ export default function RevisitCancelFormPage() {
   const [gender, setGender] = useState("");
   const [address, setAddress] = useState("");
   const [contactNo, setContactNo] = useState("");
+
+  useEffect(() => {
+    if (!editingRecord) return;
+
+    setUhid(editingRecord.uhidNo || "");
+    setOpNo(editingRecord.opNo || "");
+    setReason(editingRecord.reason || "");
+    setPatientName(editingRecord.patientName || "");
+    setGender(editingRecord.gender || "");
+    setAddress(editingRecord.address || "");
+    setContactNo(editingRecord.contactNo || "");
+  }, [editingRecord]);
 
   const handleGetDetails = () => {
     if (!uhid.trim()) {
@@ -31,8 +46,29 @@ export default function RevisitCancelFormPage() {
       notify.validationError("Please fill all mandatory fields.");
       return;
     }
-    notify.saveSuccess("Record saved successfully.");
-    navigate("/op/revisit-cancellation");
+
+    const savedRecord = {
+      uhidNo: uhid.trim(),
+      opNo: opNo.trim() || "N/A",
+      revisitNo: editingRecord?.revisitNo || `REV-${Date.now().toString().slice(-6)}`,
+      patientName: patientName.trim() || "New Cancellation",
+      gender: gender || "N/A",
+      address: address || "N/A",
+      contactNo: contactNo || "N/A",
+      reason: reason.trim(),
+      cancelledDate: new Date().toLocaleDateString("en-GB"),
+      status: "cancelled",
+      createdBy: "System",
+    };
+
+    notify.saveSuccess(editingRecord ? "Record updated successfully." : "Record saved successfully.");
+    navigate("/op/revisit-cancellation", {
+      state: {
+        ...(editingRecord
+          ? { editedRecord: savedRecord, originalRevisitNo: editingRecord.revisitNo }
+          : { newRecord: savedRecord }),
+      },
+    });
   };
 
   const handleClear = () => {
@@ -130,12 +166,12 @@ export default function RevisitCancelFormPage() {
           </div>
 
           <div className="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
-            <Button variant="outline" onClick={handleClear} className="text-[13px] font-medium text-slate-600 cursor-pointer">
+            <Button variant="outline" onClick={handleClear} className="text-[13px]  h-10 w-28 font-medium text-slate-600 cursor-pointer">
               Clear
             </Button>
             <Button
               onClick={handleSubmit}
-              className="text-white text-[13px] cursor-pointer"
+              className="text-white text-[13px] cursor-pointer h-10 w-28"
               style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
             >
               Cancel Visit

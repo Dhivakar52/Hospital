@@ -56,7 +56,7 @@ const formatLabel = (str: string): string => {
   
   // Direct mapping for common combined words
   const wordMap: Record<string, string> = {
-    'diagnosisentry': 'Diagnosis Entry',
+    'diagnosisentry': 'Diagnosisentry',
     'patientregistration': 'Patient Registration',
     'appointmentschedule': 'Appointment Schedule',
     'billingreport': 'Billing Report',

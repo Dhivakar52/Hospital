@@ -1,40 +1,36 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Baby, Plus, FileText, Pencil } from "lucide-react";
+import { Baby, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-
-interface AncRecord {
-  ancNo: string;
-  ancDate: string;
-  uhidNo: string;
-  patientName: string;
-  age: number;
-  gender: string;
-  department: string;
-}
-
-const MOCK_DATA: AncRecord[] = [
-  { ancNo: "263208", ancDate: "31 Jul 2026 14:04", uhidNo: "4282176", patientName: "AMUTHA", age: 26, gender: "Female", department: "Obstetrics" },
-  { ancNo: "263207", ancDate: "31 Jul 2026 13:52", uhidNo: "4285500", patientName: "MANJUPRIYA", age: 32, gender: "Female", department: "Obstetrics" },
-  { ancNo: "263206", ancDate: "31 Jul 2026 13:51", uhidNo: "4285330", patientName: "AFRIJA KHATUN", age: 23, gender: "Female", department: "Obstetrics" },
-  { ancNo: "263205", ancDate: "31 Jul 2026 13:33", uhidNo: "4285299", patientName: "BHAVANI M", age: 31, gender: "Female", department: "General Surgery" },
-  { ancNo: "263204", ancDate: "31 Jul 2026 13:18", uhidNo: "4285342", patientName: "RUPA GUPTA", age: 27, gender: "Female", department: "Obstetrics" },
-];
+import Status from "@/common/Status";
+import CustomPanel from "@/common/CustomPanel";
+import type { AncRecord } from "@/types/anc";
+import { mockAncRecords } from "@/data/mockAncRecords";
 
 export default function AncRecordsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [records, setRecords] = useState<AncRecord[]>(mockAncRecords);
   const [selectedRecord, setSelectedRecord] = useState<AncRecord | null>(null);
+
+  useEffect(() => {
+    const newRecord = (location.state as { newRecord?: AncRecord } | null)?.newRecord;
+
+    if (!newRecord) return;
+
+    setRecords((current) => {
+      const exists = current.some(
+        (item) => item.ancNo === newRecord.ancNo || item.uhidNo === newRecord.uhidNo,
+      );
+
+      return exists ? current : [newRecord, ...current];
+    });
+
+    navigate("/registered-anc-records", { replace: true, state: undefined });
+  }, [location.state, navigate]);
 
   const columns: ColumnDef<AncRecord>[] = [
     {
@@ -59,11 +55,10 @@ export default function AncRecordsPage() {
     {
       id: "status",
       header: "Status",
-      cell: () => (
-        <Badge variant="destructive" className="rounded-full font-medium">
-          Active
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const status = row.original.status || 'active';
+        return <Status status={status} size="sm" />;
+      },
     },
     {
       id: "actions",
@@ -117,76 +112,55 @@ export default function AncRecordsPage() {
         title="Registered ANC Records"
         searchPlaceholder="Search Patient / UHID / ANC No"
         columns={columns}
-        data={MOCK_DATA}
+        data={records}
         searchField={(r) => `${r.patientName} ${r.uhidNo} ${r.ancNo} ${r.department}`}
       />
 
-      {/* View Details Dialog */}
-      <Dialog open={Boolean(selectedRecord)} onOpenChange={() => setSelectedRecord(null)}>
-        <DialogContent className="max-w-md p-0 overflow-hidden rounded-xl border border-slate-200 shadow-xl">
-          <DialogHeader className="bg-slate-50 px-6 py-4 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              <DialogTitle className="text-base font-bold text-slate-900">
-                ANC Registration Details
-              </DialogTitle>
-            </div>
-            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-              Detailed view of antenatal care registration
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedRecord && (
-            <div className="p-6 space-y-4 text-xs text-slate-700 bg-white">
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <div>
-                  <span className="text-[11px] text-slate-500 block">ANC Number</span>
-                  <span className="font-bold text-slate-900 text-sm font-mono">{selectedRecord.ancNo}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">UHID Number</span>
-                  <span className="font-bold text-slate-900 text-sm font-mono">{selectedRecord.uhidNo}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-[11px] text-slate-500 block">Patient Name</span>
-                  <span className="font-bold text-slate-900 text-base">{selectedRecord.patientName}</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Gender / Age</span>
-                  <span className="font-medium text-slate-800">{selectedRecord.gender} / {selectedRecord.age} Yrs</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Department</span>
-                  <span className="font-semibold text-blue-900">{selectedRecord.department}</span>
-                </div>
-                <div className="col-span-2 border-t border-slate-200/80 pt-2">
-                  <span className="text-[11px] text-slate-500 block">Registration Date & Time</span>
-                  <span className="font-medium text-slate-700">{selectedRecord.ancDate}</span>
-                </div>
+      <CustomPanel
+        isOpen={Boolean(selectedRecord)}
+        title="ANC Registration Details"
+        onClose={() => setSelectedRecord(null)}
+        onSave={() => setSelectedRecord(null)}
+        saveLabel="Close"
+        width="620px"
+      >
+        {selectedRecord && (
+          <div className="space-y-5 text-sm text-slate-700">
+            <div className="grid grid-cols-2 gap-4 rounded-lg border border-slate-100 bg-slate-50 p-4">
+              <div>
+                <span className="text-[11px] text-slate-500 block">ANC Number</span>
+                <span className="font-bold text-slate-900 text-sm font-mono">{selectedRecord.ancNo}</span>
               </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => setSelectedRecord(null)}>
-                  Close
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const rec = selectedRecord;
-                    setSelectedRecord(null);
-                    navigate("/antenatal-registration", { state: { record: rec } });
-                  }}
-                  className="text-white text-xs gap-1.5"
-                  style={{ background: "var(--blue-btn)" }}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit ANC Record
-                </Button>
+              <div>
+                <span className="text-[11px] text-slate-500 block">UHID Number</span>
+                <span className="font-bold text-slate-900 text-sm font-mono">{selectedRecord.uhidNo}</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-[11px] text-slate-500 block">Patient Name</span>
+                <span className="font-bold text-slate-900 text-base">{selectedRecord.patientName}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Gender / Age</span>
+                <span className="font-medium text-slate-800">{selectedRecord.gender} / {selectedRecord.age} Yrs</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Department</span>
+                <span className="font-semibold text-blue-900">{selectedRecord.department}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Status</span>
+                <Status status={selectedRecord.status || 'active'} size="sm" />
+              </div>
+              <div className="col-span-2 border-t border-slate-200/80 pt-2">
+                <span className="text-[11px] text-slate-500 block">Registration Date & Time</span>
+                <span className="font-medium text-slate-700">{selectedRecord.ancDate}</span>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+
+          
+          </div>
+        )}
+      </CustomPanel>
     </div>
   );
 }

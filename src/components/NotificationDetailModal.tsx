@@ -89,7 +89,8 @@ export const NotificationDetailModal: React.FC<NotificationDetailModalProps> = (
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:w-[780px] max-w-3xl max-h-[90vh] p-0 overflow-hidden rounded-2xl border border-slate-200 shadow-2xl flex flex-col">
+      <DialogContent className=" p-0  rounded-2xl border border-slate-200 shadow-2xl flex flex-col"
+      style={{ maxWidth: "min(920px, 90vw)" }}>
         {/* Fixed Header */}
         <DialogHeader className="bg-slate-50/90 px-6 py-4 border-b border-slate-200/80 shrink-0">
           <div className="flex items-center justify-between gap-4">

@@ -1,7 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "../components/app-sidebar"
 import { Header } from "../components/Header"
-import { Outlet, useLocation } from "react-router-dom"
+import { Outlet } from "react-router-dom"
 
 interface LayoutProps {
   children?: React.ReactNode
@@ -24,15 +24,6 @@ export function Layout({
   // notificationCount = 3,
   breadcrumbItems = []
 }: LayoutProps) {
-  const location = useLocation()
-  const pathname = location.pathname.replace('/', '') || 'Dashboard'
-  const pageName = pathname.charAt(0).toUpperCase() + pathname.slice(1)
-
-  const autoBreadcrumbs = breadcrumbItems.length > 0 ? breadcrumbItems : [
-    { label: "Home", href: "/dashboard" },
-    { label: pageName }
-  ]
-
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full">
@@ -42,7 +33,7 @@ export function Layout({
           <Header 
             // user={user}
             // notificationCount={notificationCount}
-            breadcrumbItems={autoBreadcrumbs}
+            breadcrumbItems={breadcrumbItems}
           />
 
           <main className="flex-1 p-6 layerBg">{children || <Outlet/>}</main>
