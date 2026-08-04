@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import {
@@ -9,6 +9,7 @@ import {
   Printer,
   Filter,
   Loader2,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,11 +18,21 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { DataTable } from "@/common/Datatable";
 import TableSearch from "@/common/TableSearch";
 import Pagination from "@/common/Pagination";
+import CustomPanel from "@/common/CustomPanel";
+import { Field, TextField, SelectField } from "@/components/FormPrimitives";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 
 import { BarcodePreviewModal } from "@/components/BarcodePreviewModal";
 import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal";
+
+export interface FilterOption {
+  label: string;
+  key: string;
+  type?: "text" | "select";
+  options?: string[];
+}
 
 interface StandardModuleTableProps<TData> {
   title: string;
@@ -30,6 +41,7 @@ interface StandardModuleTableProps<TData> {
   data: TData[];
   searchField?: (item: TData) => string;
   isLoading?: boolean;
+  filterFields?: FilterOption[];
 }
 
 export function StandardModuleTable<TData extends Record<string, any>>({
@@ -39,23 +51,68 @@ export function StandardModuleTable<TData extends Record<string, any>>({
   data,
   searchField,
   isLoading = false,
+  filterFields,
 }: StandardModuleTableProps<TData>) {
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [showActions, setShowActions] = useState(false);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedPrintItem, setSelectedPrintItem] = useState<TData | null>(null);
   const [selectedBarcodeItem, setSelectedBarcodeItem] = useState<TData | null>(null);
   const actionRef = useRef<HTMLDivElement>(null);
 
-  // Filter data based on search and dates
+  // Active filters & temp filters
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [tempFilters, setTempFilters] = useState<Record<string, string>>({});
+
+  const hasActiveFilters =
+    Object.keys(filters).length > 0 || Boolean(fromDate) || Boolean(toDate) || Boolean(search.trim());
+
+  // Automatically derive default filter fields if not provided
+  const derivedFilterFields: FilterOption[] = useMemo(() => {
+    if (filterFields && filterFields.length > 0) return filterFields;
+    if (!data || data.length === 0) return [];
+
+    const sample = data[0];
+    const keysToExclude = ["id", "uhidNo", "opNo", "ancNo", "contactNo", "phone", "email"];
+
+    return Object.keys(sample)
+      .filter((k) => typeof sample[k] === "string" && !keysToExclude.includes(k))
+      .slice(0, 4)
+      .map((k) => {
+        const uniqueValues = Array.from(new Set(data.map((d) => String(d[k] || "")).filter(Boolean)));
+        const isSelect = uniqueValues.length > 0 && uniqueValues.length <= 15;
+        const formattedLabel = k.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+        return {
+          label: formattedLabel,
+          key: k,
+          type: isSelect ? "select" : "text",
+          options: isSelect ? uniqueValues : undefined,
+        };
+      });
+  }, [filterFields, data]);
+
+  // Close actions dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (actionRef.current && !actionRef.current.contains(e.target as Node)) {
+        setShowActions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Filter data based on Search, Date range, and Field filters
   const filteredData = useMemo(() => {
     let result = data;
 
+    // Search Filter (case-insensitive, trimmed)
     if (search.trim()) {
-      const q = search.toLowerCase();
+      const q = search.trim().toLowerCase();
       result = result.filter((item) => {
         if (searchField) {
           return searchField(item).toLowerCase().includes(q);
@@ -66,8 +123,62 @@ export function StandardModuleTable<TData extends Record<string, any>>({
       });
     }
 
+    // Dynamic Field Filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) {
+        result = result.filter((item) => {
+          const itemVal = item[key];
+          if (itemVal === undefined || itemVal === null) return false;
+          return String(itemVal).toLowerCase().includes(value.toLowerCase());
+        });
+      }
+    });
+
+    // From Date -> To Date Filtering
+    if (fromDate || toDate) {
+      result = result.filter((item) => {
+        const dateStr = item.registrationDate || item.ancDate || item.cancelledDate || item.date || item.createdDate;
+        if (!dateStr) return true;
+        const itemDate = new Date(dateStr);
+        if (isNaN(itemDate.getTime())) return true;
+
+        if (fromDate && itemDate < fromDate) return false;
+        if (toDate && itemDate > toDate) return false;
+        return true;
+      });
+    }
+
     return result;
-  }, [data, search, searchField]);
+  }, [data, search, filters, fromDate, toDate, searchField]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filters, fromDate, toDate]);
+
+  // Open Filter Panel
+  const handleOpenFilterPanel = () => {
+    setTempFilters({ ...filters });
+    setIsFilterPanelOpen(true);
+    setShowActions(false);
+  };
+
+  // Apply Filter
+  const handleApplyFilter = () => {
+    setFilters({ ...tempFilters });
+    setIsFilterPanelOpen(false);
+  };
+
+  // Reset / Clear All Filters
+  const handleResetFilters = () => {
+    setSearch("");
+    setFilters({});
+    setTempFilters({});
+    setFromDate(undefined);
+    setToDate(undefined);
+    setCurrentPage(1);
+    setIsFilterPanelOpen(false);
+  };
 
   // Paginated Data
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
@@ -96,7 +207,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
 
   const handleExportExcel = () => {
     if (!paginatedData.length) {
-      toast.error("No data to export on current page");
+      notify.validationError("No data to export on current page");
       return;
     }
     try {
@@ -130,7 +241,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
       toast.success(`Exported ${paginatedData.length} records`);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to export data");
+      notify.serverError("Failed to export data");
     } finally {
       setShowActions(false);
     }
@@ -170,7 +281,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "justify-start text-left font-normal",
+                    "justify-start text-left font-normal cursor-pointer",
                     !fromDate && "text-muted-foreground"
                   )}
                 >
@@ -195,7 +306,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "justify-start text-left font-normal",
+                    "justify-start text-left font-normal cursor-pointer",
                     !toDate && "text-muted-foreground"
                   )}
                 >
@@ -219,33 +330,41 @@ export function StandardModuleTable<TData extends Record<string, any>>({
               variant="outline"
               size="sm"
               onClick={() => setShowActions(!showActions)}
-              className="shrink-0 cursor-pointer"
+              className={cn("shrink-0 cursor-pointer", hasActiveFilters && "border-blue-500 text-blue-600 bg-blue-50/50")}
             >
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
 
+            {hasActiveFilters && (
+              <button
+                onClick={handleResetFilters}
+                title="Clear all filters"
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center shadow-md hover:bg-blue-700 cursor-pointer"
+              >
+                <X size={12} />
+              </button>
+            )}
+
             {showActions && (
               <div className="absolute right-0 mt-2 bg-card border border-border rounded-xl shadow-lg p-2 flex items-center gap-1 z-50">
                 <button
-                  onClick={() => {
-                    setShowActions(false);
-                  }}
-                  className="p-2 rounded-lg hover:bg-blue-50 text-muted-foreground transition"
-                  title="Filter"
+                  onClick={handleOpenFilterPanel}
+                  className="p-2 rounded-lg hover:bg-blue-50 text-muted-foreground hover:text-blue-600 transition cursor-pointer"
+                  title="Open Filter Panel"
                 >
                   <Filter size={18} />
                 </button>
                 <button
                   onClick={handleExportExcel}
-                  className="p-2 rounded-lg hover:bg-green-50 text-muted-foreground hover:text-green-600 transition"
-                  title="Export"
+                  className="p-2 rounded-lg hover:bg-green-50 text-muted-foreground hover:text-green-600 transition cursor-pointer"
+                  title="Export to CSV"
                 >
                   <FileSpreadsheet size={18} />
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="p-2 rounded-lg hover:bg-purple-50 text-muted-foreground hover:text-purple-600 transition"
-                  title="Print"
+                  className="p-2 rounded-lg hover:bg-purple-50 text-muted-foreground hover:text-purple-600 transition cursor-pointer"
+                  title="Print Table"
                 >
                   <Printer size={18} />
                 </button>
@@ -255,13 +374,24 @@ export function StandardModuleTable<TData extends Record<string, any>>({
         </div>
       </div>
 
-      {/* Stats Row */}
+      {/* Active Filter Indicators & Record Count Row */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">
             Showing {paginatedData.length} of {filteredData.length} records
           </span>
           {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleResetFilters}
+              className="h-7 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 gap-1 px-2 cursor-pointer"
+            >
+              <X className="h-3 w-3" /> Clear Filters
+            </Button>
+          )}
         </div>
       </div>
 
@@ -272,6 +402,67 @@ export function StandardModuleTable<TData extends Record<string, any>>({
       <div className="mt-4">
         <Pagination table={paginationTable} totalCount={filteredData.length} />
       </div>
+
+      {/* Filter Custom Panel Slide-over (Matching Registered Patients) */}
+      <CustomPanel
+        isOpen={isFilterPanelOpen}
+        title="Filter Records"
+        onClose={() => setIsFilterPanelOpen(false)}
+        onSave={handleApplyFilter}
+        saveLabel="Apply Filter"
+        width="580px"
+      >
+        <div className="space-y-6 text-slate-700">
+          <p className="text-xs text-muted-foreground">
+            Specify filter criteria below to refine matching records.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4">
+            {derivedFilterFields.map((field) => (
+              <Field key={field.key} label={field.label}>
+                {field.type === "select" && field.options ? (
+                  <SelectField
+                    options={field.options}
+                    placeholder={`Any ${field.label.toLowerCase()}`}
+                    value={tempFilters[field.key] || ""}
+                    onChange={(val: string) =>
+                      setTempFilters((prev) => {
+                        const next = { ...prev };
+                        if (val) next[field.key] = val;
+                        else delete next[field.key];
+                        return next;
+                      })
+                    }
+                  />
+                ) : (
+                  <TextField
+                    placeholder={`Filter by ${field.label.toLowerCase()}`}
+                    value={tempFilters[field.key] || ""}
+                    onChange={(val: string) =>
+                      setTempFilters((prev) => {
+                        const next = { ...prev };
+                        if (val) next[field.key] = val;
+                        else delete next[field.key];
+                        return next;
+                      })
+                    }
+                  />
+                )}
+              </Field>
+            ))}
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={handleResetFilters}
+              className="text-xs text-slate-600 cursor-pointer"
+            >
+              Reset All Filters
+            </Button>
+          </div>
+        </div>
+      </CustomPanel>
 
       {/* Print Preview Modal */}
       <PatientPrintPreviewModal

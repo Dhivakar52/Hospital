@@ -95,9 +95,15 @@ export default function HospitalMasterPage() {
       {/* Standardized Card & Table */}
       <StandardModuleTable
         title="Hospital Master Records"
-        searchPlaceholder="Search hospital, area, city..."
+        searchPlaceholder="Search hospital name, code, area, city..."
         columns={columns}
         data={records}
+        filterFields={[
+          { label: "City Name", key: "cityName", type: "select", options: ["Chennai", "Chengalpattu", "Kancheepuram", "Thiruvallur"] },
+          { label: "State", key: "state", type: "select", options: ["Tamil Nadu"] },
+          { label: "Area Name", key: "areaName", type: "text" },
+          { label: "Hospital Name", key: "hospital", type: "text" }
+        ]}
         searchField={(r) => `${r.hospital} ${r.areaName} ${r.cityName} ${r.state}`}
       />
 

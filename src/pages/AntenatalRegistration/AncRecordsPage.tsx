@@ -110,9 +110,14 @@ export default function AncRecordsPage() {
       {/* Standardized Card & Table */}
       <StandardModuleTable
         title="Registered ANC Records"
-        searchPlaceholder="Search Patient / UHID / ANC No"
+        searchPlaceholder="Search Patient / UHID / ANC No / Mobile"
         columns={columns}
         data={records}
+        filterFields={[
+          { label: "Department", key: "department", type: "select", options: ["Obstetrics", "General Surgery", "General Medicine"] },
+          { label: "Gender", key: "gender", type: "select", options: ["Female"] },
+          { label: "Patient Name", key: "patientName", type: "text" }
+        ]}
         searchField={(r) => `${r.patientName} ${r.uhidNo} ${r.ancNo} ${r.department}`}
       />
 
