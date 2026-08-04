@@ -374,12 +374,9 @@ export function StandardModuleTable<TData extends Record<string, any>>({
         </div>
       </div>
 
-      {/* Active Filter Indicators & Record Count Row */}
+      {/* Active Filter Indicators & Loader Row */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            Showing {paginatedData.length} of {filteredData.length} records
-          </span>
           {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
 
           {hasActiveFilters && (

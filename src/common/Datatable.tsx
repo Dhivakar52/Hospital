@@ -2,7 +2,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
@@ -47,7 +46,6 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   })
 
   const renderSkeletonRows = () => {
@@ -65,7 +63,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="relative overflow-x-auto rounded-md border">
       <Table>
-        <TableHeader className=""  style={{ background: "var(--sidebar-top-bg)" }}>
+        <TableHeader className="" style={{ background: "var(--sidebar-top-bg)" }}>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -79,7 +77,6 @@ export function DataTable<TData, TValue>({
                         className={`flex items-center text-white gap-1 ${
                           isSortable ? 'cursor-pointer select-none ' : ''
                         }`}
-                       
                         onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
