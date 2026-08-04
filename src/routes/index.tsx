@@ -1,9 +1,11 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { Suspense } from "react"
+import { ErrorBoundary } from "react-error-boundary"
 import { routes } from "./routes.config"
 import ProtectedRoutes from "./ProtectedRoutes"
 import { Layout } from "@/layout/Layout"
 import { useAuth } from "@/context/AuthContext"
+import { ErrorFallback } from "@/components/ErrorFallback"
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -11,10 +13,22 @@ const PageLoader = () => (
   </div>
 )
 
+// Reusable wrapper — resetKeys la pathname pass panra, so route change aanaa
+// boundary automatic-a reset aagum, "Try again" click pannanum nu venaam
+const withRouteErrorBoundary = (children: React.ReactNode, key: string) => (
+  <ErrorBoundary
+    FallbackComponent={ErrorFallback}
+    resetKeys={[key]}
+    onError={(error, info) => {
+      console.error(`Route error [${key}]:`, error, info.componentStack)
+    }}
+  >
+    {children}
+  </ErrorBoundary>
+)
+
 export const AppRoutes = () => {
   const location = useLocation()
-
-
   const { isAuthenticated } = useAuth()
 
   const publicRoutes = routes.filter(route => !route.protected)
@@ -28,7 +42,7 @@ export const AppRoutes = () => {
           <Route
             key={route.path}
             path={route.path}
-            element={<route.component />}
+            element={withRouteErrorBoundary(<route.component />, route.path)}
           />
         ))}
 
@@ -36,7 +50,7 @@ export const AppRoutes = () => {
         <Route
           element={
             <ProtectedRoutes isAuthenticated={isAuthenticated}>
-              <Layout />
+              {withRouteErrorBoundary(<Layout />, 'layout')}
             </ProtectedRoutes>
           }
         >
@@ -49,7 +63,7 @@ export const AppRoutes = () => {
                   isAuthenticated={isAuthenticated}
                   requiredRoles={(route as { roles?: string[] }).roles ?? []}
                 >
-                  <route.component />
+                  {withRouteErrorBoundary(<route.component />, route.path)}
                 </ProtectedRoutes>
               }
             />
