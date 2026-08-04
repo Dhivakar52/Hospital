@@ -1,35 +1,17 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { CalendarClock, Plus, Pencil } from "lucide-react";
+import { CalendarClock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
 import CustomPanel from "@/common/CustomPanel";
-
-interface RevisitRow {
-  uhidNo: string;
-  opNo: string;
-  title: string;
-  patientName: string;
-  fhwo: string;
-  area: string;
-  city: string;
-  department: string;
-}
-
-const MOCK_DATA: RevisitRow[] = [
-  { uhidNo: "3995988", opNo: "26602286", title: "Mr", patientName: "NITESH KUMAR", fhwo: "Self", area: "Vadapalani", city: "Chennai", department: "General Medicine" },
-  { uhidNo: "3489205", opNo: "26602285", title: "Mrs", patientName: "SUVETHA", fhwo: "DHEENA DHAYALAN", area: "Tambaram", city: "Chengalpattu", department: "Urology" },
-  { uhidNo: "4137281", opNo: "26602284", title: "Miss", patientName: "ERGAMREDDY SHARMILA", fhwo: "D/O SIVASHANKARAREDDY", area: "Potheri", city: "Chengalpattu", department: "Psychiatry" },
-  { uhidNo: "3709448", opNo: "26602281", title: "Mr", patientName: "PRIYANSHU PANDA", fhwo: "S/O PRASATH PANDA", area: "Potheri", city: "Chengalpattu", department: "Dermatology" },
-  { uhidNo: "2879469", opNo: "26602280", title: "Mr", patientName: "MURUGESAN", fhwo: "S/O VEERASAMY", area: "Kancheepuram", city: "Kancheepuram", department: "Family Medicine" },
-];
+import { GENERATED_REVISIT_RECORDS, type RevisitRow } from "@/data/sampleData";
 
 export default function RevisitRecordsPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [records, setRecords] = useState<RevisitRow[]>(MOCK_DATA);
+  const [records, setRecords] = useState<RevisitRow[]>(GENERATED_REVISIT_RECORDS);
   const [selectedRecord, setSelectedRecord] = useState<RevisitRow | null>(null);
 
   useEffect(() => {

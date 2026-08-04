@@ -1,6 +1,6 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
-import { Baby } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Baby, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
 import { notify } from "@/lib/notify";
@@ -11,6 +11,9 @@ const UNITS = ["Unit 1", "Unit 2", "Unit 3"] as const;
 
 export default function AntenatalRegistration() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editRecord = location.state?.record;
+
   const [ancNo, setAncNo] = React.useState("");
   const [uhidNo, setUhidNo] = React.useState("");
   const [patientName, setPatientName] = React.useState("");
@@ -23,6 +26,45 @@ export default function AntenatalRegistration() {
   const [department, setDepartment] = React.useState<string>("");
   const [doctor, setDoctor] = React.useState<string>("");
   const [unit, setUnit] = React.useState<string>("");
+
+  React.useEffect(() => {
+    if (editRecord) {
+      setAncNo(editRecord.ancNo || "");
+      setUhidNo(editRecord.uhidNo || "");
+      setPatientName(editRecord.patientName || "");
+      setAge(String(editRecord.age || ""));
+      setGender(editRecord.gender || "Female");
+      setDepartment(editRecord.department || "Obstetrics");
+      setDoctor(editRecord.doctor || "Dr. Kavitha R");
+      setUnit(editRecord.unit || "Unit 1");
+      setCategory("General");
+      setAddress("12, Main Road, Chengalpattu");
+    }
+  }, [editRecord]);
+
+  const handleClear = () => {
+    setAncNo("");
+    setUhidNo("");
+    setPatientName("");
+    setAge("");
+    setGender("");
+    setCategory("");
+    setAddress("");
+    setLmp(undefined);
+    setEdd(undefined);
+    setDepartment("");
+    setDoctor("");
+    setUnit("");
+  };
+
+  const handleSaveOrUpdate = () => {
+    if (editRecord) {
+      notify.updateSuccess("Record updated successfully.");
+    } else {
+      notify.saveSuccess("Record saved successfully.");
+    }
+    navigate("/registered-anc-records");
+  };
 
   return (
     <div>
@@ -40,9 +82,11 @@ export default function AntenatalRegistration() {
           </div>
 
           <div>
-            <h1 className="text-[17px] font-semibold">Antenatal Registration</h1>
+            <h1 className="text-[17px] font-semibold">
+              {editRecord ? `Edit Antenatal Registration (${editRecord.ancNo})` : "Antenatal Registration"}
+            </h1>
             <p className="text-[12.5px] text-muted-foreground">
-              Register new antenatal care details
+              {editRecord ? "Modify existing antenatal care details" : "Register new antenatal care details"}
             </p>
           </div>
         </div>
@@ -53,8 +97,8 @@ export default function AntenatalRegistration() {
             className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
             style={{ background: "var(--blue-btn)" }}
           >
-            <Baby className="h-4 w-4" />
-            View Registered ANC Records
+            <ArrowLeft className="h-4 w-4" />
+            Back to ANC Records
           </Button>
         </div>
       </div>
@@ -132,34 +176,15 @@ export default function AntenatalRegistration() {
           </div>
 
           <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
-            <Button variant="outline" className="text-[13px] h-10 w-28 font-medium text-slate-600">
+            <Button variant="outline" onClick={handleClear} className="text-[13px] h-10 w-28 font-medium text-slate-600">
               Clear
             </Button>
             <Button
-              onClick={() => {
-                const newRecord = {
-                  ancNo: ancNo || `ANC-${Date.now().toString().slice(-6)}`,
-                  ancDate: new Date().toLocaleString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }),
-                  uhidNo: uhidNo || `UH-${Date.now().toString().slice(-6)}`,
-                  patientName: patientName || "NEW ANC PATIENT",
-                  age: Number(age) || 0,
-                  gender: gender || "Female",
-                  department: department || "Obstetrics",
-                };
-
-                notify.saveSuccess("Record saved successfully.");
-                navigate("/registered-anc-records", { state: { newRecord } });
-              }}
-              className="gap-1.5 h-10  text-white text-[13px] cursor-pointer"
+              onClick={handleSaveOrUpdate}
+              className="gap-1.5 h-10 text-white text-[13px] cursor-pointer"
               style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
             >
-              Save ANC Registration
+              {editRecord ? "Update ANC Registration" : "Save ANC Registration"}
             </Button>
           </div>
         </div>

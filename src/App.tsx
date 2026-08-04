@@ -13,7 +13,7 @@ function App() {
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>
-          <Toaster position="top-right" richColors closeButton />
+          <Toaster position="top-right" richColors duration={200} closeButton />
         </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
