@@ -102,10 +102,25 @@ export default function RevisitRecordsPage() {
       {/* Standardized Card & Table */}
       <StandardModuleTable
         title="Revisit Records"
-        searchPlaceholder="Search Patient / UHID / OP No"
+        searchPlaceholder="Search Patient Name / UHID / OP Number"
         columns={columns}
         data={records}
-        searchField={(r) => `${r.patientName} ${r.uhidNo} ${r.opNo} ${r.department}`}
+        filterFields={[
+          {
+            label: "Department",
+            key: "department",
+            type: "select",
+            options: [
+              "General Medicine", "Cardiology", "Neurology", "Orthopedics", "Pediatrics",
+              "Dermatology", "Urology", "Obstetrics & Gynaecology", "ENT", "Ophthalmology",
+              "Psychiatry", "Nephrology", "Gastroenterology", "Oncology", "Family Medicine"
+            ]
+          },
+          { label: "City", key: "city", type: "select", options: ["Chennai", "Chengalpattu", "Kancheepuram", "Thiruvallur"] },
+          { label: "Area", key: "area", type: "text" },
+          { label: "Title", key: "title", type: "select", options: ["Mr", "Mrs", "Miss", "Dr"] }
+        ]}
+        searchField={(r) => `${r.patientName} ${r.uhidNo} ${r.opNo} ${r.department} ${r.area} ${r.city}`}
       />
 
       <CustomPanel

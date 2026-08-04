@@ -104,10 +104,15 @@ export default function RevisitCancelModule() {
       {/* Standalone Revisit Cancellation List Screen (Table Only, No Form) */}
       <StandardModuleTable
         title="Revisit Cancellation Records"
-        searchPlaceholder="Search Patient Name / UHID / OP Number"
+        searchPlaceholder="Search Patient Name / UHID / OP Number / Reason"
         columns={columns}
         data={data}
-        searchField={(r) => `${r.patientName} ${r.uhidNo} ${r.opNo} ${r.reason}`}
+        filterFields={[
+          { label: "Cancellation Reason", key: "reason", type: "text" },
+          { label: "Created By", key: "createdBy", type: "text" },
+          { label: "Status", key: "status", type: "select", options: ["Cancelled"] }
+        ]}
+        searchField={(r) => `${r.patientName} ${r.uhidNo} ${r.opNo} ${r.reason} ${r.createdBy}`}
       />
 
       <CustomPanel

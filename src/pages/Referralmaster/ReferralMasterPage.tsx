@@ -94,9 +94,23 @@ export default function ReferralMasterPage() {
       {/* Standardized Card & Table */}
       <StandardModuleTable
         title="Referral Master Records"
-        searchPlaceholder="Search referral name, designation..."
+        searchPlaceholder="Search referral name, code, hospital name..."
         columns={columns}
         data={records}
+        filterFields={[
+          {
+            label: "Designation",
+            key: "designation",
+            type: "select",
+            options: [
+              "Consultant Cardiologist", "General Practitioner", "Senior Surgeon", "Pediatrician",
+              "Neurologist", "Orthopedic Surgeon", "Gynecologist", "Dermatologist", "ENT Specialist",
+              "Oncologist", "Nephrologist", "Radiologist", "Pulmonologist", "Anesthesiologist", "Gastroenterologist"
+            ]
+          },
+          { label: "Hospital Name", key: "hospitalName", type: "text" },
+          { label: "Referral Name", key: "referralName", type: "text" }
+        ]}
         searchField={(r) => `${r.referralName} ${r.designation} ${r.hospitalName}`}
       />
 
