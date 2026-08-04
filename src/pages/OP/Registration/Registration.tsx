@@ -72,6 +72,10 @@ export default function Registration() {
     setDraft((current) => ({ ...current, [field]: value }));
   };
 
+  const handleStepClick = (targetStep: StepKey) => {
+    setStep(targetStep);
+  };
+
   const goNext = () => {
     if (step < 4) {
       setStep((current) => (current + 1) as StepKey);
@@ -87,10 +91,12 @@ export default function Registration() {
     setSavedPatient(draft);
     setDraft(emptyDraft);
     setStep(1);
-    notify.saveSuccess("Record saved successfully.");
+    notify.saveSuccess("Data saved successfully.");
     navigate("/registered-patients");
   };
+
   const goBack = () => setStep((s) => (s > 1 ? ((s - 1) as StepKey) : s));
+
   const clearDraft = () => {
     setDraft(emptyDraft);
     toast.info("Registration form cleared.");
@@ -105,6 +111,7 @@ export default function Registration() {
 
   return (
     <div>
+      {/* Header Bar */}
       <div className="mb-5 flex items-center justify-between">
         {/* Left Side */}
         <div className="flex items-center gap-3">
@@ -120,10 +127,10 @@ export default function Registration() {
 
           <div>
             <h1 className="text-[17px] font-semibold">
-              Patient Registration
+              {editingPatient ? "Edit Registered Patient" : "Patient Registration"}
             </h1>
             <p className="text-[12.5px] text-muted-foreground">
-              {editingPatient ? "Edit registered patient details" : "Register new patient details and manage information"}
+              {editingPatient ? "Edit and update registered patient details" : "Register new patient details and manage information"}
             </p>
           </div>
         </div>
@@ -153,28 +160,33 @@ export default function Registration() {
         </div>
       </div>
 
+      {/* Main Registration / Edit Form Container */}
       <div
-        className="rounded-md border border-slate-200"
+        className="rounded-md border border-slate-200 bg-white"
         style={{
           background: "var(--background)",
         }}
       >
-        <Stepper current={step} />
+        {/* Clickable Stepper Tabs */}
+        <Stepper current={step} onStepClick={handleStepClick} />
+
+        {/* Step Panels Content */}
         <div className="border-t border-slate-100 px-6 py-6">
           {panels[step]}
 
-          <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
+          {/* Action Buttons */}
+          <div className="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
             {step > 1 && (
-              <Button variant="outline" onClick={goBack} className="gap-1.5 text-[13px] font-medium text-slate-600">
+              <Button variant="outline" onClick={goBack} className="gap-1.5 text-[13px] font-medium text-slate-600 cursor-pointer">
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Back
               </Button>
             )}
-            <Button variant="outline" onClick={clearDraft} className="text-[13px] font-medium text-slate-600">
+            <Button variant="outline" onClick={clearDraft} className="text-[13px] font-medium text-slate-600 cursor-pointer">
               Clear
             </Button>
-            <Button onClick={goNext} className="gap-1.5 text-white text-[13px]" style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}>
-              {step === 4 ? "Register Patient" : "Save & Next"}
+            <Button onClick={goNext} className="gap-1.5 text-white text-[13px] cursor-pointer" style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}>
+              {step === 4 ? (editingPatient ? "Update Patient" : "Register Patient") : "Save & Next"}
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>

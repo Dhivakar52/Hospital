@@ -619,14 +619,11 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
         </div>
 
         {/* Stats */}
-        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Showing {paginatedData.length} of {filteredData.length} patients
-            </span>
-            {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+        {loading && (
+          <div className="flex items-center gap-4 mb-4">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
-        </div>
+        )}
 
         {/* Data Table */}
         <DataTable

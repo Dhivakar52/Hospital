@@ -14,14 +14,19 @@ const STEPS: StepDef[] = [
   { key: 4, label: "Additional Information" },
 ];
 
-export function Stepper({ current }: { current: StepKey }) {
+interface StepperProps {
+  current: StepKey;
+  onStepClick?: (step: StepKey) => void;
+}
+
+export function Stepper({ current, onStepClick }: StepperProps) {
   const total = STEPS.length;
-  const labels = STEPS.map((s) => s.label);
 
   return (
     <div className="flex items-center px-4 sm:px-6 py-4 sm:py-5 overflow-x-auto">
-      {labels.map((label, i) => {
-        const stepNum = i + 1;
+      {STEPS.map((s) => {
+        const stepNum = s.key;
+        const label = s.label;
         const isActive = stepNum === current;
         const isCompleted = stepNum < current;
         
@@ -30,7 +35,11 @@ export function Stepper({ current }: { current: StepKey }) {
             key={label} 
             className="flex flex-1 items-center last:flex-none min-w-fit"
           >
-            <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => onStepClick?.(stepNum)}
+              className="flex items-center gap-1 sm:gap-2 text-left cursor-pointer hover:opacity-80 transition-opacity outline-none"
+            >
               {/* Step Number Circle */}
               <div
                 style={
@@ -41,7 +50,7 @@ export function Stepper({ current }: { current: StepKey }) {
                     : isCompleted
                     ? {
                         background: "var(--blue-text-color)",
-                        opacity: 0.5,
+                        opacity: 0.7,
                       }
                     : undefined
                 }
@@ -51,12 +60,12 @@ export function Stepper({ current }: { current: StepKey }) {
                     ? "text-white shadow-md" 
                     : isCompleted
                     ? "text-white"
-                    : "border border-slate-300 text-slate-400"
+                    : "border border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-600"
                 )}
               >
                 {isCompleted ? (
                   <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
                   stepNum
@@ -68,10 +77,10 @@ export function Stepper({ current }: { current: StepKey }) {
                 className={cn(
                   "whitespace-nowrap text-[11px] sm:text-[13px] transition-all duration-200",
                   isActive 
-                    ? "font-semibold" 
+                    ? "font-bold" 
                     : isCompleted
-                    ? "font-medium text-slate-500"
-                    : "font-medium text-slate-400"
+                    ? "font-semibold text-slate-700"
+                    : "font-medium text-slate-400 hover:text-slate-600"
                 )}
                 style={
                   isActive
@@ -90,7 +99,7 @@ export function Stepper({ current }: { current: StepKey }) {
                    "Additional"}
                 </span>
               </span>
-            </div>
+            </button>
 
             {/* Connector Line */}
             {stepNum !== total && (

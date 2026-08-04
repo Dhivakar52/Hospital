@@ -5,7 +5,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -62,7 +61,7 @@ export function AppSidebar() {
   const isParentActive = (item: any) =>
     item.items?.some((sub: any) => isUrlActive(sub.url))
 
-  // ✅ Explicit open-state map, keyed by item title.
+  // Explicit open-state map, keyed by item title
   const [openItems, setOpenItems] = React.useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
     menuConfig.forEach((item) => {
@@ -73,7 +72,7 @@ export function AppSidebar() {
     return initial
   })
 
-  // ✅ Auto-expand parent menu when route changes
+  // Auto-expand parent menu when route changes
   React.useEffect(() => {
     menuConfig.forEach((item) => {
       if (item.items && isParentActive(item)) {
@@ -86,11 +85,7 @@ export function AppSidebar() {
     setOpenItems((prev) => ({ ...prev, [title]: next }))
   }
 
-  // ✅ Search filtering — case-insensitive match against a
-  // top-level item's own title, or any of its submenu titles.
-  // When a match comes only from submenu items, only those
-  // matching submenu items are shown (parent still shown as the
-  // group header so context isn't lost).
+  // Search filtering
   const filteredMenu = React.useMemo(() => {
     const q = search.trim().toLowerCase()
     if (!q) return menuConfig
@@ -108,11 +103,9 @@ export function AppSidebar() {
         )
 
         if (titleMatches) {
-          // Parent matched — show it with all its original subitems
           return item
         }
         if (matchingSubs.length > 0) {
-          // Only some subitems matched — show just those
           return { ...item, items: matchingSubs }
         }
         return null
@@ -122,8 +115,6 @@ export function AppSidebar() {
 
   const hasResults = filteredMenu.length > 0
 
-  // ✅ Logout Handler - uses AuthContext so isAuthenticated updates
-  // immediately everywhere, instead of only in localStorage
   const handleLogout = () => {
     logout()
     toast.success('Logged out successfully')
@@ -132,29 +123,31 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="px-4 py-3 font-bold  border-b flex justify-start items-start gap-2 overflow-hidden"
-      style={{ background: "var(--sidebar-top-bg)", color: "white" }}
-        >
-        <div>
-          <img src={Logo} className="w-auto h-[40px]" alt="" />
+      {/* Header */}
+      <SidebarHeader
+        className="px-4 py-3 font-bold border-b flex justify-start items-center gap-2 overflow-hidden h-14"
+        style={{ background: "var(--sidebar-top-bg)", color: "white" }}
+      >
+        <div className="flex items-center gap-2">
+          <img src={Logo} className="w-auto h-8 object-contain shrink-0" alt="Hospital Logo" />
         </div>
       </SidebarHeader>
 
-      {/* ✅ Menu search — hidden when the sidebar is collapsed to icons */}
-      <div className="px-3 pt-3 group-data-[collapsible=icon]:hidden">
-        <div className="relative">
+      {/* Menu Search */}
+      <div className="px-3 pt-3 pb-1 group-data-[collapsible=icon]:hidden">
+        <div className="relative flex items-center">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search menu"
-            className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-7 text-[12.5px] outline-none placeholder:text-muted-foreground focus:border-slate-400"
+            placeholder="Search menu..."
+            className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-7 text-xs outline-none placeholder:text-muted-foreground focus:border-slate-400"
           />
           {isSearching && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
               aria-label="Clear search"
             >
               <X className="h-3.5 w-3.5" />
@@ -163,52 +156,53 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
-            Menu
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
+      {/* Sidebar Navigation Content */}
+      <SidebarContent className="px-2 py-2">
+        <SidebarGroup className="p-0">
+          <SidebarGroupContent className="mt-1">
             {isSearching && !hasResults ? (
-              <div className="px-3 py-4 text-[12.5px] text-muted-foreground group-data-[collapsible=icon]:hidden">
+              <div className="px-3 py-4 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
                 No menu items match "{search}"
               </div>
             ) : (
-              <SidebarMenu>
+              <SidebarMenu className="gap-1">
                 {filteredMenu.map((item) => {
-                  // No submenu — plain link
+                  // Single link item (no submenu)
                   if (!item.items) {
                     const isActive = isUrlActive(item.url)
                     return (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
+                          render={
+                            <NavLink
+                              to={item.url}
+                              className={cn(
+                                "flex items-center gap-2.5 w-full h-9 px-3 rounded-md text-xs font-medium transition-colors",
+                                isActive && "theme-color font-semibold"
+                              )}
+                            >
+                              <item.icon className="h-4 w-4 shrink-0" />
+                              <span className="truncate group-data-[collapsible=icon]:hidden">
+                                {item.title}
+                              </span>
+                              {item.badge && (
+                                <Badge className="ml-auto group-data-[collapsible=icon]:hidden text-[10px]">
+                                  {item.badge}
+                                </Badge>
+                              )}
+                            </NavLink>
+                          }
                           tooltip={item.title}
-                          className={cn(
-                            "px-4 py-[18px] mb-[5px]",
-                            isActive && "theme-color"
-                          )}
-                        >
-                          <NavLink to={item.url} className="flex items-center gap-2 w-full">
-                            <item.icon className="h-4 w-4 shrink-0" />
-                            <span className="group-data-[collapsible=icon]:hidden">
-                              {item.title}
-                            </span>
-                            {item.badge && (
-                              <Badge className="ml-auto group-data-[collapsible=icon]:hidden">
-                                {item.badge}
-                              </Badge>
-                            )}
-                          </NavLink>
-                        </SidebarMenuButton>
+                          isActive={isActive}
+                        />
                       </SidebarMenuItem>
                     )
                   }
 
                   const parentActive = isParentActive(item)
-                  // While searching, force submenus open so matches are visible
                   const isOpen = isSearching ? true : openItems[item.title] ?? parentActive
 
-                  // Has submenu + sidebar collapsed to icons -> popover dropdown
+                  // Collapsed sidebar popover menu
                   if (isCollapsed) {
                     return (
                       <SidebarMenuItem key={item.title}>
@@ -217,23 +211,34 @@ export function AppSidebar() {
                             render={
                               <SidebarMenuButton
                                 tooltip={item.title}
-                                className={cn(parentActive && "theme-color")}
+                                className={cn(
+                                  "flex items-center justify-center h-9 w-full rounded-md transition-colors",
+                                  parentActive && "theme-color font-semibold"
+                                )}
                               >
                                 <item.icon className="h-4 w-4 shrink-0" />
                               </SidebarMenuButton>
                             }
                           />
-                          <DropdownMenuContent side="right" align="start" className="min-w-48">
-                            <div className="px-2 py-1.5 text-sm font-medium">{item.title}</div>
+                          <DropdownMenuContent side="right" align="start" className="min-w-48 shadow-md">
+                            <div className="px-3 py-1.5 text-xs font-bold text-slate-900 border-b border-slate-100">
+                              {item.title}
+                            </div>
                             {item.items.map((sub) => {
                               const subActive = isUrlActive(sub.url)
                               return (
                                 <DropdownMenuItem
                                   key={sub.title}
-                                  className={cn(subActive && "theme-color")}
+                                  className={cn("p-0 cursor-pointer", subActive && "bg-slate-100")}
                                   render={
-                                    <NavLink to={sub.url} className="flex items-center gap-2 w-full">
-                                      <sub.icon className="h-4 w-4" />
+                                    <NavLink
+                                      to={sub.url}
+                                      className={cn(
+                                        "flex items-center gap-2.5 px-3 py-2 text-xs w-full text-slate-700 hover:text-slate-900",
+                                        subActive && "font-semibold text-blue-700"
+                                      )}
+                                    >
+                                      <sub.icon className="h-3.5 w-3.5 shrink-0" />
                                       <span>{sub.title}</span>
                                     </NavLink>
                                   }
@@ -246,7 +251,7 @@ export function AppSidebar() {
                     )
                   }
 
-                  // Has submenu + sidebar expanded -> inline collapsible
+                  // Collapsible parent menu (expanded sidebar)
                   return (
                     <Collapsible
                       key={item.title}
@@ -259,40 +264,51 @@ export function AppSidebar() {
                           render={
                             <SidebarMenuButton
                               tooltip={item.title}
-                              className={cn(parentActive && "theme-color")}
+                              className={cn(
+                                "flex items-center gap-2.5 w-full h-9 px-3 rounded-md text-xs font-medium transition-colors cursor-pointer",
+                                parentActive && "theme-color font-semibold"
+                              )}
                             >
                               <item.icon className="h-4 w-4 shrink-0" />
-                              <span className="group-data-[collapsible=icon]:hidden">
+                              <span className="truncate group-data-[collapsible=icon]:hidden">
                                 {item.title}
                               </span>
                               {item.badge && (
-                                <Badge className="ml-auto mr-1 group-data-[collapsible=icon]:hidden">
+                                <Badge className="ml-auto mr-1 group-data-[collapsible=icon]:hidden text-[10px]">
                                   {item.badge}
                                 </Badge>
                               )}
                               <ChevronRight
                                 className={cn(
-                                  "ml-auto h-4 w-4 transition-transform duration-200 group-data-[collapsible=icon]:hidden",
-                                  isOpen && "rotate-90"
+                                  "ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden text-slate-400",
+                                  isOpen && "rotate-90 text-slate-600"
                                 )}
                               />
                             </SidebarMenuButton>
                           }
                         />
                         <CollapsibleContent>
-                          <SidebarMenuSub>
+                          <SidebarMenuSub className="my-1 border-l-2 border-slate-200 ml-4 pl-2 space-y-1">
                             {item.items.map((sub) => {
                               const subActive = isUrlActive(sub.url)
                               return (
                                 <SidebarMenuSubItem key={sub.title}>
                                   <SidebarMenuSubButton
-                                    className={cn(subActive && "theme-color")}
-                                  >
-                                    <NavLink to={sub.url} className="flex items-center gap-2 w-full">
-                                      <sub.icon className="h-4 w-4" />
-                                      <span>{sub.title}</span>
-                                    </NavLink>
-                                  </SidebarMenuSubButton>
+                                    render={
+                                      <NavLink
+                                        to={sub.url}
+                                        className={cn(
+                                          "flex items-center gap-2.5 w-full h-8 px-2.5 rounded-md text-xs transition-colors",
+                                          subActive
+                                            ? "theme-color font-semibold"
+                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
+                                        )}
+                                      >
+                                        <sub.icon className="h-3.5 w-3.5 shrink-0" />
+                                        <span className="truncate">{sub.title}</span>
+                                      </NavLink>
+                                    }
+                                  />
                                 </SidebarMenuSubItem>
                               )
                             })}
@@ -308,13 +324,13 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* ✅ Sidebar Footer with Logout */}
-      <SidebarFooter className="border-t p-4">
+      {/* Footer */}
+      <SidebarFooter className="border-t p-3">
         <SidebarMenuItem className="list-none">
-          <SidebarMenuButton 
-            tooltip="Logout" 
+          <SidebarMenuButton
+            tooltip="Logout"
             onClick={handleLogout}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50/10"
+            className="flex items-center gap-2.5 w-full h-9 px-3 rounded-md text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50/50 transition-colors cursor-pointer"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             <span className="group-data-[collapsible=icon]:hidden">Logout</span>

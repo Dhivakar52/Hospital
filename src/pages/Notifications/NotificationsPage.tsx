@@ -11,15 +11,6 @@ import {
   Bed,
   Info,
   Eye,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/common/Datatable";
-import { Field, TextField } from "@/components/FormPrimitives";
-import { useNotifications, type NotificationItem } from "@/context/NotificationContext";
-import { NotificationDetailModal } from "@/components/NotificationDetailModal";
-
-import {
   AlertTriangle,
   Stethoscope,
   LogOut,
@@ -27,6 +18,13 @@ import {
   FileText,
   CheckCircle,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/common/Datatable";
+import Pagination from "@/common/Pagination";
+import { Field, TextField } from "@/components/FormPrimitives";
+import { useNotifications, type NotificationItem } from "@/context/NotificationContext";
+import { NotificationDetailModal } from "@/components/NotificationDetailModal";
 
 const typeIcons: Record<NotificationItem["type"], React.ReactNode> = {
   critical_lab: <AlertTriangle className="h-4 w-4 text-red-600 animate-pulse" />,
@@ -56,6 +54,10 @@ export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const filteredNotifications = useMemo(() => {
     let list = notifications;
     if (activeTab === "unread") {
@@ -73,6 +75,31 @@ export default function NotificationsPage() {
     }
     return list;
   }, [notifications, activeTab, searchTerm]);
+
+  // Paginated Data
+  const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage) || 1;
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredNotifications.slice(start, start + itemsPerPage);
+  }, [filteredNotifications, currentPage, itemsPerPage]);
+
+  const paginationTable = {
+    getState: () => ({
+      pagination: {
+        pageIndex: currentPage - 1,
+        pageSize: itemsPerPage,
+      },
+    }),
+    setPageIndex: (index: number) => setCurrentPage(index + 1),
+    setPageSize: (size: number) => {
+      setItemsPerPage(size);
+      setCurrentPage(1);
+    },
+    previousPage: () => setCurrentPage((prev) => Math.max(prev - 1, 1)),
+    nextPage: () => setCurrentPage((prev) => Math.min(prev + 1, totalPages)),
+    getCanPreviousPage: () => currentPage > 1,
+    getCanNextPage: () => currentPage < totalPages,
+  };
 
   const columns: ColumnDef<NotificationItem>[] = [
     {
@@ -154,7 +181,7 @@ export default function NotificationsPage() {
             markAsRead(row.original.id);
             setSelectedNotification(row.original);
           }}
-          className="gap-1.5 text-[12px] h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+          className="gap-1.5 text-[12px] h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 cursor-pointer"
         >
           <Eye className="h-3.5 w-3.5" />
           View Details
@@ -205,7 +232,10 @@ export default function NotificationsPage() {
                 <TextField
                   placeholder="Search by title, patient, or ID..."
                   value={searchTerm}
-                  onChange={setSearchTerm}
+                  onChange={(val) => {
+                    setSearchTerm(val);
+                    setCurrentPage(1);
+                  }}
                 />
               </Field>
             </div>
@@ -221,16 +251,22 @@ export default function NotificationsPage() {
           <div className="flex items-center gap-2">
             <Button
               variant={activeTab === "all" ? "default" : "outline"}
-              onClick={() => setActiveTab("all")}
-              className="text-[12.5px] h-9"
+              onClick={() => {
+                setActiveTab("all");
+                setCurrentPage(1);
+              }}
+              className="text-[12.5px] h-9 cursor-pointer"
               style={activeTab === "all" ? { background: "var(--blue-btn)", color: "white" } : {}}
             >
               All Notifications ({notifications.length})
             </Button>
             <Button
               variant={activeTab === "unread" ? "default" : "outline"}
-              onClick={() => setActiveTab("unread")}
-              className="text-[12.5px] h-9"
+              onClick={() => {
+                setActiveTab("unread");
+                setCurrentPage(1);
+              }}
+              className="text-[12.5px] h-9 cursor-pointer"
               style={activeTab === "unread" ? { background: "var(--blue-btn)", color: "white" } : {}}
             >
               Unread ({unreadCount})
@@ -241,8 +277,11 @@ export default function NotificationsPage() {
 
       {/* Main Table */}
       <div className="my-4">
-        <DataTable columns={columns} data={filteredNotifications} />
+        <DataTable columns={columns} data={paginatedData} />
       </div>
+
+      {/* Pagination Controls (Supporting 10, 25, 50, 100 per page) */}
+      <Pagination table={paginationTable} totalCount={filteredNotifications.length} />
 
       {/* Notification Detail View Modal */}
       <NotificationDetailModal
