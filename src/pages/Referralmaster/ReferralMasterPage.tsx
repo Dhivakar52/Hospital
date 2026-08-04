@@ -1,29 +1,17 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { UserCheck, Plus, Pencil } from "lucide-react";
+import { UserCheck, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
 import CustomPanel from "@/common/CustomPanel";
-
-interface ReferralRow {
-  referralName: string;
-  designation: string;
-  hospitalName: string;
-  contactNo: string;
-}
-
-const MOCK_REFERRALS: ReferralRow[] = [
-  { referralName: "Dr. Meena Kumar", designation: "Consultant", hospitalName: "Apollo Speciality", contactNo: "9840012345" },
-  { referralName: "Dr. Arjun Nair", designation: "General Practitioner", hospitalName: "SRM Global Hospitals", contactNo: "9884023456" },
-  { referralName: "Dr. Sathish Babu", designation: "Surgeon", hospitalName: "Fortis Malar", contactNo: "9445034567" },
-];
+import { GENERATED_REFERRAL_RECORDS, type ReferralRow } from "@/data/sampleData";
 
 export default function ReferralMasterPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [records, setRecords] = useState<ReferralRow[]>(MOCK_REFERRALS);
+  const [records, setRecords] = useState<ReferralRow[]>(GENERATED_REFERRAL_RECORDS);
   const [selectedReferral, setSelectedReferral] = useState<ReferralRow | null>(null);
 
   useEffect(() => {

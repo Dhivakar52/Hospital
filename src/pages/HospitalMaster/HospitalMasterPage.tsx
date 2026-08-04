@@ -1,30 +1,17 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Building2, Plus, Pencil } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
 import CustomPanel from "@/common/CustomPanel";
-
-interface HospitalRow {
-  hospital: string;
-  areaName: string;
-  cityName: string;
-  contactNo: string;
-  state: string;
-}
-
-const MOCK_HOSPITALS: HospitalRow[] = [
-  { hospital: "SRM Global Hospitals", areaName: "Vadapalani", cityName: "Chennai", contactNo: "044-45923000", state: "Tamil Nadu" },
-  { hospital: "Apollo Speciality", areaName: "Vanagaram", cityName: "Chennai", contactNo: "044-40200000", state: "Tamil Nadu" },
-  { hospital: "Fortis Malar", areaName: "Adyar", cityName: "Chennai", contactNo: "044-42892222", state: "Tamil Nadu" },
-];
+import { GENERATED_HOSPITAL_RECORDS, type HospitalRow } from "@/data/sampleData";
 
 export default function HospitalMasterPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [records, setRecords] = useState<HospitalRow[]>(MOCK_HOSPITALS);
+  const [records, setRecords] = useState<HospitalRow[]>(GENERATED_HOSPITAL_RECORDS);
   const [selectedHospital, setSelectedHospital] = useState<HospitalRow | null>(null);
 
   useEffect(() => {
