@@ -148,13 +148,27 @@ export default function DiagnoModule() {
       <div className="mb-6 rounded-md border border-slate-200 bg-white" style={{ background: "var(--background)" }}>
         <div className="px-6 py-5">
           <div className="grid grid-cols-12 items-end gap-4">
-            <Field label="Date" required span={6}>
+            <Field label="Date" required span={3}>
               <DateField value={date} onChange={setDate} placeholder="Pick a date" />
             </Field>
 
-            <Field label="Department" required span={6}>
+            <Field label="Department" required span={3}>
               <SelectField options={DEPARTMENTS} value={department} onChange={setDepartment} />
             </Field>
+
+             <Button
+            variant="outline"
+            size="sm"
+            onClick={() => notify.saveSuccess("Details fetched successfully.")}
+            className="h-9 gap-1.5 text-[13px] text-white cursor-pointer shrink-0"
+            style={{
+              background: "var(--blue-btn)",
+              borderColor: "var(--blue-btn)",
+            }}
+          >
+            <Search className="h-3.5 w-3.5" />
+            Get Details
+          </Button>
           </div>
         </div>
       </div>
@@ -168,21 +182,7 @@ export default function DiagnoModule() {
         data={rows}
         hideDateFilters={true}
         onAdd={handleOpenPanel}
-        headerExtra={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => notify.saveSuccess("Details fetched successfully.")}
-            className="h-9 gap-1.5 text-[13px] text-white cursor-pointer shrink-0"
-            style={{
-              background: "var(--blue-btn)",
-              borderColor: "var(--blue-btn)",
-            }}
-          >
-            <Search className="h-3.5 w-3.5" />
-            Get Details
-          </Button>
-        }
+       
         searchField={(r) => `${r.code} ${r.name} ${r.count}`}
       />
 
