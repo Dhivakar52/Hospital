@@ -13,9 +13,10 @@ import {
   Plus,
   UsersRound,
   UserPlus,
-  RotateCcw,
+  // RotateCcw,
   Stethoscope,
   Ban,
+  CalendarClock,
   Baby,
   Building2,
   Network,
@@ -43,8 +44,8 @@ import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal"
 const HEADER_CONFIG: Record<string, { icon: any; subtitle: string }> = {
   "Registered Patients": { icon: UsersRound, subtitle: "View and manage registered patient records" },
   "OP Registration": { icon: UserPlus, subtitle: "Register and manage outpatient registrations" },
-  "Revisit": { icon: RotateCcw, subtitle: "View and manage patient revisit records" },
-  "Revisit Records": { icon: RotateCcw, subtitle: "View and manage patient revisit records" },
+  "Revisit": { icon: CalendarClock, subtitle: "View and manage patient revisit records" },
+  "Revisit Records": { icon: CalendarClock, subtitle: "View and manage patient revisit records" },
   "Diagnosis Entry": { icon: Stethoscope, subtitle: "Manage patient diagnosis information" },
   "Revisit Cancellation": { icon: Ban, subtitle: "Manage revisit cancellation records" },
   "Revisit Cancellation Records": { icon: Ban, subtitle: "Manage revisit cancellation records" },
@@ -176,15 +177,29 @@ export function StandardModuleTable<TData extends Record<string, any>>({
     Object.entries(filters).forEach(([key, value]) => {
       if (value) {
         result = result.filter((item) => {
+          // Special handling for status field
           if (key === "status") {
             const valLower = value.toLowerCase();
             if (valLower === "all") return true;
             const itemStatus = (item.status || "active").toLowerCase();
             return itemStatus === valLower;
           }
+          
           const itemVal = item[key];
           if (itemVal === undefined || itemVal === null) return false;
-          return String(itemVal).toLowerCase().includes(value.toLowerCase());
+          
+          // Check if this field is a select field
+          const isSelectField = derivedFilterFields.some(
+            field => field.key === key && field.type === "select"
+          );
+          
+          // For select fields, do exact match (case-insensitive)
+          if (isSelectField) {
+            return String(itemVal).toLowerCase() === String(value).toLowerCase();
+          }
+          
+          // For text fields, do partial match (case-insensitive)
+          return String(itemVal).toLowerCase().includes(String(value).toLowerCase());
         });
       }
     });
@@ -204,7 +219,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
     }
 
     return result;
-  }, [data, search, filters, fromDate, toDate, searchField]);
+  }, [data, search, filters, fromDate, toDate, searchField, derivedFilterFields]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -309,7 +324,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
 
   return (
     <div className="bg-card border border-border rounded-md p-6">
-      {/* Title & Top Action Row (Standardized Single Horizontal Row Layout) */}
+      {/* Title & Top Action Row */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         {/* Left: Icon + Title & Subtitle + Count Badge */}
         <div className="flex items-center gap-3">
@@ -340,7 +355,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
           </div>
         </div>
 
-        {/* Right: Search + From Date -> To Date + Extra Header Buttons + Actions Menu + [+] Add */}
+        {/* Right: Search + Date Pickers + Actions + Add */}
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           {/* Search Box */}
           <div className="flex-1 sm:flex-none">
@@ -351,7 +366,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
             />
           </div>
 
-          {/* Date Pickers (From Date -> To Date) */}
+          {/* Date Pickers */}
           {!hideDateFilters && (
             <div className="flex items-center gap-2 shrink-0">
               <Popover>
@@ -404,10 +419,10 @@ export function StandardModuleTable<TData extends Record<string, any>>({
             </div>
           )}
 
-          {/* Extra Header Controls (e.g. OP Statistics) */}
+          {/* Extra Header Controls */}
           {headerExtra}
 
-          {/* Action Menu (Filter / Export / Print) */}
+          {/* Action Menu */}
           <div className="relative" ref={actionRef}>
             <Button
               variant="outline"
@@ -455,7 +470,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
             )}
           </div>
 
-          {/* Add (+) Button - Icon Only */}
+          {/* Add Button */}
           {onAdd && (
             <Button
               size="sm"
@@ -499,7 +514,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
         />
       </div>
 
-      {/* Dynamic Filter Panel Drawer */}
+      {/* Dynamic Filter Panel Drawer - UPDATED: Removed "All" option */}
       <CustomPanel
         isOpen={isFilterPanelOpen}
         title="Filter Records"
@@ -513,12 +528,12 @@ export function StandardModuleTable<TData extends Record<string, any>>({
             <Field key={field.key} label={field.label}>
               {field.type === "select" && field.options ? (
                 <SelectField
-                  options={["All", ...field.options]}
-                  value={tempFilters[field.key] || "All"}
+                  options={field.options} // Removed "All" from here
+                  value={tempFilters[field.key] || ""}
                   onChange={(val) =>
                     setTempFilters((prev) => ({
                       ...prev,
-                      [field.key]: val === "All" ? "" : val,
+                      [field.key]: val,
                     }))
                   }
                 />

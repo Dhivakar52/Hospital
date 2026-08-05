@@ -124,7 +124,7 @@ export default function RevisitRecordsPage() {
             label: "Status",
             key: "status",
             type: "select",
-            options: ["All", "Active", "Cancelled"],
+            options: ["Active", "Cancelled"],
           },
           {
             label: "Department",

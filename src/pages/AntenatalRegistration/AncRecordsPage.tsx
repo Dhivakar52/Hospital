@@ -14,11 +14,16 @@ import { notify } from "@/lib/notify";
 export default function AncRecordsPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [records, setRecords] = useState<AncRecord[]>(mockAncRecords);
+  
+  // Get all active and deactivated records
+  const allRecords = mockAncRecords.filter(record => 
+    record.status === "active" || record.status === "Deactivate" || record.status === "deactivated"
+  );
+  
+  const [records, setRecords] = useState<AncRecord[]>(allRecords);
   const [selectedRecord, setSelectedRecord] = useState<AncRecord | null>(null);
-
-  // Deactivation Modal State
   const [deactivateRecord, setDeactivateRecord] = useState<AncRecord | null>(null);
+  // const [genderFilter, setGenderFilter] = useState<string>("");
 
   useEffect(() => {
     const newRecord = (location.state as { newRecord?: AncRecord } | null)?.newRecord;
@@ -41,7 +46,7 @@ export default function AncRecordsPage() {
 
     setRecords((current) =>
       current.map((item) =>
-        item.ancNo === deactivateRecord.ancNo ? { ...item, status: "inactive" } : item
+        item.ancNo === deactivateRecord.ancNo ? { ...item, status: "Deactivate" } : item
       )
     );
 
@@ -81,7 +86,7 @@ export default function AncRecordsPage() {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        const isInactive = row.original.status === "inactive" || row.original.status === "Inactive";
+        const isInactive = row.original.status === "Deactivate" || row.original.status === "Inactive" || row.original.status === "deactivated";
         return (
           <ActionMenu
             item={row.original}
@@ -100,9 +105,19 @@ export default function AncRecordsPage() {
     },
   ];
 
+  // Debug: Log male and female counts
+  useEffect(() => {
+    console.log("Total records:", records.length);
+    console.log("Male records:", records.filter(r => r.gender === "Male").length);
+    console.log("Female records:", records.filter(r => r.gender === "Female").length);
+    console.log("All male patients:", records.filter(r => r.gender === "Male"));
+  }, [records]);
+
   return (
     <div>
-      {/* Standardized Card & Table */}
+      {/* Add manual gender filter dropdown */}
+     
+
       <StandardModuleTable
         title="Registered ANC Records"
         countUnit="ANC Records"
@@ -112,7 +127,7 @@ export default function AncRecordsPage() {
         onAdd={() => navigate("/antenatal-registration")}
         filterFields={[
           { label: "Department", key: "department", type: "select", options: ["Obstetrics", "General Surgery", "General Medicine"] },
-          { label: "Gender", key: "gender", type: "select", options: ["Female"] },
+          { label: "Gender", key: "gender", type: "select", options: ["Male", "Female"] },
           { label: "Patient Name", key: "patientName", type: "text" }
         ]}
         searchField={(r) => `${r.patientName} ${r.uhidNo} ${r.ancNo} ${r.department}`}
@@ -163,7 +178,7 @@ export default function AncRecordsPage() {
         )}
       </CustomPanel>
 
-      {/* Requirement 4: Confirmation Dialog for Deactivation */}
+      {/* Confirmation Dialog for Deactivation */}
       {deactivateRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
@@ -178,7 +193,7 @@ export default function AncRecordsPage() {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed mb-5">
-              Are you sure you want to deactivate ANC record <strong className="text-slate-900 font-semibold">{deactivateRecord.ancNo}</strong> ({deactivateRecord.patientName})? The status will be set to Inactive.
+              Are you sure you want to deactivate ANC record <strong className="text-slate-900 font-semibold">{deactivateRecord.ancNo}</strong> ({deactivateRecord.patientName})? The status will be set to Deactivate.
             </p>
 
             <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">

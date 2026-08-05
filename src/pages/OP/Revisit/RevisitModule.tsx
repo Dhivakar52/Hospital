@@ -1,5 +1,5 @@
 import * as React from "react";
-import { RotateCcw, CalendarClock, Search, ArrowRight, ArrowLeft, ExternalLink } from "lucide-react";
+import { CalendarClock, Search, ArrowRight, ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RevisitStepper } from "./Revisitstepper";
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
@@ -354,7 +354,7 @@ export default function OPRevisit() {
             className="flex h-12 w-12 items-center justify-center rounded-lg"
             style={{ background: "var(--side-menu)", color: "var(--blue-text-color)" }}
           >
-            <RotateCcw className="h-5 w-5" />
+            <CalendarClock className="h-5 w-5" />
           </div>
           <div>
             <h1 className="text-[17px] font-semibold">Revisit</h1>

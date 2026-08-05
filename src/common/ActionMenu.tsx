@@ -87,7 +87,7 @@ export function ActionMenu<T>({
           {onRevisitCancellation && (
             <DropdownMenuItem onClick={() => onRevisitCancellation(item)} className="text-amber-700 focus:text-amber-800 cursor-pointer">
               <XCircle className="mr-2 h-4 w-4 text-amber-600" />
-              Revisit Cancellation
+             Cancellation
             </DropdownMenuItem>
           )}
           {onDeactivate && (

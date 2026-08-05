@@ -12,44 +12,14 @@ export const mockAncRecords: AncRecord[] = [
     status: "active"
   },
   { 
-    ancNo: "263207", 
-    ancDate: "31 Jul 2026 13:52", 
-    uhidNo: "4285500", 
-    patientName: "MANJUPRIYA", 
-    age: 32, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
-  },
-  { 
-    ancNo: "263206", 
-    ancDate: "31 Jul 2026 13:51", 
-    uhidNo: "4285330", 
-    patientName: "AFRIJA KHATUN", 
-    age: 23, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
     ancNo: "263205", 
     ancDate: "31 Jul 2026 13:33", 
     uhidNo: "4285299", 
-    patientName: "BHAVANI M", 
-    age: 31, 
-    gender: "Female", 
+    patientName: "RAJESH KUMAR", 
+    age: 45, 
+    gender: "Male", 
     department: "General Surgery",
     status: "active"
-  },
-  { 
-    ancNo: "263204", 
-    ancDate: "31 Jul 2026 13:18", 
-    uhidNo: "4285342", 
-    patientName: "RUPA GUPTA", 
-    age: 27, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
   },
   { 
     ancNo: "263203", 
@@ -69,17 +39,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 24, 
     gender: "Female", 
     department: "Obstetrics",
-    status: "cancelled"
-  },
-  { 
-    ancNo: "263201", 
-    ancDate: "29 Jul 2026 16:45", 
-    uhidNo: "4284700", 
-    patientName: "PRIYADHARSHINI", 
-    age: 30, 
-    gender: "Female", 
-    department: "General Surgery",
-    status: "completed"
+    status: "deactivated"
   },
   { 
     ancNo: "263200", 
@@ -92,43 +52,13 @@ export const mockAncRecords: AncRecord[] = [
     status: "active"
   },
   { 
-    ancNo: "263199", 
-    ancDate: "29 Jul 2026 12:15", 
-    uhidNo: "4284500", 
-    patientName: "GAYATHRI", 
-    age: 28, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263198", 
-    ancDate: "28 Jul 2026 17:20", 
-    uhidNo: "4284400", 
-    patientName: "KAVITHA", 
-    age: 34, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263197", 
-    ancDate: "28 Jul 2026 15:45", 
-    uhidNo: "4284300", 
-    patientName: "SELVI", 
-    age: 22, 
-    gender: "Female", 
-    department: "General Surgery",
-    status: "pending"
-  },
-  { 
     ancNo: "263196", 
     ancDate: "28 Jul 2026 13:10", 
     uhidNo: "4284200", 
-    patientName: "NANDHINI", 
-    age: 27, 
-    gender: "Female", 
-    department: "Obstetrics",
+    patientName: "SURESH BABU", 
+    age: 38, 
+    gender: "Male", 
+    department: "General Medicine",
     status: "active"
   },
   { 
@@ -139,7 +69,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 31, 
     gender: "Female", 
     department: "Obstetrics",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263194", 
@@ -150,36 +80,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263193", 
-    ancDate: "27 Jul 2026 14:25", 
-    uhidNo: "4283900", 
-    patientName: "VIDYA", 
-    age: 29, 
-    gender: "Female", 
-    department: "General Surgery",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263192", 
-    ancDate: "27 Jul 2026 12:40", 
-    uhidNo: "4283800", 
-    patientName: "VALLI", 
-    age: 33, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263191", 
-    ancDate: "27 Jul 2026 10:15", 
-    uhidNo: "4283700", 
-    patientName: "PRIYA", 
-    age: 24, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263190", 
@@ -199,7 +99,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 28, 
     gender: "Female", 
     department: "Obstetrics",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263188", 
@@ -210,36 +110,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "General Surgery",
     status: "active"
-  },
-  { 
-    ancNo: "263187", 
-    ancDate: "26 Jul 2026 11:20", 
-    uhidNo: "4283300", 
-    patientName: "SHANTHI", 
-    age: 27, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263186", 
-    ancDate: "25 Jul 2026 16:45", 
-    uhidNo: "4283200", 
-    patientName: "JOTHI", 
-    age: 32, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263185", 
-    ancDate: "25 Jul 2026 14:30", 
-    uhidNo: "4283100", 
-    patientName: "SANGEETHA", 
-    age: 26, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263184", 
@@ -259,7 +129,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 31, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263182", 
@@ -270,36 +140,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263181", 
-    ancDate: "24 Jul 2026 15:40", 
-    uhidNo: "4282700", 
-    patientName: "VANITHA", 
-    age: 33, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263180", 
-    ancDate: "24 Jul 2026 13:25", 
-    uhidNo: "4282600", 
-    patientName: "KALYANI", 
-    age: 25, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263179", 
-    ancDate: "24 Jul 2026 11:15", 
-    uhidNo: "4282500", 
-    patientName: "MALATHI", 
-    age: 30, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263178", 
@@ -319,7 +159,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 34, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263176", 
@@ -330,36 +170,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263175", 
-    ancDate: "23 Jul 2026 10:30", 
-    uhidNo: "4282100", 
-    patientName: "INDHIRA", 
-    age: 29, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263174", 
-    ancDate: "22 Jul 2026 17:30", 
-    uhidNo: "4282000", 
-    patientName: "SUJATHA", 
-    age: 32, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263173", 
-    ancDate: "22 Jul 2026 15:45", 
-    uhidNo: "4281900", 
-    patientName: "GEETHA", 
-    age: 24, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263172", 
@@ -379,7 +189,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 31, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263170", 
@@ -390,36 +200,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263169", 
-    ancDate: "21 Jul 2026 14:50", 
-    uhidNo: "4281500", 
-    patientName: "HARINI", 
-    age: 33, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263168", 
-    ancDate: "21 Jul 2026 12:30", 
-    uhidNo: "4281400", 
-    patientName: "ANUSHA", 
-    age: 25, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263167", 
-    ancDate: "21 Jul 2026 10:15", 
-    uhidNo: "4281300", 
-    patientName: "KIRUTHIKA", 
-    age: 30, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263166", 
@@ -439,7 +219,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 29, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263164", 
@@ -450,36 +230,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263163", 
-    ancDate: "20 Jul 2026 11:25", 
-    uhidNo: "4280900", 
-    patientName: "SARALA", 
-    age: 28, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263162", 
-    ancDate: "19 Jul 2026 16:40", 
-    uhidNo: "4280800", 
-    patientName: "PUSHPA", 
-    age: 31, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263161", 
-    ancDate: "19 Jul 2026 14:15", 
-    uhidNo: "4280700", 
-    patientName: "SUDHARANI", 
-    age: 26, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263160", 
@@ -499,7 +249,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 27, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263158", 
@@ -510,36 +260,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263157", 
-    ancDate: "18 Jul 2026 15:30", 
-    uhidNo: "4280300", 
-    patientName: "KAMATCHI", 
-    age: 33, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263156", 
-    ancDate: "18 Jul 2026 13:50", 
-    uhidNo: "4280200", 
-    patientName: "NAGAMANI", 
-    age: 25, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263155", 
-    ancDate: "18 Jul 2026 11:45", 
-    uhidNo: "4280100", 
-    patientName: "BHAVANI", 
-    age: 30, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263154", 
@@ -559,7 +279,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 34, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263152", 
@@ -570,36 +290,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263151", 
-    ancDate: "17 Jul 2026 10:30", 
-    uhidNo: "4279700", 
-    patientName: "PRIYADARSHINI", 
-    age: 31, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263150", 
-    ancDate: "16 Jul 2026 17:20", 
-    uhidNo: "4279600", 
-    patientName: "RAJALAKSHMI", 
-    age: 27, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263149", 
-    ancDate: "16 Jul 2026 15:45", 
-    uhidNo: "4279500", 
-    patientName: "JAYANTHI", 
-    age: 32, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263148", 
@@ -619,7 +309,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 33, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263146", 
@@ -630,36 +320,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263145", 
-    ancDate: "15 Jul 2026 14:25", 
-    uhidNo: "4279100", 
-    patientName: "MANGAI", 
-    age: 30, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263144", 
-    ancDate: "15 Jul 2026 12:40", 
-    uhidNo: "4279000", 
-    patientName: "VIJAYALAKSHMI", 
-    age: 28, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263143", 
-    ancDate: "15 Jul 2026 10:35", 
-    uhidNo: "4278900", 
-    patientName: "RUKMANI", 
-    age: 34, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263142", 
@@ -679,7 +339,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 31, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263140", 
@@ -690,36 +350,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263139", 
-    ancDate: "14 Jul 2026 11:20", 
-    uhidNo: "4278500", 
-    patientName: "MADHUMITHA", 
-    age: 27, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263138", 
-    ancDate: "13 Jul 2026 16:45", 
-    uhidNo: "4278400", 
-    patientName: "JAYA", 
-    age: 33, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263137", 
-    ancDate: "13 Jul 2026 14:30", 
-    uhidNo: "4278300", 
-    patientName: "ANANDHAVALLI", 
-    age: 25, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263136", 
@@ -739,7 +369,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 28, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263134", 
@@ -750,36 +380,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263133", 
-    ancDate: "12 Jul 2026 15:55", 
-    uhidNo: "4277900", 
-    patientName: "SIVAKAMI", 
-    age: 26, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263132", 
-    ancDate: "12 Jul 2026 13:40", 
-    uhidNo: "4277800", 
-    patientName: "VALLIYAMMAI", 
-    age: 34, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263131", 
-    ancDate: "12 Jul 2026 11:30", 
-    uhidNo: "4277700", 
-    patientName: "PERIYANAYAKI", 
-    age: 29, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263130", 
@@ -799,7 +399,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 27, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263128", 
@@ -810,36 +410,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263127", 
-    ancDate: "11 Jul 2026 10:30", 
-    uhidNo: "4277300", 
-    patientName: "SELVANAYAKI", 
-    age: 25, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263126", 
-    ancDate: "10 Jul 2026 17:20", 
-    uhidNo: "4277200", 
-    patientName: "KALAVATHI", 
-    age: 30, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263125", 
-    ancDate: "10 Jul 2026 15:15", 
-    uhidNo: "4277100", 
-    patientName: "NACHIYAR", 
-    age: 28, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263124", 
@@ -859,7 +429,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 26, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263122", 
@@ -870,36 +440,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263121", 
-    ancDate: "09 Jul 2026 14:40", 
-    uhidNo: "4276700", 
-    patientName: "SARASWATHI", 
-    age: 29, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263120", 
-    ancDate: "09 Jul 2026 12:30", 
-    uhidNo: "4276600", 
-    patientName: "VISALAKSHI", 
-    age: 31, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263119", 
-    ancDate: "09 Jul 2026 10:15", 
-    uhidNo: "4276500", 
-    patientName: "CHELLAMMAL", 
-    age: 27, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263118", 
@@ -919,7 +459,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 25, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263116", 
@@ -930,36 +470,6 @@ export const mockAncRecords: AncRecord[] = [
     gender: "Female", 
     department: "Obstetrics",
     status: "active"
-  },
-  { 
-    ancNo: "263115", 
-    ancDate: "08 Jul 2026 11:40", 
-    uhidNo: "4276100", 
-    patientName: "ALAMELU", 
-    age: 28, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
-  },
-  { 
-    ancNo: "263114", 
-    ancDate: "07 Jul 2026 16:35", 
-    uhidNo: "4276000", 
-    patientName: "GOWRI", 
-    age: 34, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "completed"
-  },
-  { 
-    ancNo: "263113", 
-    ancDate: "07 Jul 2026 14:50", 
-    uhidNo: "4275900", 
-    patientName: "PARAMESHWARI", 
-    age: 26, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "pending"
   },
   { 
     ancNo: "263112", 
@@ -979,7 +489,7 @@ export const mockAncRecords: AncRecord[] = [
     age: 29, 
     gender: "Female", 
     department: "General Surgery",
-    status: "cancelled"
+    status: "deactivated"
   },
   { 
     ancNo: "263110", 
@@ -995,11 +505,11 @@ export const mockAncRecords: AncRecord[] = [
     ancNo: "263109", 
     ancDate: "06 Jul 2026 15:20", 
     uhidNo: "4275500", 
-    patientName: "PONNUVAMMAI", 
-    age: 27, 
-    gender: "Female", 
-    department: "Obstetrics",
-    status: "scheduled"
+    patientName: "KARTHIK RAJ", 
+    age: 42, 
+    gender: "Male", 
+    department: "General Medicine",
+    status: "active"
   }
 ];
 
