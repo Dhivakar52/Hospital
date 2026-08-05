@@ -16,7 +16,7 @@ import {
   Users,
   Zap,
 } from "lucide-react"
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import WhiteLogo from "@/assets/images/white-logo.png";
 import leftImage from "@/assets/images/left-image.png"
 import { useAuth } from "@/context/AuthContext"

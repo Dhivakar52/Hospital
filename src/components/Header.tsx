@@ -31,7 +31,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import NotificationPanel from "./NotificationPanel"
 import { useTheme } from "@/context/ThemeContext"
 import { useAuth } from "@/context/AuthContext"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/toast"
 
 interface HeaderProps {
   breadcrumbItems?: {

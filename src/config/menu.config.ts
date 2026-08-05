@@ -4,7 +4,6 @@ import {
   UsersRound,
   Stethoscope,
   CalendarClock,
-  CalendarX,
   Baby,
   Building2,
   UserCheck,
@@ -41,7 +40,6 @@ export const menuConfig: MenuItem[] = [
       { title: "Registration", url: "/registered-patients", icon: UsersRound },
       { title: "Diagnosis Entry", url: "/op/diagnosisentry", icon: Stethoscope },
       { title: "Revisit", url: "/revisit-records", icon: CalendarClock },
-      { title: "Revisit Cancellation", url: "/op/revisit-cancellation", icon: CalendarX },
     ],
   },
   { 

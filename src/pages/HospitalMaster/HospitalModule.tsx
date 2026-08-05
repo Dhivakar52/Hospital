@@ -11,6 +11,7 @@ export default function HospitalModule() {
   const editingRecord = (location.state as { record?: any } | null)?.record;
 
   const [hospital, setHospital] = useState("");
+  const [streetName, setStreetName] = useState("");
   const [areaName, setAreaName] = useState("");
   const [cityName, setCityName] = useState("");
   const [contactNo, setContactNo] = useState("");
@@ -23,6 +24,7 @@ export default function HospitalModule() {
     if (!editingRecord) return;
 
     setHospital(editingRecord.hospital || "");
+    setStreetName(editingRecord.streetName || "");
     setAreaName(editingRecord.areaName || "");
     setCityName(editingRecord.cityName || "");
     setContactNo(editingRecord.contactNo || "");
@@ -68,23 +70,26 @@ export default function HospitalModule() {
             <Field label="Hospital Name" required>
               <TextField placeholder="Enter hospital name" value={hospital} onChange={setHospital} />
             </Field>
+            <Field label="Street Name">
+              <TextField placeholder="Enter street name" value={streetName} onChange={setStreetName} />
+            </Field>
             <Field label="Area Name">
               <TextField placeholder="Enter area name" value={areaName} onChange={setAreaName} />
             </Field>
+
             <Field label="City Name">
               <TextField placeholder="Enter city name" value={cityName} onChange={setCityName} />
             </Field>
-
             <Field label="Contact No">
               <TextField placeholder="Enter contact number" value={contactNo} onChange={setContactNo} />
             </Field>
             <Field label="Pincode">
               <TextField placeholder="Enter pincode" value={pincode} onChange={setPincode} />
             </Field>
+
             <Field label="District">
               <TextField placeholder="Enter district" value={district} onChange={setDistrict} />
             </Field>
-
             <Field label="State">
               <TextField placeholder="Enter state" value={state} onChange={setState} />
             </Field>
@@ -94,13 +99,32 @@ export default function HospitalModule() {
           </div>
 
           <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
-            <Button variant="outline" className="text-[13px] h-10 w-28 font-medium text-slate-600">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setHospital("");
+                setStreetName("");
+                setAreaName("");
+                setCityName("");
+                setContactNo("");
+                setPincode("");
+                setDistrict("");
+                setState("");
+                setCountry("");
+              }}
+              className="text-[13px] h-10 w-28 font-medium text-slate-600 cursor-pointer"
+            >
               Clear
             </Button>
             <Button
               onClick={() => {
+                if (!hospital.trim()) {
+                  notify.validationError("Please enter hospital name.");
+                  return;
+                }
                 const updatedRecord = {
-                  hospital: hospital.trim() || "New Hospital",
+                  hospital: hospital.trim(),
+                  streetName: streetName.trim() || "N/A",
                   areaName: areaName.trim() || "N/A",
                   cityName: cityName.trim() || "N/A",
                   contactNo: contactNo.trim() || "N/A",

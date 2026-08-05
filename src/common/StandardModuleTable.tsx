@@ -21,7 +21,7 @@ import Pagination from "@/common/Pagination";
 import CustomPanel from "@/common/CustomPanel";
 import { Field, TextField, SelectField } from "@/components/FormPrimitives";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { notify } from "@/lib/notify";
 
 import { BarcodePreviewModal } from "@/components/BarcodePreviewModal";
@@ -42,6 +42,7 @@ interface StandardModuleTableProps<TData> {
   searchField?: (item: TData) => string;
   isLoading?: boolean;
   filterFields?: FilterOption[];
+  hideDateFilters?: boolean;
 }
 
 export function StandardModuleTable<TData extends Record<string, any>>({
@@ -52,6 +53,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
   searchField,
   isLoading = false,
   filterFields,
+  hideDateFilters = false,
 }: StandardModuleTableProps<TData>) {
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
@@ -233,12 +235,10 @@ export function StandardModuleTable<TData extends Record<string, any>>({
       const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `${title.replace(/\s+/g, "_")}_Page${currentPage}_${
-        new Date().toISOString().split("T")[0]
-      }.csv`;
+      link.download = `${title.trim()}.xlsx`;
       link.click();
       URL.revokeObjectURL(link.href);
-      toast.success(`Exported ${paginatedData.length} records`);
+      toast.success(`Exported ${paginatedData.length} records to ${title.trim()}.xlsx`);
     } catch (err) {
       console.error(err);
       notify.serverError("Failed to export data");
@@ -249,7 +249,12 @@ export function StandardModuleTable<TData extends Record<string, any>>({
 
   const handlePrint = () => {
     setShowActions(false);
+    const originalTitle = document.title;
+    document.title = title;
     window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
   };
 
   return (
@@ -274,55 +279,57 @@ export function StandardModuleTable<TData extends Record<string, any>>({
           </div>
 
           {/* Date Pickers */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Popover>
-              <PopoverTrigger>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "justify-start text-left font-normal cursor-pointer",
-                    !fromDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {fromDate ? format(fromDate, "dd MMM yyyy") : <span>From Date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={fromDate}
-                  onSelect={(date: any) => setFromDate(date)}
-                />
-              </PopoverContent>
-            </Popover>
+          {!hideDateFilters && (
+            <div className="flex items-center gap-2 shrink-0">
+              <Popover>
+                <PopoverTrigger>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "justify-start text-left font-normal cursor-pointer",
+                      !fromDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fromDate ? format(fromDate, "dd MMM yyyy") : <span>From Date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={(date: any) => setFromDate(date)}
+                  />
+                </PopoverContent>
+              </Popover>
 
-            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
 
-            <Popover>
-              <PopoverTrigger>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "justify-start text-left font-normal cursor-pointer",
-                    !toDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {toDate ? format(toDate, "dd MMM yyyy") : <span>To Date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={toDate}
-                  onSelect={(date: any) => setToDate(date)}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+              <Popover>
+                <PopoverTrigger>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "justify-start text-left font-normal cursor-pointer",
+                      !toDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {toDate ? format(toDate, "dd MMM yyyy") : <span>To Date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={toDate}
+                    onSelect={(date: any) => setToDate(date)}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
 
           {/* Action Menu (Filter / Export / Print) */}
           <div className="relative" ref={actionRef}>

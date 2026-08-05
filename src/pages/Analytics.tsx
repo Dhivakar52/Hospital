@@ -27,7 +27,7 @@ import {
   Filter,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/toast"
 
 type Patient = {
   id: string
