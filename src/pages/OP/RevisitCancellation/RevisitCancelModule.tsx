@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { CalendarX, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
 import Status from "@/common/Status";
@@ -74,39 +72,14 @@ export default function RevisitCancelModule() {
 
   return (
     <div>
-      {/* Header matching Registered Patients module */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-lg"
-            style={{ background: "var(--side-menu)", color: "var(--blue-text-color)" }}
-          >
-            <CalendarX className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-[17px] font-semibold">Revisit Cancellation</h1>
-            <p className="text-[12.5px] text-muted-foreground">
-              View and manage Revisit Cancellation records.
-            </p>
-          </div>
-        </div>
-
-        <Button
-          onClick={() => navigate("/op/revisit-cancellation/new")}
-          className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
-          style={{ background: "var(--blue-btn)" }}
-        >
-          <Plus className="h-4 w-4" />
-          New Revisit Cancellation
-        </Button>
-      </div>
-
-      {/* Standalone Revisit Cancellation List Screen (Table Only, No Form) */}
+      {/* Standalone Revisit Cancellation List Screen */}
       <StandardModuleTable
-        title="Revisit Cancellation Records"
+        title="Revisit Cancellation"
+        countUnit="Records"
         searchPlaceholder="Search Patient Name / UHID / OP Number / Reason"
         columns={columns}
         data={data}
+        onAdd={() => navigate("/op/revisit-cancellation/new")}
         filterFields={[
           { label: "Cancellation Reason", key: "reason", type: "text" },
           { label: "Created By", key: "createdBy", type: "text" },

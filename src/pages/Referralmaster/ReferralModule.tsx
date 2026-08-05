@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { UserPlus } from "lucide-react";
+import { Network } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, TextField, SelectField } from "@/components/FormPrimitives";
 import { notify } from "@/lib/notify";
@@ -35,12 +35,12 @@ export default function ReferralModule() {
             className="flex h-12 w-12 items-center justify-center rounded-lg"
             style={{ background: "var(--side-menu)", color: "var(--blue-text-color)" }}
           >
-            <UserPlus className="h-5 w-5" />
+            <Network className="h-5 w-5" />
           </div>
           <div>
             <h1 className="text-[17px] font-semibold">Referral Master</h1>
             <p className="text-[12.5px] text-muted-foreground">
-              Add new referring doctor details
+              Manage referral information
             </p>
           </div>
         </div>
@@ -50,7 +50,7 @@ export default function ReferralModule() {
           className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
           style={{ background: "var(--blue-btn)" }}
         >
-          <UserPlus className="h-4 w-4" />
+          <Network className="h-4 w-4" />
           View Referral Master
         </Button>
       </div>

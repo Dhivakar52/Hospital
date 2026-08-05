@@ -18,6 +18,7 @@ import {
   Activity,
   ShieldCheck,
   Eye,
+  LayoutDashboard,
 } from "lucide-react"
 import {
   Area,
@@ -148,22 +149,23 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* 1. Dashboard Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Hospital Overview & Clinical Analytics
-            </h1>
-            <Badge variant="secondary" className="text-xs font-semibold px-2.5 py-0.5" style={{ background: "var(--side-menu)", color: "var(--blue-text-color)" }}>
-              Live HMS Data
-            </Badge>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Real-time tracking of OP registrations, revisit volume, departmental statistics, and system activities.
-          </p>
+      <div className="flex items-center gap-3 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div
+          className="flex h-12 w-12 items-center justify-center rounded-lg shrink-0"
+          style={{
+            background: "var(--side-menu)",
+            color: "var(--blue-text-color)",
+          }}
+        >
+          <LayoutDashboard className="h-5 w-5" />
         </div>
 
-
+        <div>
+          <h1 className="text-[17px] font-semibold text-slate-900">Dashboard</h1>
+          <p className="text-[12.5px] text-muted-foreground">
+            Hospital Management Dashboard
+          </p>
+        </div>
       </div>
 
       {/* 2. KPI Cards (Single Horizontal Row on Desktop: lg:grid-cols-6) */}

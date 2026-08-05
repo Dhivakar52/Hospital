@@ -86,7 +86,7 @@ export default function AntenatalRegistration() {
               {editRecord ? `Edit Antenatal Registration (${editRecord.ancNo})` : "Antenatal Registration"}
             </h1>
             <p className="text-[12.5px] text-muted-foreground">
-              {editRecord ? "Modify existing antenatal care details" : "Register new antenatal care details"}
+              {editRecord ? "Modify existing antenatal care details" : "Manage antenatal registration records"}
             </p>
           </div>
         </div>

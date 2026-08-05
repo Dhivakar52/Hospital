@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { UsersRound, BarChart3, ArrowRight, ArrowLeft } from "lucide-react";
+import { UserPlus, UsersRound, BarChart3, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Stepper } from "@/components/Stepper";
 import { StepPatientDetails, StepAddressContact, StepInsuranceDetails, StepAdditionalInformation } from "./StepPanels";
@@ -122,15 +122,15 @@ export default function Registration() {
               color: "var(--blue-text-color)",
             }}
           >
-            <UsersRound className="h-5 w-5" />
+            <UserPlus className="h-5 w-5" />
           </div>
 
           <div>
             <h1 className="text-[17px] font-semibold">
-              {editingPatient ? "Edit Registered Patient" : "Patient Registration"}
+              {editingPatient ? "Edit Registered Patient" : "OP Registration"}
             </h1>
             <p className="text-[12.5px] text-muted-foreground">
-              {editingPatient ? "Edit and update registered patient details" : "Register new patient details and manage information"}
+              {editingPatient ? "Edit and update registered patient details" : "Register and manage outpatient registrations"}
             </p>
           </div>
         </div>

@@ -48,7 +48,7 @@ export default function HospitalModule() {
           <div>
             <h1 className="text-[17px] font-semibold">Hospital Master</h1>
             <p className="text-[12.5px] text-muted-foreground">
-              Register referring hospital details
+              Manage hospital information
             </p>
           </div>
         </div>

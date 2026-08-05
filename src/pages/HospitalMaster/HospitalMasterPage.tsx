@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Building2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
 import CustomPanel from "@/common/CustomPanel";
@@ -66,40 +64,15 @@ export default function HospitalMasterPage() {
 
   return (
     <div>
-      {/* Top Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-lg"
-            style={{ background: "var(--side-menu)", color: "var(--blue-text-color)" }}
-          >
-            <Building2 className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-[17px] font-semibold">Hospital Master Records</h1>
-            <p className="text-[12.5px] text-muted-foreground">
-              View and manage registered referring hospitals
-            </p>
-          </div>
-        </div>
-
-        <Button
-          onClick={() => navigate("/hospital-master")}
-          className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
-          style={{ background: "var(--blue-btn)" }}
-        >
-          <Plus className="h-4 w-4" />
-          New Hospital
-        </Button>
-      </div>
-
-      {/* Standardized Card & Table (Date Filters Removed) */}
+      {/* Standardized Card & Table */}
       <StandardModuleTable
         title="Hospital Master Records"
+        countUnit="Hospitals"
         searchPlaceholder="Search hospital name, street, area, city..."
         columns={columns}
         data={records}
         hideDateFilters={true}
+        onAdd={() => navigate("/hospital-master")}
         filterFields={[
           { label: "City Name", key: "cityName", type: "select", options: ["Chennai", "Chengalpattu", "Kancheepuram", "Thiruvallur"] },
           { label: "State", key: "state", type: "select", options: ["Tamil Nadu"] },

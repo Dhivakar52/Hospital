@@ -1,6 +1,6 @@
 import * as React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Stethoscope, Plus, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
@@ -142,60 +142,19 @@ export default function DiagnoModule() {
 
   return (
     <div>
-      {/* Page Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-lg"
-            style={{ background: "var(--side-menu)", color: "var(--blue-text-color)" }}
-          >
-            <Stethoscope className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-[17px] font-semibold">Diagnosis Entry</h1>
-            <p className="text-[12.5px] text-muted-foreground">
-              Record diagnosis details for the visit
-            </p>
-          </div>
-        </div>
-      </div>
+
 
       {/* Top Form Card */}
       <div className="mb-6 rounded-md border border-slate-200 bg-white" style={{ background: "var(--background)" }}>
         <div className="px-6 py-5">
           <div className="grid grid-cols-12 items-end gap-4">
-            <Field label="Date" required span={4}>
+            <Field label="Date" required span={6}>
               <DateField value={date} onChange={setDate} placeholder="Pick a date" />
             </Field>
 
-            <Field label="Department" required span={4}>
+            <Field label="Department" required span={6}>
               <SelectField options={DEPARTMENTS} value={department} onChange={setDepartment} />
             </Field>
-
-            {/* Get Details & Add Buttons side by side */}
-            <div className="col-span-4 flex items-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => notify.saveSuccess("Details fetched successfully.")}
-                className="h-9 gap-1.5 text-[13px] text-white cursor-pointer"
-                style={{
-                  background: "var(--blue-btn)",
-                  borderColor: "var(--blue-btn)",
-                }}
-              >
-                <Search className="h-3.5 w-3.5" />
-                Get Details
-              </Button>
-
-              <Button
-                onClick={handleOpenPanel}
-                className="h-9 gap-1.5 text-white text-[13px] cursor-pointer"
-                style={{ background: "var(--blue-btn)" }}
-              >
-                <Plus className="h-4 w-4" />
-                Add
-              </Button>
-            </div>
           </div>
         </div>
       </div>
@@ -203,10 +162,27 @@ export default function DiagnoModule() {
       {/* Diagnosis Entry DataTable */}
       <StandardModuleTable
         title="Diagnosis Entry"
+        countUnit="Records"
         searchPlaceholder="Search Diagnosis Code or Name..."
         columns={columns}
         data={rows}
         hideDateFilters={true}
+        onAdd={handleOpenPanel}
+        headerExtra={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => notify.saveSuccess("Details fetched successfully.")}
+            className="h-9 gap-1.5 text-[13px] text-white cursor-pointer shrink-0"
+            style={{
+              background: "var(--blue-btn)",
+              borderColor: "var(--blue-btn)",
+            }}
+          >
+            <Search className="h-3.5 w-3.5" />
+            Get Details
+          </Button>
+        }
         searchField={(r) => `${r.code} ${r.name} ${r.count}`}
       />
 
