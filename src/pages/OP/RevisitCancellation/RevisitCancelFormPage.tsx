@@ -30,17 +30,17 @@ export default function RevisitCancelFormPage() {
     setContactNo(editingRecord.contactNo || "9840012345");
   }, [editingRecord]);
 
-  const handleGetDetails = () => {
-    if (!uhid.trim()) {
-      notify.validationError("Please enter UHID number.");
-      return;
-    }
-    setPatientName("NITESH KUMAR");
-    setGender("Male");
-    setAddress("12, Grand Trunk Road, Vadapalani, Chennai");
-    setContactNo("9840012345");
-    notify.saveSuccess("Patient details fetched successfully.");
-  };
+  // const handleGetDetails = () => {
+  //   if (!uhid.trim()) {
+  //     notify.validationError("Please enter UHID number.");
+  //     return;
+  //   }
+  //   setPatientName("NITESH KUMAR");
+  //   setGender("Male");
+  //   setAddress("12, Grand Trunk Road, Vadapalani, Chennai");
+  //   setContactNo("9840012345");
+  //   notify.saveSuccess("Patient details fetched successfully.");
+  // };
 
   const handleSubmit = () => {
     if (!uhid.trim() || !reason.trim()) {
@@ -69,15 +69,15 @@ export default function RevisitCancelFormPage() {
     });
   };
 
-  const handleClear = () => {
-    setUhid("");
-    setOpNo("");
-    setReason("");
-    setPatientName("");
-    setGender("");
-    setAddress("");
-    setContactNo("");
-  };
+  // const handleClear = () => {
+  //   setUhid("");
+  //   setOpNo("");
+  //   setReason("");
+  //   setPatientName("");
+  //   setGender("");
+  //   setAddress("");
+  //   setContactNo("");
+  // };
 
   return (
     <div>
@@ -112,12 +112,12 @@ export default function RevisitCancelFormPage() {
       <div className="rounded-md border border-slate-200 bg-white" style={{ background: "var(--background)" }}>
         <div className="px-6 py-6">
           <div className="grid grid-cols-3 items-end gap-4">
-            <Field label="UHID No" required>
+            {/* <Field label="UHID No" required>
               <TextField placeholder="Enter UHID number" value={uhid} onChange={setUhid} />
             </Field>
             <Field label="OP">
               <TextField placeholder="Enter OP number" value={opNo} onChange={setOpNo} />
-            </Field>
+            </Field> */}
             {/* <Button
               variant="outline"
               onClick={handleGetDetails}

@@ -5,6 +5,7 @@ import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
 import CustomPanel from "@/common/CustomPanel";
 import { GENERATED_HOSPITAL_RECORDS, type HospitalRow } from "@/data/sampleData";
+// import { notify } from "@/lib/notify";
 
 export default function HospitalMasterPage() {
   const navigate = useNavigate();
@@ -40,6 +41,14 @@ export default function HospitalMasterPage() {
     }
   }, [location.state, navigate]);
 
+  // Handle Delete - ActionMenu will handle the confirmation dialog
+  const handleDelete = (item: HospitalRow) => {
+    setRecords((current) =>
+      current.filter((record) => record.hospital !== item.hospital)
+    );
+    // Notification is already handled by ActionMenu
+  };
+
   const columns: ColumnDef<HospitalRow>[] = [
     { accessorKey: "hospital", header: "Hospital" },
     { accessorKey: "streetName", header: "Street Name", cell: ({ row }) => row.original.streetName || "N/A" },
@@ -55,8 +64,9 @@ export default function HospitalMasterPage() {
           item={row.original}
           onView={(item) => setSelectedHospital(item)}
           onEdit={(item) => navigate("/hospital-master", { state: { record: item } })}
-          // onPrint={() => window.print()}
-          // onBarcode={() => {}}
+          onDelete={handleDelete}
+          onPrint={() => window.print()}
+          onBarcode={() => {}}
         />
       ),
     },
@@ -83,6 +93,7 @@ export default function HospitalMasterPage() {
         searchField={(r) => `${r.hospital} ${r.streetName || ""} ${r.areaName} ${r.cityName} ${r.state}`}
       />
 
+      {/* View Panel */}
       <CustomPanel
         isOpen={Boolean(selectedHospital)}
         title="Hospital Master Details"

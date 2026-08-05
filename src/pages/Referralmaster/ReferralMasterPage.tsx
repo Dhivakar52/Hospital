@@ -40,6 +40,14 @@ export default function ReferralMasterPage() {
     }
   }, [location.state, navigate]);
 
+  // Handle Delete - ActionMenu will handle the confirmation dialog
+  const handleDelete = (item: ReferralRow) => {
+    setRecords((current) =>
+      current.filter((record) => record.referralName !== item.referralName)
+    );
+    // Notification is already handled by ActionMenu
+  };
+
   const columns: ColumnDef<ReferralRow>[] = [
     { accessorKey: "referralName", header: "Referral Name" },
     { accessorKey: "designation", header: "Designation" },
@@ -53,8 +61,9 @@ export default function ReferralMasterPage() {
           item={row.original}
           onView={(item) => setSelectedReferral(item)}
           onEdit={(item) => navigate("/referral-master", { state: { record: item } })}
-          // onPrint={() => window.print()}
-          // onBarcode={() => {}}
+          onDelete={handleDelete}
+          onPrint={() => window.print()}
+          onBarcode={() => {}}
         />
       ),
     },
@@ -88,6 +97,7 @@ export default function ReferralMasterPage() {
         searchField={(r) => `${r.referralName} ${r.designation} ${r.hospitalName}`}
       />
 
+      {/* View Panel */}
       <CustomPanel
         isOpen={Boolean(selectedReferral)}
         title="Referral Doctor Details"
