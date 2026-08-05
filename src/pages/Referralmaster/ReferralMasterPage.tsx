@@ -91,12 +91,13 @@ export default function ReferralMasterPage() {
         </Button>
       </div>
 
-      {/* Standardized Card & Table */}
+      {/* Standardized Card & Table (Date Filters Removed) */}
       <StandardModuleTable
         title="Referral Master Records"
         searchPlaceholder="Search referral name, code, hospital name..."
         columns={columns}
         data={records}
+        hideDateFilters={true}
         filterFields={[
           {
             label: "Designation",
@@ -142,8 +143,6 @@ export default function ReferralMasterPage() {
                 <span className="font-medium text-slate-700 font-mono">{selectedReferral.contactNo}</span>
               </div>
             </div>
-
-            
           </div>
         )}
       </CustomPanel>

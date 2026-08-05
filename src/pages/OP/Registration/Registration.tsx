@@ -4,7 +4,7 @@ import { UsersRound, BarChart3, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Stepper } from "@/components/Stepper";
 import { StepPatientDetails, StepAddressContact, StepInsuranceDetails, StepAdditionalInformation } from "./StepPanels";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { notify } from "@/lib/notify";
 import { OpStatisticsModal } from "@/components/OpStatisticsModal";
 import type { Patient } from "@/types/op_register";

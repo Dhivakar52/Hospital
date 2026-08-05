@@ -32,7 +32,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { menuConfig } from "@/config/menu.config"
 import Logo from "@/assets/images/full-logo.png"
 import { cn } from "@/lib/utils"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/toast"
 import { useAuth } from "@/context/AuthContext"
 
 export function AppSidebar() {

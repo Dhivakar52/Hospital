@@ -44,6 +44,7 @@ export default function HospitalMasterPage() {
 
   const columns: ColumnDef<HospitalRow>[] = [
     { accessorKey: "hospital", header: "Hospital" },
+    { accessorKey: "streetName", header: "Street Name", cell: ({ row }) => row.original.streetName || "N/A" },
     { accessorKey: "areaName", header: "Area Name" },
     { accessorKey: "cityName", header: "City Name" },
     { accessorKey: "contactNo", header: "Contact No" },
@@ -92,19 +93,21 @@ export default function HospitalMasterPage() {
         </Button>
       </div>
 
-      {/* Standardized Card & Table */}
+      {/* Standardized Card & Table (Date Filters Removed) */}
       <StandardModuleTable
         title="Hospital Master Records"
-        searchPlaceholder="Search hospital name, code, area, city..."
+        searchPlaceholder="Search hospital name, street, area, city..."
         columns={columns}
         data={records}
+        hideDateFilters={true}
         filterFields={[
           { label: "City Name", key: "cityName", type: "select", options: ["Chennai", "Chengalpattu", "Kancheepuram", "Thiruvallur"] },
           { label: "State", key: "state", type: "select", options: ["Tamil Nadu"] },
+          { label: "Street Name", key: "streetName", type: "text" },
           { label: "Area Name", key: "areaName", type: "text" },
           { label: "Hospital Name", key: "hospital", type: "text" }
         ]}
-        searchField={(r) => `${r.hospital} ${r.areaName} ${r.cityName} ${r.state}`}
+        searchField={(r) => `${r.hospital} ${r.streetName || ""} ${r.areaName} ${r.cityName} ${r.state}`}
       />
 
       <CustomPanel
@@ -123,6 +126,10 @@ export default function HospitalMasterPage() {
                 <span className="font-bold text-slate-900 text-base">{selectedHospital.hospital}</span>
               </div>
               <div>
+                <span className="text-[11px] text-slate-500 block">Street Name</span>
+                <span className="font-semibold text-slate-800">{selectedHospital.streetName || "N/A"}</span>
+              </div>
+              <div>
                 <span className="text-[11px] text-slate-500 block">Area Name</span>
                 <span className="font-semibold text-slate-800">{selectedHospital.areaName}</span>
               </div>
@@ -134,13 +141,11 @@ export default function HospitalMasterPage() {
                 <span className="text-[11px] text-slate-500 block">Contact No</span>
                 <span className="font-medium text-slate-700 font-mono">{selectedHospital.contactNo}</span>
               </div>
-              <div>
+              <div className="col-span-2">
                 <span className="text-[11px] text-slate-500 block">State</span>
                 <span className="font-medium text-slate-700">{selectedHospital.state}</span>
               </div>
             </div>
-
-
           </div>
         )}
       </CustomPanel>

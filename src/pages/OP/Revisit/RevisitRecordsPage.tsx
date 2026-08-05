@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { CalendarClock, Plus } from "lucide-react";
+import { CalendarClock, Plus, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
 import CustomPanel from "@/common/CustomPanel";
+import Status from "@/common/Status";
+import { OpStatisticsModal } from "@/components/OpStatisticsModal";
 import { GENERATED_REVISIT_RECORDS, type RevisitRow } from "@/data/sampleData";
 
 export default function RevisitRecordsPage() {
@@ -13,10 +15,12 @@ export default function RevisitRecordsPage() {
   const location = useLocation();
   const [records, setRecords] = useState<RevisitRow[]>(GENERATED_REVISIT_RECORDS);
   const [selectedRecord, setSelectedRecord] = useState<RevisitRow | null>(null);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
 
   useEffect(() => {
     const newRecord = (location.state as { newRecord?: RevisitRow } | null)?.newRecord;
     const editedRecord = (location.state as { editedRecord?: RevisitRow; originalUhidNo?: string; originalOpNo?: string } | null)?.editedRecord;
+    const cancelledRecord = (location.state as { cancelledRecord?: any } | null)?.cancelledRecord;
     const originalUhidNo = (location.state as { originalUhidNo?: string } | null)?.originalUhidNo;
     const originalOpNo = (location.state as { originalOpNo?: string } | null)?.originalOpNo;
 
@@ -38,7 +42,17 @@ export default function RevisitRecordsPage() {
       );
     }
 
-    if (newRecord || editedRecord) {
+    if (cancelledRecord) {
+      setRecords((current) =>
+        current.map((item) =>
+          item.uhidNo === cancelledRecord.uhidNo || item.opNo === cancelledRecord.opNo
+            ? { ...item, status: "cancelled" }
+            : item
+        )
+      );
+    }
+
+    if (newRecord || editedRecord || cancelledRecord) {
       navigate("/revisit-records", { replace: true, state: undefined });
     }
   }, [location.state, navigate]);
@@ -53,17 +67,33 @@ export default function RevisitRecordsPage() {
     { accessorKey: "city", header: "City" },
     { accessorKey: "department", header: "Department" },
     {
+      id: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = (row.original as any).status || "active";
+        return <Status status={status} size="sm" />;
+      },
+    },
+    {
       id: "actions",
       header: "Actions",
-      cell: ({ row }) => (
-        <ActionMenu
-          item={row.original}
-          onView={(item) => setSelectedRecord(item)}
-          onEdit={(item) => navigate("/op/revisit", { state: { record: item } })}
-          onPrint={() => window.print()}
-          onBarcode={() => {}}
-        />
-      ),
+      cell: ({ row }) => {
+        const isCancelled = (row.original as any).status === "cancelled";
+        return (
+          <ActionMenu
+            item={row.original}
+            onView={(item) => setSelectedRecord(item)}
+            onEdit={(item) => navigate("/op/revisit", { state: { record: item } })}
+            onPrint={() => window.print()}
+            onBarcode={() => {}}
+            onRevisitCancellation={
+              isCancelled
+                ? undefined
+                : (item) => navigate("/op/revisit-cancellation/new", { state: { record: item } })
+            }
+          />
+        );
+      },
     },
   ];
 
@@ -89,14 +119,29 @@ export default function RevisitRecordsPage() {
           </div>
         </div>
 
-        <Button
-          onClick={() => navigate("/op/revisit")}
-          className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
-          style={{ background: "var(--blue-btn)" }}
-        >
-          <Plus className="h-4 w-4" />
-          New Revisit
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* OP Statistics Button */}
+          <Button
+            variant="outline"
+            onClick={() => setIsStatsOpen(true)}
+            className="gap-2 text-[13px] border-blue-200 cursor-pointer"
+            style={{
+              color: "var(--blue-text-color)",
+            }}
+          >
+            <BarChart3 className="h-4 w-4" />
+            OP Statistics
+          </Button>
+
+          <Button
+            onClick={() => navigate("/op/revisit")}
+            className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
+            style={{ background: "var(--blue-btn)" }}
+          >
+            <Plus className="h-4 w-4" />
+            New Revisit
+          </Button>
+        </div>
       </div>
 
       {/* Standardized Card & Table */}
@@ -106,6 +151,12 @@ export default function RevisitRecordsPage() {
         columns={columns}
         data={records}
         filterFields={[
+          {
+            label: "Status",
+            key: "status",
+            type: "select",
+            options: ["All", "Active", "Cancelled"],
+          },
           {
             label: "Department",
             key: "department",
@@ -123,6 +174,7 @@ export default function RevisitRecordsPage() {
         searchField={(r) => `${r.patientName} ${r.uhidNo} ${r.opNo} ${r.department} ${r.area} ${r.city}`}
       />
 
+      {/* View Details Custom Panel */}
       <CustomPanel
         isOpen={Boolean(selectedRecord)}
         title="Revisit Record Details"
@@ -164,12 +216,17 @@ export default function RevisitRecordsPage() {
                 <span className="text-[11px] text-slate-500 block">City</span>
                 <span className="font-medium text-slate-700">{selectedRecord.city}</span>
               </div>
+              <div>
+                <span className="text-[11px] text-slate-500 block">Status</span>
+                <Status status={(selectedRecord as any).status || "active"} size="sm" />
+              </div>
             </div>
-
-           
           </div>
         )}
       </CustomPanel>
+
+      {/* OP Statistics Modal */}
+      <OpStatisticsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
     </div>
   );
 }

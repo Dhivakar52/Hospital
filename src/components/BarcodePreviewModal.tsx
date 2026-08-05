@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Printer, Download, X, QrCode, Barcode } from "lucide-react";
 import { BarcodeGenerator } from "./BarcodeGenerator";
 import { QRCodeGenerator } from "./QRCodeGenerator";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface BarcodePreviewModalProps {
   patient: {

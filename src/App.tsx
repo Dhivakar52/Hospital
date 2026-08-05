@@ -3,7 +3,7 @@ import { AppRoutes } from "@/routes"
 import { ThemeProvider } from "@/context/ThemeContext"
 import { AuthProvider } from "./context/AuthContext"
 import { NotificationProvider } from "./context/NotificationContext"
-import { Toaster } from "sonner"
+import { Toaster } from "@/components/ui/toast"
 
 function App() {
   return (
@@ -13,7 +13,7 @@ function App() {
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>
-          <Toaster position="top-right" richColors duration={100} closeButton />
+          <Toaster />
         </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>

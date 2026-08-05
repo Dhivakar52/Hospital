@@ -13,6 +13,7 @@ export interface RevisitRow {
 
 export interface HospitalRow {
   hospital: string;
+  streetName?: string;
   areaName: string;
   cityName: string;
   contactNo: string;
@@ -92,6 +93,7 @@ export const GENERATED_HOSPITAL_RECORDS: HospitalRow[] = Array.from({ length: 10
   
   return {
     hospital: branchNum > 1 ? `${baseHospital} (${area} Branch)` : `${baseHospital} - ${area}`,
+    streetName: ["Grand Trunk Road", "Anna Salai", "GST Road", "Mount Road", "Usman Road", "Arcot Road"][i % 6],
     areaName: area,
     cityName: city,
     contactNo: `044-${45000000 + i * 111}`,

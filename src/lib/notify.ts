@@ -1,67 +1,37 @@
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 export const notify = {
   saveSuccess: (message = "Record saved successfully.") => {
-    toast.success(`✔ ${message}`, {
-      duration: 4000,
-      position: "top-right",
-      className: "bg-emerald-600 text-white font-medium text-sm border-none shadow-lg",
-    });
+    toast.success(message);
   },
   updateSuccess: (message = "Record updated successfully.") => {
-    toast.success(`✔ ${message}`, {
-      duration: 4000,
-      position: "top-right",
-      className: "bg-emerald-600 text-white font-medium text-sm border-none shadow-lg",
-    });
+    toast.success(message);
   },
   deleteSuccess: (message = "Record deleted successfully.") => {
-    toast.success(`✔ ${message}`, {
-      duration: 4000,
-      position: "top-right",
-      className: "bg-emerald-600 text-white font-medium text-sm border-none shadow-lg",
-    });
+    toast.delete(message);
   },
   draftSuccess: (message = "Draft saved successfully.") => {
-    toast.success(`✔ ${message}`, {
-      duration: 4000,
-      position: "top-right",
-      className: "bg-emerald-600 text-white font-medium text-sm border-none shadow-lg",
-    });
+    toast.success(message);
   },
   approveSuccess: (message = "Record approved successfully.") => {
-    toast.success(`✔ ${message}`, {
-      duration: 4000,
-      position: "top-right",
-      className: "bg-emerald-600 text-white font-medium text-sm border-none shadow-lg",
-    });
+    toast.success(message);
   },
   rejectSuccess: (message = "Record rejected successfully.") => {
-    toast.success(`✔ ${message}`, {
-      duration: 4000,
-      position: "top-right",
-      className: "bg-emerald-600 text-white font-medium text-sm border-none shadow-lg",
-    });
+    toast.warning(message);
   },
   validationError: (message = "Please fill all mandatory fields.") => {
-    toast.warning(`⚠ ${message}`, {
-      duration: 4000,
-      position: "top-right",
-      className: "bg-amber-600 text-white font-medium text-sm border-none shadow-lg",
-    });
+    toast.validation(message);
   },
   serverError: (message = "Failed to save the record. Please try again.") => {
-    toast.error(`❌ ${message}`, {
-      duration: 4000,
-      position: "top-right",
-      className: "bg-rose-600 text-white font-medium text-sm border-none shadow-lg",
-    });
+    toast.error(message);
   },
   apiError: (message = "Something went wrong. Please contact the administrator.") => {
-    toast.error(`❌ ${message}`, {
-      duration: 4000,
-      position: "top-right",
-      className: "bg-rose-600 text-white font-medium text-sm border-none shadow-lg",
-    });
+    toast.error(message);
+  },
+  info: (message: string) => {
+    toast.info(message);
+  },
+  warning: (message: string) => {
+    toast.warning(message);
   },
 };

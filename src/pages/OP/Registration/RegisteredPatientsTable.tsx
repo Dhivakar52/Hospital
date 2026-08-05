@@ -28,7 +28,7 @@ import {
   Filter,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/toast"
 import { notify } from "@/lib/notify"
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives"
 import type { RegistrationDraft } from "./Registration"
@@ -439,11 +439,11 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
       const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" })
       const link = document.createElement("a")
       link.href = URL.createObjectURL(blob)
-      link.download = `Patients_Page${currentPage}_${new Date().toISOString().split("T")[0]}.csv`
+      link.download = `Registered Patients.xlsx`
       link.click()
       URL.revokeObjectURL(link.href)
 
-      toast.success(`Exported ${pagedData.length} records from current page`)
+      toast.success(`Exported ${pagedData.length} records to Registered Patients.xlsx`)
     } catch (error) {
       console.error("Export error:", error)
       toast.error("Failed to export data. Please try again.")
@@ -455,7 +455,12 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
   // ✅ Print current page - Accessories pattern
   const handlePrint = () => {
     setShowActions(false)
+    const originalTitle = document.title
+    document.title = "Registered Patients"
     window.print()
+    setTimeout(() => {
+      document.title = originalTitle
+    }, 1000)
   }
 
   return (

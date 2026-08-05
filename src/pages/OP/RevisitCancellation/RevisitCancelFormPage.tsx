@@ -24,10 +24,10 @@ export default function RevisitCancelFormPage() {
     setUhid(editingRecord.uhidNo || "");
     setOpNo(editingRecord.opNo || "");
     setReason(editingRecord.reason || "");
-    setPatientName(editingRecord.patientName || "");
-    setGender(editingRecord.gender || "");
-    setAddress(editingRecord.address || "");
-    setContactNo(editingRecord.contactNo || "");
+    setPatientName(editingRecord.patientName ? `${editingRecord.title ? editingRecord.title + ". " : ""}${editingRecord.patientName}` : "");
+    setGender(editingRecord.gender || "Male");
+    setAddress(editingRecord.address || (editingRecord.area ? `${editingRecord.area}, ${editingRecord.city}` : "Chennai"));
+    setContactNo(editingRecord.contactNo || "9840012345");
   }, [editingRecord]);
 
   const handleGetDetails = () => {
@@ -39,11 +39,12 @@ export default function RevisitCancelFormPage() {
     setGender("Male");
     setAddress("12, Grand Trunk Road, Vadapalani, Chennai");
     setContactNo("9840012345");
+    notify.saveSuccess("Patient details fetched successfully.");
   };
 
   const handleSubmit = () => {
     if (!uhid.trim() || !reason.trim()) {
-      notify.validationError("Please fill all mandatory fields.");
+      notify.validationError("Please fill all mandatory fields (UHID and Reason).");
       return;
     }
 
@@ -51,22 +52,19 @@ export default function RevisitCancelFormPage() {
       uhidNo: uhid.trim(),
       opNo: opNo.trim() || "N/A",
       revisitNo: editingRecord?.revisitNo || `REV-${Date.now().toString().slice(-6)}`,
-      patientName: patientName.trim() || "New Cancellation",
+      patientName: patientName.trim() || "Cancelled Patient",
       gender: gender || "N/A",
       address: address || "N/A",
       contactNo: contactNo || "N/A",
       reason: reason.trim(),
       cancelledDate: new Date().toLocaleDateString("en-GB"),
       status: "cancelled",
-      createdBy: "System",
     };
 
-    notify.saveSuccess(editingRecord ? "Record updated successfully." : "Record saved successfully.");
-    navigate("/op/revisit-cancellation", {
+    notify.saveSuccess("Revisit cancelled successfully.");
+    navigate("/revisit-records", {
       state: {
-        ...(editingRecord
-          ? { editedRecord: savedRecord, originalRevisitNo: editingRecord.revisitNo }
-          : { newRecord: savedRecord }),
+        cancelledRecord: savedRecord,
       },
     });
   };
@@ -93,7 +91,7 @@ export default function RevisitCancelFormPage() {
             <CalendarX className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-[17px] font-semibold">New OP Re-Visit Cancellation</h1>
+            <h1 className="text-[17px] font-semibold">OP Re-Visit Cancellation</h1>
             <p className="text-[12.5px] text-muted-foreground">
               Cancel an existing OP re-visit record
             </p>
@@ -102,16 +100,16 @@ export default function RevisitCancelFormPage() {
 
         <Button
           variant="outline"
-          onClick={() => navigate("/op/revisit-cancellation")}
+          onClick={() => navigate("/revisit-records")}
           className="gap-2 text-[13px] border-slate-300 cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Cancellation List
+          Back to Revisit List
         </Button>
       </div>
 
-      {/* Form Card ONLY (No table underneath) */}
-      <div className="rounded-md border border-slate-200" style={{ background: "var(--background)" }}>
+      {/* Form Card */}
+      <div className="rounded-md border border-slate-200 bg-white" style={{ background: "var(--background)" }}>
         <div className="px-6 py-6">
           <div className="grid grid-cols-3 items-end gap-4">
             <Field label="UHID No" required>
@@ -166,15 +164,15 @@ export default function RevisitCancelFormPage() {
           </div>
 
           <div className="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
-            <Button variant="outline" onClick={handleClear} className="text-[13px]  h-10 w-28 font-medium text-slate-600 cursor-pointer">
+            <Button variant="outline" onClick={handleClear} className="text-[13px] h-10 w-28 font-medium text-slate-600 cursor-pointer">
               Clear
             </Button>
             <Button
               onClick={handleSubmit}
-              className="text-white text-[13px] cursor-pointer h-10 w-28"
+              className="text-white text-[13px] cursor-pointer h-10 w-36"
               style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
             >
-              Cancel Visit
+              Confirm Cancel
             </Button>
           </div>
         </div>

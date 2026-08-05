@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useRef } from "react"
 import { Navigate, useLocation } from "react-router-dom"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/toast"
 import { useAuth } from "@/context/AuthContext"
 
 interface ProtectedRoutesProps {
