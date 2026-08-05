@@ -65,8 +65,8 @@ export default function HospitalMasterPage() {
           onView={(item) => setSelectedHospital(item)}
           onEdit={(item) => navigate("/hospital-master", { state: { record: item } })}
           onDelete={handleDelete}
-          onPrint={() => window.print()}
-          onBarcode={() => {}}
+          // onPrint={() => window.print()}
+          // onBarcode={() => {}}
         />
       ),
     },

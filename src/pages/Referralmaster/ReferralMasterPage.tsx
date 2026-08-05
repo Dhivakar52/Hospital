@@ -62,8 +62,8 @@ export default function ReferralMasterPage() {
           onView={(item) => setSelectedReferral(item)}
           onEdit={(item) => navigate("/referral-master", { state: { record: item } })}
           onDelete={handleDelete}
-          onPrint={() => window.print()}
-          onBarcode={() => {}}
+          // onPrint={() => window.print()}
+          // onBarcode={() => {}}
         />
       ),
     },
