@@ -118,14 +118,14 @@ export default function RevisitCancelFormPage() {
             <Field label="OP">
               <TextField placeholder="Enter OP number" value={opNo} onChange={setOpNo} />
             </Field>
-            <Button
+            {/* <Button
               variant="outline"
               onClick={handleGetDetails}
               className="h-9 text-[13px] w-28 cursor-pointer"
               style={{ background: "var(--blue-btn)", color: "white" }}
             >
               Get Details
-            </Button>
+            </Button> */}
           </div>
 
           <div className="mt-4 grid grid-cols-3 gap-4">
@@ -164,9 +164,9 @@ export default function RevisitCancelFormPage() {
           </div>
 
           <div className="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
-            <Button variant="outline" onClick={handleClear} className="text-[13px] h-10 w-28 font-medium text-slate-600 cursor-pointer">
+            {/* <Button variant="outline" onClick={handleClear} className="text-[13px] h-10 w-28 font-medium text-slate-600 cursor-pointer">
               Clear
-            </Button>
+            </Button> */}
             <Button
               onClick={handleSubmit}
               className="text-white text-[13px] cursor-pointer h-10 w-36"
