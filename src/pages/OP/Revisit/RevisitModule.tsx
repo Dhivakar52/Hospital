@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CalendarClock, Search, ArrowRight, ArrowLeft, ExternalLink } from "lucide-react";
+import { RotateCcw, CalendarClock, Search, ArrowRight, ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RevisitStepper } from "./Revisitstepper";
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
@@ -354,14 +354,12 @@ export default function OPRevisit() {
             className="flex h-12 w-12 items-center justify-center rounded-lg"
             style={{ background: "var(--side-menu)", color: "var(--blue-text-color)" }}
           >
-            <CalendarClock className="h-5 w-5" />
+            <RotateCcw className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-[17px] font-semibold">OP Re-Visit</h1>
+            <h1 className="text-[17px] font-semibold">Revisit</h1>
             <p className="text-[12.5px] text-muted-foreground">
-              Last UHID No: <span className="font-medium text-slate-700">4285630</span> &nbsp;•&nbsp;
-              New Visit: <span className="font-medium text-slate-700">805</span> &nbsp;•&nbsp;
-              ReVisit: <span className="font-medium text-slate-700">1912</span>
+              View and manage patient revisit records
             </p>
           </div>
         </div>

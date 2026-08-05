@@ -205,9 +205,9 @@ export default function NotificationsPage() {
             <Bell className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-[17px] font-semibold">Hospital Notifications</h1>
+            <h1 className="text-[17px] font-semibold">Notifications</h1>
             <p className="text-[12.5px] text-muted-foreground">
-              View and manage all system and patient activity alerts
+              View and manage notifications
             </p>
           </div>
         </div>

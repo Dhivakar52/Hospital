@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import type { ColumnDef } from "@tanstack/react-table"
+import { UsersRound } from "lucide-react";
 import {
   // UserPlus,
   Loader2,
@@ -26,6 +27,7 @@ import {
   FileSpreadsheet,
   Printer,
   Filter,
+  Plus,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/toast"
@@ -120,7 +122,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
       try {
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1500))
-        
+
         // Use mock data from the separate file
         setData(mockPatients)
         setFilteredData(mockPatients)
@@ -470,10 +472,21 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           {/* Title */}
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-foreground">Registered Patients</h1>
-            <Badge variant="secondary" className="text-xs">
-              {filteredData.length} patients
-            </Badge>
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-lg"
+              style={{
+                background: "var(--side-menu)",
+                color: "var(--blue-text-color)",
+              }}
+            >
+              <UsersRound className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-[17px] font-semibold">Registered Patients</h1>
+              <p className="text-[12.5px] text-muted-foreground">
+                View and manage registered patient records
+              </p>
+            </div>
           </div>
 
           {/* Search, From Date -> To Date (NEW), Menu Actions (Filter/Export/Print), Add - All in One Row */}
@@ -553,13 +566,13 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
               Add
             </Button> */}
 
-            {/* ✅ Menu → Filter / Export / Print dropdown - Accessories pattern */}
+            {/* Actions Menu (Filter / Export / Print) */}
             <div className="relative" ref={actionRef}>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowActions(!showActions)}
-                className="shrink-0"
+                className="shrink-0 cursor-pointer"
               >
                 <SlidersHorizontal className="h-4 w-4" />
               </Button>
@@ -568,7 +581,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                 <button
                   onClick={handleCloseFilter}
                   title="Clear filters"
-                  className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center shadow-md hover:bg-blue-700"
+                  className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center shadow-md hover:bg-blue-700 cursor-pointer"
                 >
                   <SlidersHorizontal size={12} />
                 </button>
@@ -578,41 +591,21 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                 <div className="absolute right-0 mt-2 bg-card border border-border rounded-xl shadow-lg p-2 flex items-center gap-1 z-50">
                   <button
                     onClick={openFilterPanel}
-                    className={`p-2 rounded-lg hover:bg-blue-50 text-muted-foreground transition    
-                    `}
-                     style={
-                        hasActiveFilters
-                        ? {
-                          color: "var(--blue-text-color)",
-                            background: "var(--side-menu)",
-                          
-                            }
-                        : undefined
-                    }
+                    className="p-2 rounded-lg hover:bg-blue-50 text-muted-foreground transition cursor-pointer"
                     title="Filter"
                   >
                     <Filter size={18} />
-                    {/* {Object.keys(filters).length > 0 && (
-                      <Badge variant="secondary" className="ml-1 text-xs align-middle">
-                        {Object.keys(filters).length}
-                      </Badge>
-                    )} */}
                   </button>
                   <button
                     onClick={handleExportExcel}
-                    className="p-2 rounded-lg hover:bg-green-50 text-muted-foreground hover:text-green-600 transition relative"
-                    title={`Export ${pagedData.length} records from current page`}
+                    className="p-2 rounded-lg hover:bg-green-50 text-muted-foreground hover:text-green-600 transition relative cursor-pointer"
+                    title={`Export ${pagedData.length} records`}
                   >
                     <FileSpreadsheet size={18} />
-                    {pagedData.length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                        {pagedData.length}
-                      </span>
-                    )}
                   </button>
                   <button
                     onClick={handlePrint}
-                    className="p-2 rounded-lg hover:bg-purple-50 text-muted-foreground hover:text-purple-600 transition"
+                    className="p-2 rounded-lg hover:bg-purple-50 text-muted-foreground hover:text-purple-600 transition cursor-pointer"
                     title="Print"
                   >
                     <Printer size={18} />
@@ -620,6 +613,17 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                 </div>
               )}
             </div>
+
+            {/* Add (+) Button - Icon Only */}
+            <Button
+              size="sm"
+              onClick={() => navigate("/op/registration")}
+              className="h-9 w-9 p-0 shrink-0 text-white cursor-pointer"
+              style={{ background: "var(--blue-btn)" }}
+              title="New Registration"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
@@ -650,23 +654,23 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
         isOpen={isPanelOpen}
         title={
           panelMode === "add" ? "Add New Patient" :
-          panelMode === "view" ? `View Patient: ${selectedPatient?.patientName || ""}` :
-          panelMode === "edit" ? `Edit Patient: ${selectedPatient?.patientName || ""}` :
-          panelMode === "filter" ? "Filter Patients" :
-          "Patient Details"
+            panelMode === "view" ? `View Patient: ${selectedPatient?.patientName || ""}` :
+              panelMode === "edit" ? `Edit Patient: ${selectedPatient?.patientName || ""}` :
+                panelMode === "filter" ? "Filter Patients" :
+                  "Patient Details"
         }
         onClose={handlePanelClose}
         onSave={
           panelMode === "add" ? confirmAdd :
-          panelMode === "edit" ? confirmEdit :
-          panelMode === "filter" ? applyFilters :
-          handlePanelClose
+            panelMode === "edit" ? confirmEdit :
+              panelMode === "filter" ? applyFilters :
+                handlePanelClose
         }
         saveLabel={
           panelMode === "add" ? "Add Patient" :
-          panelMode === "edit" ? "Save Changes" :
-          panelMode === "filter" ? "Apply Filters" :
-          "Close"
+            panelMode === "edit" ? "Save Changes" :
+              panelMode === "filter" ? "Apply Filters" :
+                "Close"
         }
       >
         {/* Add Mode */}
@@ -770,7 +774,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                     <Calendar
                       mode="single"
                       selected={formData.registrationDate ? new Date(formData.registrationDate) : undefined}
-                      onSelect={(date : any) =>
+                      onSelect={(date: any) =>
                         setFormData({ ...formData, registrationDate: date ? format(date, "yyyy-MM-dd") : "" })
                       }
                     />
@@ -965,7 +969,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                     <Calendar
                       mode="single"
                       selected={formData.registrationDate ? new Date(formData.registrationDate) : undefined}
-                      onSelect={(date :any) =>
+                      onSelect={(date: any) =>
                         setFormData({ ...formData, registrationDate: date ? format(date, "yyyy-MM-dd") : "" })
                       }
                     />
@@ -1005,7 +1009,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                   options={titleOptions}
                   placeholder="Any title"
                   value={tempFilters.title || ""}
-                  onChange={(value : any) =>
+                  onChange={(value: any) =>
                     setTempFilters((prev) => {
                       const next = { ...prev }
                       if (value) next.title = value
@@ -1019,7 +1023,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                 <TextField
                   placeholder="Search by name"
                   value={tempFilters.patientName || ""}
-                  onChange={(value : any) =>
+                  onChange={(value: any) =>
                     setTempFilters((prev) => {
                       const next = { ...prev }
                       if (value) next.patientName = value
@@ -1051,7 +1055,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                   options={departmentOptions}
                   placeholder="Any department"
                   value={tempFilters.department || ""}
-                  onChange={(value : any) =>
+                  onChange={(value: any) =>
                     setTempFilters((prev) => {
                       const next = { ...prev }
                       if (value) next.department = value
@@ -1068,7 +1072,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                 <TextField
                   placeholder="Search by area"
                   value={tempFilters.area || ""}
-                  onChange={(value : any) =>
+                  onChange={(value: any) =>
                     setTempFilters((prev) => {
                       const next = { ...prev }
                       if (value) next.area = value
@@ -1082,7 +1086,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                 <TextField
                   placeholder="Search by city"
                   value={tempFilters.city || ""}
-                  onChange={(value : any) =>
+                  onChange={(value: any) =>
                     setTempFilters((prev) => {
                       const next = { ...prev }
                       if (value) next.city = value
@@ -1099,7 +1103,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                 <DateField
                   placeholder="Pick a date"
                   value={tempFilters.registrationDate ? new Date(tempFilters.registrationDate) : undefined}
-                  onChange={(date : any) =>
+                  onChange={(date: any) =>
                     setTempFilters((prev) => {
                       const next = { ...prev }
                       if (date) next.registrationDate = format(date, "yyyy-MM-dd")

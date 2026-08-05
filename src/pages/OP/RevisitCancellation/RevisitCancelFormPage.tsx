@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CalendarX, ArrowLeft } from "lucide-react";
+import { Ban, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, TextField } from "@/components/FormPrimitives";
 import { notify } from "@/lib/notify";
@@ -88,12 +88,12 @@ export default function RevisitCancelFormPage() {
             className="flex h-12 w-12 items-center justify-center rounded-lg"
             style={{ background: "var(--side-menu)", color: "var(--blue-text-color)" }}
           >
-            <CalendarX className="h-5 w-5" />
+            <Ban className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-[17px] font-semibold">OP Re-Visit Cancellation</h1>
+            <h1 className="text-[17px] font-semibold">Revisit Cancellation</h1>
             <p className="text-[12.5px] text-muted-foreground">
-              Cancel an existing OP re-visit record
+              Manage revisit cancellation records
             </p>
           </div>
         </div>

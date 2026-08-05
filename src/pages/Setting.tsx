@@ -24,6 +24,7 @@ import {
   KeyRound,
   LogOut,
   Trash2,
+  Settings as SettingsIcon,
 } from "lucide-react"
 import { toast } from "@/components/ui/toast"
 
@@ -79,11 +80,22 @@ const Settings = () => {
   return (
     <div className=" space-y-6 p-6">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your account, notifications, security, and appearance preferences.
-        </p>
+      <div className="flex items-center gap-3">
+        <div
+          className="flex h-12 w-12 items-center justify-center rounded-lg shrink-0"
+          style={{
+            background: "var(--side-menu)",
+            color: "var(--blue-text-color)",
+          }}
+        >
+          <SettingsIcon className="h-5 w-5" />
+        </div>
+        <div>
+          <h1 className="text-[17px] font-semibold text-foreground">Settings</h1>
+          <p className="text-[12.5px] text-muted-foreground">
+            Configure application settings
+          </p>
+        </div>
       </div>
 
       <Tabs defaultValue="account" className="w-full">

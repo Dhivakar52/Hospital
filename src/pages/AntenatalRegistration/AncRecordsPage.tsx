@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Baby, Plus, PowerOff } from "lucide-react";
+import { PowerOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
@@ -102,42 +102,14 @@ export default function AncRecordsPage() {
 
   return (
     <div>
-      {/* Top Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-lg"
-            style={{
-              background: "var(--side-menu)",
-              color: "var(--blue-text-color)",
-            }}
-          >
-            <Baby className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-[17px] font-semibold">Registered ANC Records</h1>
-            <p className="text-[12.5px] text-muted-foreground">
-              View and manage registered antenatal care records
-            </p>
-          </div>
-        </div>
-
-        <Button
-          onClick={() => navigate("/antenatal-registration")}
-          className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
-          style={{ background: "var(--blue-btn)" }}
-        >
-          <Plus className="h-4 w-4" />
-          New ANC Registration
-        </Button>
-      </div>
-
       {/* Standardized Card & Table */}
       <StandardModuleTable
         title="Registered ANC Records"
-        searchPlaceholder="Search Patient / UHID / ANC No / Mobile"
+        countUnit="ANC Records"
+        searchPlaceholder="Search Patient Name / ANC Number / UHID"
         columns={columns}
         data={records}
+        onAdd={() => navigate("/antenatal-registration")}
         filterFields={[
           { label: "Department", key: "department", type: "select", options: ["Obstetrics", "General Surgery", "General Medicine"] },
           { label: "Gender", key: "gender", type: "select", options: ["Female"] },

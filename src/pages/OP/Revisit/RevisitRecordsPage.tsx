@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { CalendarClock, Plus, BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
@@ -99,57 +99,26 @@ export default function RevisitRecordsPage() {
 
   return (
     <div>
-      {/* Top Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-lg"
-            style={{
-              background: "var(--side-menu)",
-              color: "var(--blue-text-color)",
-            }}
-          >
-            <CalendarClock className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-[17px] font-semibold">Revisit Records</h1>
-            <p className="text-[12.5px] text-muted-foreground">
-              View and manage patient revisit history
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* OP Statistics Button */}
+      {/* Standardized Card & Table */}
+      <StandardModuleTable
+        title="Revisit Records"
+        countUnit="Records"
+        searchPlaceholder="Search Patient Name / UHID / OP Number"
+        columns={columns}
+        data={records}
+        onAdd={() => navigate("/op/revisit")}
+        headerExtra={
           <Button
             variant="outline"
+            size="sm"
             onClick={() => setIsStatsOpen(true)}
-            className="gap-2 text-[13px] border-blue-200 cursor-pointer"
-            style={{
-              color: "var(--blue-text-color)",
-            }}
+            className="gap-2 text-[13px] border-blue-200 cursor-pointer h-9 shrink-0"
+            style={{ color: "var(--blue-text-color)" }}
           >
             <BarChart3 className="h-4 w-4" />
             OP Statistics
           </Button>
-
-          <Button
-            onClick={() => navigate("/op/revisit")}
-            className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
-            style={{ background: "var(--blue-btn)" }}
-          >
-            <Plus className="h-4 w-4" />
-            New Revisit
-          </Button>
-        </div>
-      </div>
-
-      {/* Standardized Card & Table */}
-      <StandardModuleTable
-        title="Revisit Records"
-        searchPlaceholder="Search Patient Name / UHID / OP Number"
-        columns={columns}
-        data={records}
+        }
         filterFields={[
           {
             label: "Status",

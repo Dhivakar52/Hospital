@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
-import { UserCheck, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
 import CustomPanel from "@/common/CustomPanel";
@@ -64,40 +62,15 @@ export default function ReferralMasterPage() {
 
   return (
     <div>
-      {/* Top Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-lg"
-            style={{ background: "var(--side-menu)", color: "var(--blue-text-color)" }}
-          >
-            <UserCheck className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-[17px] font-semibold">Referral Master Records</h1>
-            <p className="text-[12.5px] text-muted-foreground">
-              View and manage referring doctor details
-            </p>
-          </div>
-        </div>
-
-        <Button
-          onClick={() => navigate("/referral-master")}
-          className="gap-2 text-[13px] text-white hover:opacity-90 cursor-pointer"
-          style={{ background: "var(--blue-btn)" }}
-        >
-          <Plus className="h-4 w-4" />
-          New Referral
-        </Button>
-      </div>
-
-      {/* Standardized Card & Table (Date Filters Removed) */}
+      {/* Standardized Card & Table */}
       <StandardModuleTable
         title="Referral Master Records"
+        countUnit="Referrals"
         searchPlaceholder="Search referral name, code, hospital name..."
         columns={columns}
         data={records}
         hideDateFilters={true}
+        onAdd={() => navigate("/referral-master")}
         filterFields={[
           {
             label: "Designation",

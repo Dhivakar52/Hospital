@@ -10,6 +10,19 @@ import {
   Filter,
   Loader2,
   X,
+  Plus,
+  UsersRound,
+  UserPlus,
+  RotateCcw,
+  Stethoscope,
+  Ban,
+  Baby,
+  Building2,
+  Network,
+  Bell,
+  FileText,
+  LayoutDashboard,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +40,26 @@ import { notify } from "@/lib/notify";
 import { BarcodePreviewModal } from "@/components/BarcodePreviewModal";
 import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal";
 
+const HEADER_CONFIG: Record<string, { icon: any; subtitle: string }> = {
+  "Registered Patients": { icon: UsersRound, subtitle: "View and manage registered patient records" },
+  "OP Registration": { icon: UserPlus, subtitle: "Register and manage outpatient registrations" },
+  "Revisit": { icon: RotateCcw, subtitle: "View and manage patient revisit records" },
+  "Revisit Records": { icon: RotateCcw, subtitle: "View and manage patient revisit records" },
+  "Diagnosis Entry": { icon: Stethoscope, subtitle: "Manage patient diagnosis information" },
+  "Revisit Cancellation": { icon: Ban, subtitle: "Manage revisit cancellation records" },
+  "Revisit Cancellation Records": { icon: Ban, subtitle: "Manage revisit cancellation records" },
+  "Antenatal Registration": { icon: Baby, subtitle: "Manage antenatal registration records" },
+  "Registered ANC Records": { icon: Baby, subtitle: "Manage antenatal registration records" },
+  "Hospital Master": { icon: Building2, subtitle: "Manage hospital information" },
+  "Hospital Master Records": { icon: Building2, subtitle: "Manage hospital information" },
+  "Referral Master": { icon: Network, subtitle: "Manage referral information" },
+  "Referral Master Records": { icon: Network, subtitle: "Manage referral information" },
+  "Notifications": { icon: Bell, subtitle: "View and manage notifications" },
+  "Documents": { icon: FileText, subtitle: "Manage hospital documents" },
+  "Dashboard": { icon: LayoutDashboard, subtitle: "Hospital Management Dashboard" },
+  "Settings": { icon: SettingsIcon, subtitle: "Configure application settings" },
+};
+
 export interface FilterOption {
   label: string;
   key: string;
@@ -36,6 +69,9 @@ export interface FilterOption {
 
 interface StandardModuleTableProps<TData> {
   title: string;
+  subtitle?: string;
+  icon?: any;
+  countUnit?: string;
   searchPlaceholder?: string;
   columns: ColumnDef<TData>[];
   data: TData[];
@@ -43,10 +79,15 @@ interface StandardModuleTableProps<TData> {
   isLoading?: boolean;
   filterFields?: FilterOption[];
   hideDateFilters?: boolean;
+  onAdd?: () => void;
+  headerExtra?: React.ReactNode;
 }
 
 export function StandardModuleTable<TData extends Record<string, any>>({
   title,
+  subtitle,
+  icon,
+  countUnit = "Records",
   searchPlaceholder = "Search...",
   columns,
   data,
@@ -54,7 +95,13 @@ export function StandardModuleTable<TData extends Record<string, any>>({
   isLoading = false,
   filterFields,
   hideDateFilters = false,
+  onAdd,
+  headerExtra,
 }: StandardModuleTableProps<TData>) {
+  const config = HEADER_CONFIG[title];
+  const HeaderIcon = icon || config?.icon;
+  const headerSubtitle = subtitle || config?.subtitle;
+
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
@@ -99,8 +146,8 @@ export function StandardModuleTable<TData extends Record<string, any>>({
 
   // Close actions dropdown on outside click
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (actionRef.current && !actionRef.current.contains(e.target as Node)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (actionRef.current && !actionRef.current.contains(event.target as Node)) {
         setShowActions(false);
       }
     };
@@ -108,13 +155,13 @@ export function StandardModuleTable<TData extends Record<string, any>>({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filter data based on Search, Date range, and Field filters
+  // Combined Filtering Logic
   const filteredData = useMemo(() => {
-    let result = data;
+    let result = [...data];
 
-    // Search Filter (case-insensitive, trimmed)
+    // Global Search Filter
     if (search.trim()) {
-      const q = search.trim().toLowerCase();
+      const q = search.toLowerCase().trim();
       result = result.filter((item) => {
         if (searchField) {
           return searchField(item).toLowerCase().includes(q);
@@ -129,6 +176,12 @@ export function StandardModuleTable<TData extends Record<string, any>>({
     Object.entries(filters).forEach(([key, value]) => {
       if (value) {
         result = result.filter((item) => {
+          if (key === "status") {
+            const valLower = value.toLowerCase();
+            if (valLower === "all") return true;
+            const itemStatus = (item.status || "active").toLowerCase();
+            return itemStatus === valLower;
+          }
           const itemVal = item[key];
           if (itemVal === undefined || itemVal === null) return false;
           return String(itemVal).toLowerCase().includes(value.toLowerCase());
@@ -178,33 +231,30 @@ export function StandardModuleTable<TData extends Record<string, any>>({
     setTempFilters({});
     setFromDate(undefined);
     setToDate(undefined);
-    setCurrentPage(1);
-    setIsFilterPanelOpen(false);
   };
 
-  // Paginated Data
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  // Pagination calculation
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(start, start + itemsPerPage);
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const paginationTable = {
-    getState: () => ({
-      pagination: {
-        pageIndex: currentPage - 1,
-        pageSize: itemsPerPage,
-      },
-    }),
+  const handleItemsPerPageChange = (size: number) => {
+    setItemsPerPage(size);
+    setCurrentPage(1);
+  };
+
+  // Table object matching DataTable expectations
+  const tableObject = {
+    setPageSize: (size: number) => handleItemsPerPageChange(size),
     setPageIndex: (index: number) => setCurrentPage(index + 1),
-    setPageSize: (size: number) => {
-      setItemsPerPage(size);
-      setCurrentPage(1);
-    },
     previousPage: () => setCurrentPage((prev) => Math.max(prev - 1, 1)),
     nextPage: () => setCurrentPage((prev) => Math.min(prev + 1, totalPages)),
     getCanPreviousPage: () => currentPage > 1,
     getCanNextPage: () => currentPage < totalPages,
+    getState: () => ({ pagination: { pageIndex: currentPage - 1, pageSize: itemsPerPage } }),
   };
 
   const handleExportExcel = () => {
@@ -259,15 +309,38 @@ export function StandardModuleTable<TData extends Record<string, any>>({
 
   return (
     <div className="bg-card border border-border rounded-md p-6">
-      {/* Title & Top Action Row */}
+      {/* Title & Top Action Row (Standardized Single Horizontal Row Layout) */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        {/* Left: Icon + Title & Subtitle + Count Badge */}
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-foreground">{title}</h1>
-          <Badge variant="secondary" className="text-xs">
-            {filteredData.length} records
-          </Badge>
+          {HeaderIcon && (
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-lg shrink-0"
+              style={{
+                background: "var(--side-menu)",
+                color: "var(--blue-text-color)",
+              }}
+            >
+              <HeaderIcon className="h-5 w-5" />
+            </div>
+          )}
+
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-[17px] font-semibold text-foreground">{title}</h1>
+              {countUnit && (
+                <Badge variant="secondary" className="text-xs">
+                  {filteredData.length} {countUnit}
+                </Badge>
+              )}
+            </div>
+            {headerSubtitle && (
+              <p className="text-[12.5px] text-muted-foreground">{headerSubtitle}</p>
+            )}
+          </div>
         </div>
 
+        {/* Right: Search + From Date -> To Date + Extra Header Buttons + Actions Menu + [+] Add */}
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           {/* Search Box */}
           <div className="flex-1 sm:flex-none">
@@ -278,7 +351,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
             />
           </div>
 
-          {/* Date Pickers */}
+          {/* Date Pickers (From Date -> To Date) */}
           {!hideDateFilters && (
             <div className="flex items-center gap-2 shrink-0">
               <Popover>
@@ -331,6 +404,9 @@ export function StandardModuleTable<TData extends Record<string, any>>({
             </div>
           )}
 
+          {/* Extra Header Controls (e.g. OP Statistics) */}
+          {headerExtra}
+
           {/* Action Menu (Filter / Export / Print) */}
           <div className="relative" ref={actionRef}>
             <Button
@@ -378,6 +454,19 @@ export function StandardModuleTable<TData extends Record<string, any>>({
               </div>
             )}
           </div>
+
+          {/* Add (+) Button - Icon Only */}
+          {onAdd && (
+            <Button
+              size="sm"
+              onClick={onAdd}
+              className="h-9 w-9 p-0 shrink-0 text-white cursor-pointer"
+              style={{ background: "var(--blue-btn)" }}
+              title="Add New"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -391,107 +480,82 @@ export function StandardModuleTable<TData extends Record<string, any>>({
               variant="ghost"
               size="sm"
               onClick={handleResetFilters}
-              className="h-7 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 gap-1 px-2 cursor-pointer"
+              className="text-xs text-blue-600 hover:text-blue-800 p-0 h-auto cursor-pointer"
             >
-              <X className="h-3 w-3" /> Clear Filters
+              Clear all filters
             </Button>
           )}
         </div>
       </div>
 
-      {/* Main Data Table */}
-      <DataTable columns={columns} data={paginatedData} isLoading={isLoading} />
+      {/* Data Table */}
+      <DataTable columns={columns} data={paginatedData} />
 
-      {/* Pagination Controls */}
-      <div className="mt-4">
-        <Pagination table={paginationTable} totalCount={filteredData.length} />
+      {/* Pagination Footer */}
+      <div className="mt-4 border-t border-border pt-4">
+        <Pagination
+          table={tableObject}
+          totalCount={filteredData.length}
+        />
       </div>
 
-      {/* Filter Custom Panel Slide-over (Matching Registered Patients) */}
+      {/* Dynamic Filter Panel Drawer */}
       <CustomPanel
         isOpen={isFilterPanelOpen}
         title="Filter Records"
         onClose={() => setIsFilterPanelOpen(false)}
         onSave={handleApplyFilter}
         saveLabel="Apply Filter"
-        width="580px"
+        width="450px"
       >
-        <div className="space-y-6 text-slate-700">
-          <p className="text-xs text-muted-foreground">
-            Specify filter criteria below to refine matching records.
-          </p>
-
-          <div className="grid grid-cols-2 gap-4">
-            {derivedFilterFields.map((field) => (
-              <Field key={field.key} label={field.label}>
-                {field.type === "select" && field.options ? (
-                  <SelectField
-                    options={field.options}
-                    placeholder={`Any ${field.label.toLowerCase()}`}
-                    value={tempFilters[field.key] || ""}
-                    onChange={(val: string) =>
-                      setTempFilters((prev) => {
-                        const next = { ...prev };
-                        if (val) next[field.key] = val;
-                        else delete next[field.key];
-                        return next;
-                      })
-                    }
-                  />
-                ) : (
-                  <TextField
-                    placeholder={`Filter by ${field.label.toLowerCase()}`}
-                    value={tempFilters[field.key] || ""}
-                    onChange={(val: string) =>
-                      setTempFilters((prev) => {
-                        const next = { ...prev };
-                        if (val) next[field.key] = val;
-                        else delete next[field.key];
-                        return next;
-                      })
-                    }
-                  />
-                )}
-              </Field>
-            ))}
-          </div>
-
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={handleResetFilters}
-              className="text-xs text-slate-600 cursor-pointer"
-            >
-              Reset All Filters
-            </Button>
-          </div>
+        <div className="space-y-4">
+          {derivedFilterFields.map((field) => (
+            <Field key={field.key} label={field.label}>
+              {field.type === "select" && field.options ? (
+                <SelectField
+                  options={["All", ...field.options]}
+                  value={tempFilters[field.key] || "All"}
+                  onChange={(val) =>
+                    setTempFilters((prev) => ({
+                      ...prev,
+                      [field.key]: val === "All" ? "" : val,
+                    }))
+                  }
+                />
+              ) : (
+                <TextField
+                  placeholder={`Filter by ${field.label}...`}
+                  value={tempFilters[field.key] || ""}
+                  onChange={(val) =>
+                    setTempFilters((prev) => ({
+                      ...prev,
+                      [field.key]: val,
+                    }))
+                  }
+                />
+              )}
+            </Field>
+          ))}
         </div>
       </CustomPanel>
 
       {/* Print Preview Modal */}
-      <PatientPrintPreviewModal
-        patient={selectedPrintItem ? {
-          id: selectedPrintItem.uhidNo || selectedPrintItem.id || selectedPrintItem.ancNo || "PAT000123",
-          patientName: selectedPrintItem.patientName || selectedPrintItem.hospital || selectedPrintItem.referralName || "Patient",
-          opNo: selectedPrintItem.opNo,
-          department: selectedPrintItem.department || selectedPrintItem.designation,
-          city: selectedPrintItem.city || selectedPrintItem.cityName,
-        } : null}
-        isOpen={Boolean(selectedPrintItem)}
-        onClose={() => setSelectedPrintItem(null)}
-      />
+      {selectedPrintItem && (
+        <PatientPrintPreviewModal
+          patient={selectedPrintItem as any}
+          isOpen={Boolean(selectedPrintItem)}
+          onClose={() => setSelectedPrintItem(null)}
+        />
+      )}
 
       {/* Barcode Preview Modal */}
-      <BarcodePreviewModal
-        patient={selectedBarcodeItem ? {
-          id: selectedBarcodeItem.uhidNo || selectedBarcodeItem.id || selectedBarcodeItem.ancNo || "PAT000123",
-          patientName: selectedBarcodeItem.patientName || selectedBarcodeItem.hospital || selectedBarcodeItem.referralName || "Patient",
-          opNo: selectedBarcodeItem.opNo,
-          department: selectedBarcodeItem.department || selectedBarcodeItem.designation,
-        } : null}
-        isOpen={Boolean(selectedBarcodeItem)}
-        onClose={() => setSelectedBarcodeItem(null)}
-      />
+      {selectedBarcodeItem && (
+        <BarcodePreviewModal
+          patient={selectedBarcodeItem as any}
+          isOpen={Boolean(selectedBarcodeItem)}
+          onClose={() => setSelectedBarcodeItem(null)}
+        />
+      )}
     </div>
   );
 }
