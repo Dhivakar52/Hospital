@@ -8,6 +8,7 @@ import { ActionMenu } from "@/common/ActionMenu";
 import CustomPanel from "@/common/CustomPanel";
 import Status from "@/common/Status";
 import { OpStatisticsModal } from "@/components/OpStatisticsModal";
+import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal";
 import { GENERATED_REVISIT_RECORDS, type RevisitRow } from "@/data/sampleData";
 
 export default function RevisitRecordsPage() {
@@ -16,6 +17,8 @@ export default function RevisitRecordsPage() {
   const [records, setRecords] = useState<RevisitRow[]>(GENERATED_REVISIT_RECORDS);
   const [selectedRecord, setSelectedRecord] = useState<RevisitRow | null>(null);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [selectedPrintPatient, setSelectedPrintPatient] = useState<any>(null);
 
   useEffect(() => {
     const newRecord = (location.state as { newRecord?: RevisitRow } | null)?.newRecord;
@@ -79,12 +82,29 @@ export default function RevisitRecordsPage() {
       header: "Actions",
       cell: ({ row }) => {
         const isCancelled = (row.original as any).status === "cancelled";
+        const item = row.original;
         return (
           <ActionMenu
-            item={row.original}
+            item={item}
             onView={(item) => setSelectedRecord(item)}
             onEdit={(item) => navigate("/op/revisit", { state: { record: item } })}
-            onPrint={() => window.print()}
+            onPrint={(item) => {
+              setSelectedPrintPatient({
+                id: item.uhidNo,
+                opNo: item.opNo,
+                title: item.title,
+                patientName: item.patientName,
+                fhwo: item.fhwo,
+                area: item.area,
+                city: item.city,
+                department: item.department,
+                gender: (item as any).gender,
+                age: (item as any).age,
+                doctor: (item as any).doctor,
+                registrationDate: (item as any).registrationDate || (item as any).admitDate,
+              });
+              setIsPrintModalOpen(true);
+            }}
             onBarcode={() => {}}
             onRevisitCancellation={
               isCancelled
@@ -196,6 +216,19 @@ export default function RevisitRecordsPage() {
 
       {/* OP Statistics Modal */}
       <OpStatisticsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
+
+      {/* Print Discharge Summary Modal */}
+      {selectedPrintPatient && (
+        <PatientPrintPreviewModal
+          patient={selectedPrintPatient}
+          isOpen={isPrintModalOpen}
+          onClose={() => {
+            setIsPrintModalOpen(false);
+            setSelectedPrintPatient(null);
+          }}
+        />
+      )}
     </div>
   );
 }
+

@@ -7,6 +7,7 @@ import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { ActionMenu } from "@/common/ActionMenu";
 import Status from "@/common/Status";
 import CustomPanel from "@/common/CustomPanel";
+import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal";
 import type { AncRecord } from "@/types/anc";
 import { mockAncRecords } from "@/data/mockAncRecords";
 import { notify } from "@/lib/notify";
@@ -23,7 +24,8 @@ export default function AncRecordsPage() {
   const [records, setRecords] = useState<AncRecord[]>(allRecords);
   const [selectedRecord, setSelectedRecord] = useState<AncRecord | null>(null);
   const [deactivateRecord, setDeactivateRecord] = useState<AncRecord | null>(null);
-  // const [genderFilter, setGenderFilter] = useState<string>("");
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [selectedPrintPatient, setSelectedPrintPatient] = useState<any>(null);
 
   useEffect(() => {
     const newRecord = (location.state as { newRecord?: AncRecord } | null)?.newRecord;
@@ -87,12 +89,25 @@ export default function AncRecordsPage() {
       header: "Actions",
       cell: ({ row }) => {
         const isInactive = row.original.status === "Deactivate" || row.original.status === "Inactive" || row.original.status === "deactivated";
+        const item = row.original;
         return (
           <ActionMenu
-            item={row.original}
+            item={item}
             onView={(item) => setSelectedRecord(item)}
             onEdit={(item) => navigate("/antenatal-registration", { state: { record: item } })}
-            onPrint={() => window.print()}
+            onPrint={(item) => {
+              setSelectedPrintPatient({
+                id: item.uhidNo,
+                opNo: (item as any).opNo || item.ancNo,
+                patientName: item.patientName,
+                age: item.age,
+                gender: item.gender || "Female",
+                department: item.department || "Obstetrics",
+                registrationDate: item.ancDate,
+                doctor: (item as any).doctor,
+              });
+              setIsPrintModalOpen(true);
+            }}
             onBarcode={() => {}}
             onDeactivate={
               isInactive
@@ -115,9 +130,6 @@ export default function AncRecordsPage() {
 
   return (
     <div>
-      {/* Add manual gender filter dropdown */}
-     
-
       <StandardModuleTable
         title="Registered ANC Records"
         countUnit="ANC Records"
@@ -214,6 +226,18 @@ export default function AncRecordsPage() {
           </div>
         </div>
       )}
+
+      {/* Print Discharge Summary Modal */}
+      {selectedPrintPatient && (
+        <PatientPrintPreviewModal
+          patient={selectedPrintPatient}
+          isOpen={isPrintModalOpen}
+          onClose={() => {
+            setIsPrintModalOpen(false);
+            setSelectedPrintPatient(null);
+          }}
+        />
+      )}
     </div>
   );
-}
+}
