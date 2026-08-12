@@ -54,10 +54,56 @@ export const PatientPrintPreviewModal: React.FC<PatientPrintPreviewModalProps> =
   isOpen,
   onClose,
 }) => {
+  React.useEffect(() => {
+    if (isOpen) {
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+      }
+      setTimeout(() => {
+        const modalContent = document.querySelector('[role="dialog"]');
+        if (modalContent) {
+          modalContent.scrollTop = 0;
+          modalContent.scrollLeft = 0;
+        }
+        const printContainers = document.querySelectorAll(
+          '.print-discharge-summary-standalone, .discharge-summary-print, #printable-discharge-summary'
+        );
+        printContainers.forEach((el) => {
+          el.scrollTop = 0;
+          el.scrollLeft = 0;
+        });
+      }, 0);
+    }
+  }, [isOpen]);
+
   if (!patient) return null;
 
   const handlePrint = () => {
-    window.print();
+    // 1. Scroll main window to top
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+    }
+
+    // 2. Reset modal scroll container
+    const modalContent = document.querySelector('[role="dialog"]');
+    if (modalContent) {
+      modalContent.scrollTop = 0;
+      modalContent.scrollLeft = 0;
+    }
+
+    // 3. Reset standalone print container
+    const printContainers = document.querySelectorAll(
+      '.print-discharge-summary-standalone, .discharge-summary-print, #printable-discharge-summary'
+    );
+    printContainers.forEach((el) => {
+      el.scrollTop = 0;
+      el.scrollLeft = 0;
+    });
+
+    // 4. Trigger print
+    setTimeout(() => {
+      window.print();
+    }, 50);
   };
 
   const patientTitle = patient.title ? `${patient.title}. ` : "";
@@ -75,6 +121,7 @@ export const PatientPrintPreviewModal: React.FC<PatientPrintPreviewModalProps> =
     uhidNo: patient.id || "2689068",
     genderAge: patient.gender && patient.age ? `${patient.gender} / ${patient.age}` : "Male / 54Y 2M 19D",
     doctor: patient.doctor || "Aneesh Basheer",
+    doctorSignature: (patient as any).doctorSignature || (patient as any).signature || "",
     dischargeDate: patient.dischargeDate || "18-Dec-2025 16:00",
     unit: patient.unit || "UNIT-7",
     mlcStatus: patient.mlcStatus || "Non MLC",
