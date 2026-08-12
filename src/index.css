@@ -276,8 +276,10 @@ button[role="combobox"] {
     transform: none !important;
   }
 
-  /* Prevent page breaks inside table rows and headers */
+  /* Prevent page breaks inside table rows, signature section, and footer */
   .avoid-break,
+  .signature-section,
+  .document-footer,
   .print-discharge-summary-standalone tr,
   .print-discharge-summary-standalone table {
     break-inside: avoid !important;

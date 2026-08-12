@@ -17,6 +17,7 @@ export interface PatientDischargeData {
   uhidNo?: string;
   genderAge?: string;
   doctor?: string;
+  doctorSignature?: string;
   dischargeDate?: string;
   unit?: string;
   mlcStatus?: string;
@@ -39,39 +40,39 @@ interface DischargeSummaryDocumentProps {
 }
 
 // Custom SVG component for NABH Accredited logo matching the exact reference badge
-const NabhLogo: React.FC<{ className?: string }> = ({ className = "h-16 w-16" }) => (
-  <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
-    {/* Outer Red Ring */}
-    <circle cx="50" cy="50" r="46" fill="none" stroke="#d32f2f" strokeWidth="8" />
-    
-    {/* Top Text along path */}
-    <path id="textPathTop" d="M 12 50 A 38 38 0 0 1 88 50" fill="none" />
-    <text fontSize="7" fontWeight="bold" fill="#d32f2f" textAnchor="middle">
-      <textPath href="#textPathTop" startOffset="50%">
-        PATIENT SAFETY &amp; QUALITY OF CARE
-      </textPath>
-    </text>
+// const NabhLogo: React.FC<{ className?: string }> = ({ className = "h-16 w-16" }) => (
+//   <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+//     {/* Outer Red Ring */}
+//     <circle cx="50" cy="50" r="46" fill="none" stroke="#d32f2f" strokeWidth="8" />
 
-    {/* Inner Blue Shield / Circle */}
-    <circle cx="50" cy="50" r="33" fill="#0288d1" />
-    
-    {/* Center Emblem Graphic */}
-    <path d="M 36 50 C 36 38 50 34 50 34 C 50 34 64 38 64 50 C 64 60 50 66 50 66 C 50 66 36 60 36 50 Z" fill="#ffffff" />
-    <circle cx="50" cy="48" r="7" fill="#0288d1" />
+//     {/* Top Text along path */}
+//     <path id="textPathTop" d="M 12 50 A 38 38 0 0 1 88 50" fill="none" />
+//     <text fontSize="7" fontWeight="bold" fill="#d32f2f" textAnchor="middle">
+//       <textPath href="#textPathTop" startOffset="50%">
+//         PATIENT SAFETY &amp; QUALITY OF CARE
+//       </textPath>
+//     </text>
 
-    {/* Center Text "NABH" */}
-    <text x="50" y="74" fontSize="11" fontWeight="900" fill="#ffffff" textAnchor="middle" fontFamily="sans-serif">
-      NABH
-    </text>
-    {/* "ACCREDITED" text */}
-    <path id="textPathBottom" d="M 20 50 A 30 30 0 0 0 80 50" fill="none" />
-    <text fontSize="5.5" fontWeight="bold" fill="#d32f2f" textAnchor="middle">
-      <textPath href="#textPathBottom" startOffset="50%">
-        ACCREDITED
-      </textPath>
-    </text>
-  </svg>
-);
+//     {/* Inner Blue Shield / Circle */}
+//     <circle cx="50" cy="50" r="33" fill="#0288d1" />
+
+//     {/* Center Emblem Graphic */}
+//     <path d="M 36 50 C 36 38 50 34 50 34 C 50 34 64 38 64 50 C 64 60 50 66 50 66 C 50 66 36 60 36 50 Z" fill="#ffffff" />
+//     <circle cx="50" cy="48" r="7" fill="#0288d1" />
+
+//     {/* Center Text "NABH" */}
+//     <text x="50" y="74" fontSize="11" fontWeight="900" fill="#ffffff" textAnchor="middle" fontFamily="sans-serif">
+//       NABH
+//     </text>
+//     {/* "ACCREDITED" text */}
+//     <path id="textPathBottom" d="M 20 50 A 30 30 0 0 0 80 50" fill="none" />
+//     <text fontSize="5.5" fontWeight="bold" fill="#d32f2f" textAnchor="middle">
+//       <textPath href="#textPathBottom" startOffset="50%">
+//         ACCREDITED
+//       </textPath>
+//     </text>
+//   </svg>
+// );
 
 export const DischargeSummaryDocument: React.FC<DischargeSummaryDocumentProps> = ({
   data,
@@ -84,7 +85,7 @@ export const DischargeSummaryDocument: React.FC<DischargeSummaryDocumentProps> =
   const admitDate = data?.admitDate ?? "15-Dec-2025 13:44";
   const ward = data?.ward ?? "Male Medical";
   const abhaId = data?.abhaId ?? "";
-  
+
   const uhidNo = data?.uhidNo ?? "2689068";
   const genderAge = data?.genderAge ?? "Male / 54Y 2M 19D";
   const doctor = data?.doctor ?? "Aneesh Basheer";
@@ -117,7 +118,7 @@ export const DischargeSummaryDocument: React.FC<DischargeSummaryDocumentProps> =
   ];
 
   const defaultHopi = [
-    "PATIENT WAS APPARENTLY ASYMPTOMATIC 20 DAYS BACK AFTER WHICH HE DEVELOPED COMPLAINTS OF",
+    "PATIENT WAS APPARENTLY ASYMPTOMATIC 20 DAYS BACK AFTER WHICH HE DEVELOPED COMPLAINTS OF FEVER, GENERALIZED WEAKNESS AND BODY PAIN. THE SYMPTOMS WERE GRADUALLY PROGRESSIVE, FOR WHICH HE CONSULTED A LOCAL PHYSICIAN AND WAS EVALUATED. IN VIEW OF PERSISTENT SYMPTOMS, HE WAS ADVISED FURTHER EVALUATION AND MANAGEMENT, FOLLOWING WHICH HE WAS ADMITTED FOR FURTHER MANAGEMENT.",
   ];
 
   const diagnosisText = data?.diagnosisText ?? defaultDiagnosisText;
@@ -170,9 +171,9 @@ export const DischargeSummaryDocument: React.FC<DischargeSummaryDocumentProps> =
         </div>
 
         {/* Right NABH Accreditation Logo */}
-        <div className="w-24 flex items-center justify-end shrink-0">
+        {/* <div className="w-24 flex items-center justify-end shrink-0">
           <NabhLogo className="h-16 w-16 object-contain" />
-        </div>
+        </div> */}
       </div>
 
       {/* 2. DISCHARGE SUMMARY TITLE */}
@@ -452,6 +453,64 @@ export const DischargeSummaryDocument: React.FC<DischargeSummaryDocumentProps> =
             </div>
           </div>
         )}
+      </div>
+
+      {/* 6. SIGNATURE SECTION */}
+      <div className="signature-section pt-6 mt-6 border-t border-black avoid-break">
+        <div className="flex justify-between items-end text-[12.5px] text-black">
+          {/* Left: Prepared By */}
+          <div className="w-1/2 pr-4 space-y-1.5">
+            <p className="font-bold m-0 mb-3">Prepared By</p>
+            <p className="m-0 flex items-baseline">
+              <span className="font-semibold w-24 shrink-0">Name:</span>
+              <span className="border-b border-black flex-1 font-normal text-slate-800">________________________</span>
+            </p>
+            <p className="m-0 flex items-baseline">
+              <span className="font-semibold w-24 shrink-0">Designation:</span>
+              <span className="border-b border-black flex-1 font-normal text-slate-800">__________________</span>
+            </p>
+            <p className="m-0 flex items-baseline">
+              <span className="font-semibold w-24 shrink-0">Date:</span>
+              <span className="border-b border-black flex-1 font-normal text-slate-800">________________________</span>
+            </p>
+          </div>
+
+          {/* Right (Bottom-Right Corner): Doctor's Signature */}
+          <div className="w-1/2 pl-4 text-right flex flex-col items-end justify-end space-y-1">
+            {/* Signature Graphic / Blank Signature Space */}
+            <div className="h-14 flex items-end justify-end mb-1">
+              {data?.doctorSignature ? (
+                <img
+                  src={data.doctorSignature}
+                  alt="Doctor's Signature"
+                  className="h-12 w-auto max-w-[160px] object-contain"
+                />
+              ) : (
+                <div className="w-44 border-b border-black h-10"></div>
+              )}
+            </div>
+
+            <p className="font-bold text-[13px] text-black m-0 tracking-wide uppercase">
+              Doctor's Signature
+            </p>
+            <p className="m-0 text-[12px] font-semibold text-slate-900">
+              {doctor || "Dr. Aneesh Basheer"}
+            </p>
+            <p className="m-0 text-[11.5px] text-slate-700">
+              Consultant / Attending Physician
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 7. PROFESSIONAL DOCUMENT FOOTER */}
+      <div className="document-footer pt-3 mt-6 border-t border-black text-center text-[10.5px] text-black avoid-break">
+        <p className="m-0 font-bold uppercase tracking-tight">
+          SRM MEDICAL COLLEGE HOSPITAL &amp; RESEARCH CENTRE &nbsp;|&nbsp; DISCHARGE SUMMARY &nbsp;|&nbsp; UHID: {uhidNo}
+        </p>
+        <p className="m-0 text-[9.5px] text-gray-700 mt-0.5 italic">
+          This document is part of the patient's official medical record.
+        </p>
       </div>
     </div>
   );
