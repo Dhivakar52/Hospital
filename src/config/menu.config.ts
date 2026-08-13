@@ -27,10 +27,10 @@ export interface MenuItem {
 
 // ✅ Menu data for sidebar
 export const menuConfig: MenuItem[] = [
-  { 
-    title: "Dashboard", 
-    url: "/dashboard", 
-    icon: LayoutDashboard 
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: LayoutDashboard
   },
   {
     title: "OP",
@@ -42,21 +42,42 @@ export const menuConfig: MenuItem[] = [
       { title: "Revisit", url: "/revisit-records", icon: CalendarClock },
     ],
   },
-  { 
-    title: "AntenatalRegistration", 
-    url: "/registered-anc-records", 
-    icon: Baby 
+  {
+    title: "AntenatalRegistration",
+    url: "/registered-anc-records",
+    icon: Baby
   },
-  { 
-    title: "Hospital Master", 
-    url: "/hospital-master-records", 
-    icon: Building2 
+
+  //  {
+  //   title: "Appointment",
+  //   url: "/appointment",
+  //   icon: LayoutDashboard
+  // },
+
+
+
+  // { 
+  //   title: "Hospital Master", 
+  //   url: "/hospital-master-records", 
+  //   icon: Building2 
+  // },
+  // { 
+  //   title: "Referral Master", 
+  //   url: "/referral-master-records", 
+  //   icon: UserCheck 
+  // },
+
+  {
+    title: "Admin",
+    url: "/admin",
+    icon: Users,
+    items: [
+      { title: "Hospital Master", url: "/hospital-master-records", icon: Building2 },
+      { title: "Referral Master", url: "/referral-master-records", icon: UserCheck },
+      { title: "Appointment", url: "/appointment", icon: CalendarClock },
+    ],
   },
-  { 
-    title: "Referral Master", 
-    url: "/referral-master-records", 
-    icon: UserCheck 
-  },
+
 
   //     { 
   //   title: "Referral Master", 
@@ -127,8 +148,8 @@ export const getRoutes = () => {
       exact: true,
       protected: true,
     },
-  // OP Screen
-     {
+    // OP Screen
+    {
       path: "/op/registration",
       name: "Registration",
       component: lazy(() => import("@/pages/OP/Registration/Registration")),
@@ -142,14 +163,14 @@ export const getRoutes = () => {
       exact: true,
       protected: true,
     },
-     {
+    {
       path: "/op/diagnosisentry",
       name: "OP",
       component: lazy(() => import("@/pages/OP/Diagnosisentry/DiagnoModule")),
       exact: true,
       protected: true,
     },
-{
+    {
       path: "/op/revisit",
       name: "Revisit",
       component: lazy(() => import("@/pages/OP/Revisit/RevisitModule")),
@@ -179,7 +200,7 @@ export const getRoutes = () => {
     },
 
 
-     {
+    {
       path: "/antenatal-registration",
       name: "AntenatalRegistration",
       component: lazy(() => import("@/pages/AntenatalRegistration/AthenaModule")),
@@ -193,7 +214,7 @@ export const getRoutes = () => {
       exact: true,
       protected: true,
     },
-     {
+    {
       path: "/hospital-master",
       name: "Athena",
       component: lazy(() => import("@/pages/HospitalMaster/HospitalModule")),
@@ -228,7 +249,13 @@ export const getRoutes = () => {
       exact: true,
       protected: true,
     },
-
+    {
+      path: "/appointment",
+      name: "Appointment",
+      component: lazy(() => import("@/pages/Appointment/AppointmentModule")),
+      exact: true,
+      protected: true,
+    },
 
 
     // {
