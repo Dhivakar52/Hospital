@@ -134,3 +134,57 @@ export function DateField({
     </Popover>
   );
 }
+
+// ✅ Controlled DobDateField - Month & Year dropdown caption layout for Date of Birth selection
+export function DobDateField({
+  placeholder = "Select Date of Birth",
+  value,
+  onChange,
+  disabled,
+}: {
+  placeholder?: string;
+  value?: Date;
+  onChange?: (date: Date | undefined) => void;
+  disabled?: boolean;
+}) {
+  const [internalDate, setInternalDate] = React.useState<Date | undefined>();
+  const date = value !== undefined ? value : internalDate;
+  const currentYear = new Date().getFullYear();
+
+  const handleSelect = (d: Date | undefined) => {
+    if (onChange) {
+      onChange(d);
+    } else {
+      setInternalDate(d);
+    }
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger disabled={disabled} className="w-full">
+        <Button
+          variant="outline"
+          disabled={disabled}
+          className={cn(
+            "h-9 w-full justify-start px-3 text-left text-[13px] font-normal text-slate-700 rounded-[4px]",
+            !date && "text-slate-400"
+          )}
+        >
+          <CalendarIcon className="mr-2 h-3.5 w-3.5 shrink-0" />
+          {date ? format(date, "dd-MM-yyyy") : placeholder}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={handleSelect}
+          captionLayout="dropdown"
+          startMonth={new Date(1920, 0)}
+          endMonth={new Date(currentYear, 11)}
+          disabled={(d) => d > new Date()}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
