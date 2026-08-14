@@ -42,6 +42,8 @@ import { BarcodePreviewModal } from "@/components/BarcodePreviewModal";
 import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal";
 
 const HEADER_CONFIG: Record<string, { icon: any; subtitle: string }> = {
+  "Appointments": { icon: CalendarClock, subtitle: "View and manage appointment bookings" },
+  "Appointments & Patient Booking": { icon: CalendarClock, subtitle: "View and manage appointment bookings" },
   "Registered Patients": { icon: UsersRound, subtitle: "View and manage registered patient records" },
   "OP Registration": { icon: UserPlus, subtitle: "Register and manage outpatient registrations" },
   "Revisit": { icon: CalendarClock, subtitle: "View and manage patient revisit records" },
