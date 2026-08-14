@@ -23,9 +23,11 @@ import Pagination from "@/common/Pagination";
 import TableSearch from "@/common/TableSearch";
 import CustomPanel from "@/common/CustomPanel";
 import { DeleteConfirmationDialog } from "@/common/DeleteConfirmationDialog";
-import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives";
+import { ActionMenu } from "@/common/ActionMenu";
+import { Field, TextField, SelectField, DateField, DobDateField } from "@/components/FormPrimitives";
 import { notify } from "@/lib/notify";
 import { toast } from "@/components/ui/toast";
+import { mockAppointments } from "@/data/mockAppointments";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -240,7 +242,7 @@ const AppointmentModule: React.FC = () => {
     const [activeTab, setActiveTab] = useState<"appointments" | "patient">("appointments");
 
     // Appointments Data State
-    const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
+    const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
 
     // Search & Filter State
     const [search, setSearch] = useState("");
@@ -272,7 +274,7 @@ const AppointmentModule: React.FC = () => {
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(5);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // Add Form State
     const [addForm, setAddForm] = useState({
@@ -544,42 +546,24 @@ const AppointmentModule: React.FC = () => {
                 const item = row.original;
                 return (
                     <div className="flex justify-center">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger >
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer">
-                                    <SlidersHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem
-                                    onClick={() => {
-                                        setSelectedAppointment(item);
-                                        setIsViewDrawerOpen(true);
-                                    }}
-                                    className="cursor-pointer"
-                                >
-                                    <Eye className="mr-2 h-4 w-4 text-blue-600" /> View
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() => {
-                                        setEditForm({ ...item });
-                                        setIsEditDrawerOpen(true);
-                                    }}
-                                    className="cursor-pointer"
-                                >
-                                    <Pencil className="mr-2 h-4 w-4 text-slate-600" /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() => {
-                                        setDeleteTargetId(item.id);
-                                        setIsDeleteDialogOpen(true);
-                                    }}
-                                    className="text-red-600 focus:text-red-600 cursor-pointer"
-                                >
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <ActionMenu
+                            item={item}
+                            onView={(p) => {
+                                setSelectedAppointment(p);
+                                setIsViewDrawerOpen(true);
+                            }}
+                            onEdit={(p) => {
+                                setEditForm({ ...p });
+                                setIsEditDrawerOpen(true);
+                            }}
+                            onPrint={() => {
+                                handlePrint();
+                            }}
+                            onDelete={(p) => {
+                                setAppointments((prev) => prev.filter((a) => a.id !== p.id));
+                                notify.deleteSuccess("Appointment deleted successfully.");
+                            }}
+                        />
                     </div>
                 );
             },
@@ -1232,7 +1216,7 @@ const AppointmentModule: React.FC = () => {
                 </Field>
 
                 <Field label="Date of Birth">
-                    <DateField
+                    <DobDateField
                         value={patientForm.dob ? new Date(patientForm.dob) : undefined}
                         onChange={(d) => {
                             const dateStr = d ? format(d, "yyyy-MM-dd") : "";
