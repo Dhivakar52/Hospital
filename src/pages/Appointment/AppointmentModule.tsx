@@ -11,9 +11,10 @@ import {
     Eye,
     Pencil,
     Trash2,
-    ChevronRight,
     CalendarClock,
     UserPlus,
+    ArrowLeft,
+    ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -289,33 +290,51 @@ const AppointmentModule: React.FC = () => {
     const [editForm, setEditForm] = useState<Appointment | null>(null);
 
     // ----------------------------------------------------
-    // PATIENT BOOKING MODULE STATES
+    // PATIENT BOOKING 4-STEP WIZARD STATES
     // ----------------------------------------------------
-    const [patientsDb, setPatientsDb] = useState(INITIAL_PATIENTS_DB);
-    const [uhidCounter, setUhidCounter] = useState(5);
-    const [patientStep, setPatientStep] = useState<"search" | "select" | "register" | "book">("search");
-    const [searchMobile, setSearchMobile] = useState("");
+    type WizardStepKey = 1 | 2 | 3 | 4;
+    const [wizardStep, setWizardStep] = useState<WizardStepKey>(1);
+
+    const [patientsDb, _setPatientsDb] = useState(INITIAL_PATIENTS_DB);
     const [selectedPatientProfile, setSelectedPatientProfile] = useState<PatientProfile | null>(null);
 
-    // New Patient Registration State
-    const [regForm, setRegForm] = useState({
+    // Step 1: Mobile Search State
+    const [searchMobile, setSearchMobile] = useState("");
+    const [searchMobileError, setSearchMobileError] = useState("");
+    const [isSearchCompleted, setIsSearchCompleted] = useState(false);
+    const [searchStatus, setSearchStatus] = useState<"idle" | "found" | "not_found">("idle");
+    const [foundPatients, setFoundPatients] = useState<PatientProfile[]>([]);
+    const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+
+    // Step 2: Patient Details Form State
+    const [patientForm, setPatientForm] = useState({
+        mobile: "",
+        title: "Mr",
         name: "",
         gender: "Male",
         dob: "",
+        age: "",
         address: "",
         city: "",
         state: "",
         pincode: "",
+        bloodGroup: "O+",
+        category: "General",
     });
-    const [regErrors, setRegErrors] = useState({ name: "", dob: "" });
+    const [patientErrors, setPatientErrors] = useState({
+        mobile: "",
+        name: "",
+    });
 
-    // Booking Form State
+    // Step 3: Appointment Details Form State
     const [bookDept, setBookDept] = useState("");
     const [bookDoctor, setBookDoctor] = useState("");
     const [bookDate, setBookDate] = useState(new Date().toISOString().split("T")[0]);
     const [bookUnit, setBookUnit] = useState("");
     const [bookSlot, setBookSlot] = useState("");
-    const [bookSource, setBookSource] = useState<"Reception" | "Phone" | "">("");
+    const [bookSource, setBookSource] = useState<"Reception" | "Phone" | "Online" | "">("Reception");
+    const [bookPriority, setBookPriority] = useState("Consultation");
+    const [bookRemarks, setBookRemarks] = useState("");
     const [bookErrors, setBookErrors] = useState({
         dept: "",
         doctor: "",
@@ -628,77 +647,177 @@ const AppointmentModule: React.FC = () => {
     };
 
     // ----------------------------------------------------
-    // PATIENT MODULE LOGIC HANDLERS
+    // SEARCH & WIZARD NAVIGATION HANDLERS
     // ----------------------------------------------------
-    const handleSearchMobile = () => {
-        if (searchMobile.length !== 10) return;
-        const list = patientsDb[searchMobile];
-        if (list && list.length > 0) {
-            setPatientStep("select");
+    const isValidMobileNumber = (mobile: string): boolean => {
+        return mobile.length === 10 && ["6", "7", "8", "9"].includes(mobile[0]) && /^\d{10}$/.test(mobile);
+    };
+
+    const getMobileValidationErrorMsg = (mobile: string): string => {
+        if (!mobile) {
+            return "Mobile Number is required.";
+        }
+        if (!["6", "7", "8", "9"].includes(mobile[0])) {
+            return "Mobile Number must start with 6, 7, 8, or 9.";
+        }
+        if (mobile.length < 10) {
+            return "Mobile Number must be exactly 10 digits.";
+        }
+        if (mobile.length > 10) {
+            return "Mobile Number cannot exceed 10 digits.";
+        }
+        return "";
+    };
+
+    const handleExecuteSearch = () => {
+        if (!validateStep1Search()) {
+            return;
+        }
+        const listFromDb = patientsDb[searchMobile] || [];
+        const matchingAppts = appointments.filter((a) => a.mobile === searchMobile);
+        const combined: PatientProfile[] = [...listFromDb];
+
+        matchingAppts.forEach((a) => {
+            if (!combined.some((p) => (p.uhid && a.uhid && p.uhid === a.uhid) || p.name.toLowerCase() === a.patient.toLowerCase())) {
+                combined.push({
+                    id: a.id,
+                    name: a.patient,
+                    age: a.age || 25,
+                    gender: a.gender || "Male",
+                    uhid: a.uhid || `UH2026${String(Math.floor(10000 + Math.random() * 90000))}`,
+                    mobile: searchMobile,
+                });
+            }
+        });
+
+        if (combined.length > 0) {
+            setFoundPatients(combined);
+            const matched = combined[0];
+            setSelectedPatientId(matched.id);
+            setSelectedPatientProfile(matched);
+            setPatientForm({
+                mobile: searchMobile,
+                title: "Mr",
+                name: matched.name,
+                gender: matched.gender,
+                dob: "",
+                age: String(matched.age),
+                address: "12, Main Road",
+                city: "Chennai",
+                state: "Tamil Nadu",
+                pincode: "600028",
+                bloodGroup: "O+",
+                category: "General",
+            });
+            setSearchStatus("found");
+            setIsSearchCompleted(true);
+            toast.success(`${combined.length} patient profile(s) found for +91 ${searchMobile}`);
         } else {
-            setRegForm({
+            setFoundPatients([]);
+            setSelectedPatientId(null);
+            setSelectedPatientProfile(null);
+            setPatientForm({
+                mobile: searchMobile,
+                title: "Mr",
                 name: "",
                 gender: "Male",
                 dob: "",
+                age: "",
                 address: "",
                 city: "",
                 state: "",
                 pincode: "",
+                bloodGroup: "O+",
+                category: "General",
             });
-            setRegErrors({ name: "", dob: "" });
-            setPatientStep("register");
+            setSearchStatus("not_found");
+            setIsSearchCompleted(true);
+            setWizardStep(2);
+            toast.info("Patient not found. Please enter new patient details.");
         }
     };
 
-    const handleRegisterPatient = () => {
-        let valid = true;
-        const errors = { name: "", dob: "" };
-        if (!regForm.name.trim()) {
-            errors.name = "Please enter full name.";
-            valid = false;
-        }
-        if (!regForm.dob) {
-            errors.dob = "Please select date of birth.";
-            valid = false;
-        }
-        setRegErrors(errors);
-        if (!valid) return;
-
-        // Calculate age
-        const diff = Date.now() - new Date(regForm.dob).getTime();
-        const ageDate = new Date(diff);
-        const calculatedAge = Math.abs(ageDate.getUTCFullYear() - 1970) || 25;
-        const genUhid = `UH2026${String(uhidCounter).padStart(5, "0")}`;
-        setUhidCounter((prev) => prev + 1);
-
-        const newProfile: PatientProfile = {
-            id: `p${Date.now()}`,
-            name: regForm.name.trim(),
-            age: calculatedAge,
-            gender: regForm.gender,
-            uhid: genUhid,
+    const handleSelectPatientCard = (patient: PatientProfile) => {
+        setSelectedPatientId(patient.id);
+        setSelectedPatientProfile(patient);
+        setPatientForm({
             mobile: searchMobile,
-        };
-
-        setPatientsDb((prev) => ({
-            ...prev,
-            [searchMobile]: [...(prev[searchMobile] || []), newProfile],
-        }));
-
-        setSelectedPatientProfile(newProfile);
-        setBookDept("");
-        setBookDoctor("");
-        setBookDate(new Date().toISOString().split("T")[0]);
-        setBookUnit("");
-        setBookSlot("");
-        setBookSource("");
-        setBookErrors({ dept: "", doctor: "", date: "", unit: "", slot: "", source: "" });
-        setPatientStep("book");
+            title: "Mr",
+            name: patient.name,
+            gender: patient.gender,
+            dob: "",
+            age: String(patient.age),
+            address: "12, Main Road",
+            city: "Chennai",
+            state: "Tamil Nadu",
+            pincode: "600028",
+            bloodGroup: "O+",
+            category: "General",
+        });
     };
 
-    const handleConfirmBookClick = () => {
+    const handleAddNewPatientFromSearch = () => {
+        setSelectedPatientId(null);
+        setSelectedPatientProfile(null);
+        setPatientForm({
+            mobile: searchMobile,
+            title: "Mr",
+            name: "",
+            gender: "Male",
+            dob: "",
+            age: "",
+            address: "",
+            city: "",
+            state: "",
+            pincode: "",
+            bloodGroup: "O+",
+            category: "General",
+        });
+        setSearchStatus("not_found");
+        setWizardStep(2);
+        toast.info("Registering new patient details.");
+    };
+
+    const handleContinueFromPatientSelection = () => {
+        if (!selectedPatientId || !selectedPatientProfile) {
+            toast.error("Please select a patient profile to continue.");
+            return;
+        }
+        setWizardStep(3);
+    };
+
+    const validateStep1Search = (): boolean => {
+        const errorMsg = getMobileValidationErrorMsg(searchMobile);
+        if (errorMsg) {
+            setSearchMobileError(errorMsg);
+            return false;
+        }
+        setSearchMobileError("");
+        return true;
+    };
+
+    const validateStep2Patient = (): boolean => {
+        let valid = true;
+        const errs = { mobile: "", name: "" };
+
+        const mobileErr = getMobileValidationErrorMsg(patientForm.mobile);
+        if (mobileErr) {
+            errs.mobile = mobileErr;
+            valid = false;
+        }
+        if (!patientForm.name.trim()) {
+            errs.name = "Please enter patient name.";
+            valid = false;
+        }
+
+        setPatientErrors(errs);
+        return valid;
+    };
+
+    const validateStep3Appointment = (): boolean => {
         let valid = true;
         const errs = { dept: "", doctor: "", date: "", unit: "", slot: "", source: "" };
+
         if (!bookDept) {
             errs.dept = "Please choose department.";
             valid = false;
@@ -720,11 +839,103 @@ const AppointmentModule: React.FC = () => {
             valid = false;
         }
         if (!bookSource) {
-            errs.source = "Please select booking source.";
+            errs.source = "Please select booking type.";
             valid = false;
         }
+
         setBookErrors(errs);
-        if (!valid) return;
+        return valid;
+    };
+
+    const handleStepClick = (targetStep: WizardStepKey) => {
+        if (targetStep > 1 && !isSearchCompleted) {
+            toast.error("Please search 10-digit mobile number first.");
+            return;
+        }
+        if (targetStep === 3) {
+            if (!validateStep2Patient()) return;
+        }
+        if (targetStep === 4) {
+            if (!validateStep2Patient() || !validateStep3Appointment()) return;
+        }
+        setWizardStep(targetStep);
+    };
+
+    const goNext = () => {
+        if (wizardStep === 1) {
+            if (searchStatus === "found") {
+                handleContinueFromPatientSelection();
+            } else if (validateStep1Search()) {
+                handleExecuteSearch();
+            }
+        } else if (wizardStep === 2) {
+            if (validateStep2Patient()) {
+                setWizardStep(3);
+            }
+        } else if (wizardStep === 3) {
+            if (validateStep3Appointment()) {
+                setWizardStep(4);
+            }
+        } else if (wizardStep === 4) {
+            handleConfirmBookClick();
+        }
+    };
+
+    const goBack = () => {
+        if (wizardStep > 1) {
+            setWizardStep((prev) => (prev - 1) as WizardStepKey);
+        }
+    };
+
+    const clearWizardDraft = () => {
+        setSearchMobile("");
+        setSearchMobileError("");
+        setIsSearchCompleted(false);
+        setSearchStatus("idle");
+        setFoundPatients([]);
+        setSelectedPatientId(null);
+        setPatientForm({
+            mobile: "",
+            title: "Mr",
+            name: "",
+            gender: "Male",
+            dob: "",
+            age: "",
+            address: "",
+            city: "",
+            state: "",
+            pincode: "",
+            bloodGroup: "O+",
+            category: "General",
+        });
+        setPatientErrors({ mobile: "", name: "" });
+        setBookDept("");
+        setBookDoctor("");
+        setBookDate(new Date().toISOString().split("T")[0]);
+        setBookUnit("");
+        setBookSlot("");
+        setBookSource("Reception");
+        setBookPriority("Consultation");
+        setBookRemarks("");
+        setBookErrors({ dept: "", doctor: "", date: "", unit: "", slot: "", source: "" });
+        setSelectedPatientProfile(null);
+        setWizardStep(1);
+        toast.info("Form cleared.");
+    };
+
+    const handleConfirmBookClick = () => {
+        const activeMobile = patientForm.mobile || selectedPatientProfile?.mobile || searchMobile;
+        if (!activeMobile || !activeMobile.trim()) {
+            toast.error("Mobile Number is required before generating OTP.");
+            return;
+        }
+        const cleanedMobile = activeMobile.replace(/\D/g, "");
+        if (!isValidMobileNumber(cleanedMobile)) {
+            toast.error("Valid 10-digit Mobile Number is required before generating OTP.");
+            return;
+        }
+
+        if (!validateStep2Patient() || !validateStep3Appointment()) return;
 
         // Generate random 4-digit OTP
         const genOtp = String(Math.floor(1000 + Math.random() * 9000));
@@ -741,29 +952,49 @@ const AppointmentModule: React.FC = () => {
         }
         setIsOtpModalOpen(false);
 
-        if (!selectedPatientProfile) return;
-
         const apptNo = `APT-${bookDate.replace(/-/g, "")}-0${appointments.length + 1}`;
         const formattedOn = formatDateTime(bookDate, slotTo24(bookSlot));
+        const finalUhid = selectedPatientProfile?.uhid || `UH2026${String(Math.floor(10000 + Math.random() * 90000))}`;
+        const finalAge = patientForm.age ? parseInt(patientForm.age, 10) : selectedPatientProfile?.age || 25;
 
         const newAppt: Appointment = {
             id: String(Date.now()),
             apptNo,
-            patient: selectedPatientProfile.name,
-            uhid: selectedPatientProfile.uhid,
+            patient: `${patientForm.title ? patientForm.title + ". " : ""}${patientForm.name}`,
+            uhid: finalUhid,
             regNo: "–",
             doctor: bookDoctor,
             apptOn: formattedOn,
             rawDate: bookDate,
             rawTime: slotTo24(bookSlot),
-            type: bookSource as "Reception" | "Phone",
+            type: (bookSource as "Reception" | "Phone" | "Online") || "Reception",
             status: "Upcoming",
-            gender: selectedPatientProfile.gender,
-            age: selectedPatientProfile.age,
-            mobile: selectedPatientProfile.mobile,
+            gender: patientForm.gender,
+            age: finalAge,
+            mobile: patientForm.mobile,
             bookedOn: formatTodayDateTime(),
             dept: bookDept,
         };
+
+        // Update patientsDb with newly booked patient profile if not present
+        const currentMobile = patientForm.mobile || searchMobile;
+        if (currentMobile) {
+            _setPatientsDb((prev) => {
+                const list = prev[currentMobile] || [];
+                if (!list.some((p) => p.uhid === finalUhid || p.name.toLowerCase() === patientForm.name.toLowerCase())) {
+                    const newProfile: PatientProfile = {
+                        id: `p-${Date.now()}`,
+                        name: patientForm.name,
+                        age: finalAge,
+                        gender: patientForm.gender,
+                        uhid: finalUhid,
+                        mobile: currentMobile,
+                    };
+                    return { ...prev, [currentMobile]: [...list, newProfile] };
+                }
+                return prev;
+            });
+        }
 
         setAppointments([newAppt, ...appointments]);
         setBookedSuccessData(newAppt);
@@ -771,15 +1002,572 @@ const AppointmentModule: React.FC = () => {
     };
 
     const resetPatientFlow = () => {
-        setSearchMobile("");
-        setSelectedPatientProfile(null);
-        setPatientStep("search");
+        clearWizardDraft();
+    };
+
+    // ----------------------------------------------------
+    // WIZARD STEP PANELS
+    // ----------------------------------------------------
+
+    // STEP 1: PATIENT SEARCH & SELECTION PANEL
+    const renderStep1PatientSearch = () => {
+        if (searchStatus === "found" && foundPatients.length > 0) {
+            return (
+                <div className="py-6 max-w-xl mx-auto space-y-6">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div>
+                            <h3 className="text-[15px] font-bold text-slate-800">Select Patient Card</h3>
+                            <p className="text-[12.5px] text-muted-foreground">
+                                Profiles linked to <b className="text-blue-600 font-bold">+91 {searchMobile}</b>
+                            </p>
+                        </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAddNewPatientFromSearch}
+                            className="gap-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 cursor-pointer font-semibold"
+                        >
+                            <UserPlus className="h-3.5 w-3.5" />
+                            + Add Patient
+                        </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                        {foundPatients.map((patient) => {
+                            const isSelected = selectedPatientId === patient.id;
+                            return (
+                                <div
+                                    key={patient.id}
+                                    onClick={() => handleSelectPatientCard(patient)}
+                                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                                        isSelected
+                                            ? "border-blue-600 bg-blue-50/50 shadow-xs ring-1 ring-blue-600"
+                                            : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50/60"
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3.5">
+                                        <div
+                                            className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                                                isSelected
+                                                    ? "border-blue-600 bg-blue-600"
+                                                    : "border-slate-300 bg-white"
+                                            }`}
+                                        >
+                                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-sm text-slate-900">{patient.name}</span>
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="text-[11px] font-medium bg-slate-100 text-slate-700"
+                                                >
+                                                    {patient.gender} • {patient.age} Yrs
+                                                </Badge>
+                                            </div>
+                                            <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                                                <span>
+                                                    UHID: <strong className="text-slate-700 font-semibold">{patient.uhid}</strong>
+                                                </span>
+                                                <span>•</span>
+                                                <span>
+                                                    Mobile: <strong className="text-slate-700">+91 {patient.mobile}</strong>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {isSelected ? (
+                                        <span className="text-xs font-bold text-blue-600 bg-blue-100/70 px-2.5 py-1 rounded-md">
+                                            Selected
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs font-medium text-slate-400">Click to Select</span>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="pt-3 flex justify-end">
+                        <Button
+                            onClick={handleContinueFromPatientSelection}
+                            disabled={!selectedPatientId}
+                            className="gap-1.5 text-white text-[13px] font-semibold cursor-pointer disabled:opacity-50"
+                            style={{ background: "var(--blue-btn)", padding: "16px 24px", borderRadius: "8px" }}
+                        >
+                            Continue
+                            <ArrowRight className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="py-6 max-w-xl mx-auto space-y-6">
+                <div className="border-b border-slate-100 pb-3">
+                    <h3 className="text-[15px] font-bold text-slate-800">Step 1: Patient Search</h3>
+                    <p className="text-[12.5px] text-muted-foreground">Enter 10-digit mobile number to search existing patient records</p>
+                </div>
+
+                <div className="space-y-4">
+                    <Field label="Mobile Number" required>
+                        <div
+                            className={`flex items-center rounded-md border overflow-hidden bg-white transition-all ${
+                                searchMobileError
+                                    ? "border-red-500 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500"
+                                    : "border-slate-200 focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
+                            }`}
+                        >
+                            <span className="px-3 py-2 bg-slate-100 font-bold text-slate-700 text-xs border-r border-slate-200 shrink-0">
+                                +91
+                            </span>
+                            <TextField
+                                placeholder="Enter 10-digit mobile number"
+                                value={searchMobile}
+                                onChange={(val) => {
+                                    const hasNonNumeric = /[^\d]/.test(val);
+                                    const cleaned = val.replace(/\D/g, "").slice(0, 10);
+                                    setSearchMobile(cleaned);
+
+                                    if (searchStatus !== "idle") {
+                                        setSearchStatus("idle");
+                                        setFoundPatients([]);
+                                        setSelectedPatientId(null);
+                                    }
+
+                                    if (hasNonNumeric) {
+                                        setSearchMobileError("Only numeric values are allowed.");
+                                    } else if (!cleaned) {
+                                        setSearchMobileError("Mobile Number is required.");
+                                    } else if (!["6", "7", "8", "9"].includes(cleaned[0])) {
+                                        setSearchMobileError("Mobile Number must start with 6, 7, 8, or 9.");
+                                    } else if (cleaned.length < 10) {
+                                        setSearchMobileError("Mobile Number must be exactly 10 digits.");
+                                    } else {
+                                        setSearchMobileError("");
+                                    }
+                                }}
+                            />
+                        </div>
+                        {searchMobileError && (
+                            <span className="text-xs text-red-500 mt-1 block font-medium">{searchMobileError}</span>
+                        )}
+                    </Field>
+
+                    <div className="pt-2 flex items-center justify-end">
+                        <Button
+                            onClick={handleExecuteSearch}
+                            disabled={!isValidMobileNumber(searchMobile)}
+                            className="gap-1.5 text-white text-[13px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ background: "var(--blue-btn)", padding: "12px 20px", borderRadius: "8px" }}
+                        >
+                            Search Patient
+                            <ArrowRight className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // STEP 2: PATIENT DETAILS PANEL
+    const renderStep2PatientDetails = () => (
+        <div className="space-y-6">
+            <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+                <div>
+                    <h3 className="text-[15px] font-bold text-slate-800">Step 2: Patient Information</h3>
+                    <p className="text-[12.5px] text-muted-foreground">
+                        {searchStatus === "found"
+                            ? `Existing profile loaded for +91 ${searchMobile}`
+                            : `Patient not found. Complete setup for +91 ${searchMobile}`}
+                    </p>
+                </div>
+                <div className="text-xs font-bold px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-md">
+                    +91 {searchMobile}
+                </div>
+            </div>
+
+            {searchStatus === "not_found" && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 font-medium">
+                    Patient Not Found! Please enter full details below to register and proceed with booking.
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-4">
+                <Field label="Mobile Number" required>
+                    <TextField value={`+91 ${patientForm.mobile}`} disabled />
+                </Field>
+
+                <Field label="Title">
+                    <SelectField
+                        options={["Mr", "Mrs", "Ms", "Dr", "Baby"]}
+                        value={patientForm.title}
+                        onChange={(val) => setPatientForm({ ...patientForm, title: val })}
+                    />
+                </Field>
+
+                <Field label="Patient Name" required>
+                    <TextField
+                        placeholder="Enter full name"
+                        value={patientForm.name}
+                        onChange={(val) => {
+                            setPatientForm({ ...patientForm, name: val });
+                            if (patientErrors.name) setPatientErrors((prev) => ({ ...prev, name: "" }));
+                        }}
+                    />
+                    {patientErrors.name && (
+                        <span className="text-xs text-red-500 mt-1 block font-medium">{patientErrors.name}</span>
+                    )}
+                </Field>
+
+                <Field label="Gender">
+                    <SelectField
+                        options={["Male", "Female", "Other"]}
+                        value={patientForm.gender}
+                        onChange={(val) => setPatientForm({ ...patientForm, gender: val })}
+                    />
+                </Field>
+
+                <Field label="Date of Birth">
+                    <DateField
+                        value={patientForm.dob ? new Date(patientForm.dob) : undefined}
+                        onChange={(d) => {
+                            const dateStr = d ? format(d, "yyyy-MM-dd") : "";
+                            const calculatedAge = d
+                                ? String(Math.abs(new Date(Date.now() - d.getTime()).getUTCFullYear() - 1970))
+                                : "";
+                            setPatientForm({ ...patientForm, dob: dateStr, age: calculatedAge });
+                        }}
+                    />
+                </Field>
+
+                <Field label="Age (Years)">
+                    <TextField
+                        placeholder="Age in years"
+                        value={patientForm.age}
+                        onChange={(val) => setPatientForm({ ...patientForm, age: val.replace(/\D/g, "") })}
+                    />
+                </Field>
+
+                <Field label="Blood Group">
+                    <SelectField
+                        options={["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]}
+                        value={patientForm.bloodGroup}
+                        onChange={(val) => setPatientForm({ ...patientForm, bloodGroup: val })}
+                    />
+                </Field>
+
+                <Field label="Patient Category">
+                    <SelectField
+                        options={["General", "Corporate", "Insurance", "Staff", "Senior Citizen"]}
+                        value={patientForm.category}
+                        onChange={(val) => setPatientForm({ ...patientForm, category: val })}
+                    />
+                </Field>
+
+                <Field label="Address">
+                    <TextField
+                        placeholder="House no, street"
+                        value={patientForm.address}
+                        onChange={(val) => setPatientForm({ ...patientForm, address: val })}
+                    />
+                </Field>
+
+                <Field label="City">
+                    <TextField
+                        placeholder="e.g. Chennai"
+                        value={patientForm.city}
+                        onChange={(val) => setPatientForm({ ...patientForm, city: val })}
+                    />
+                </Field>
+
+                <Field label="State">
+                    <TextField
+                        placeholder="e.g. Tamil Nadu"
+                        value={patientForm.state}
+                        onChange={(val) => setPatientForm({ ...patientForm, state: val })}
+                    />
+                </Field>
+
+                <Field label="PIN Code">
+                    <TextField
+                        placeholder="6-digit PIN"
+                        value={patientForm.pincode}
+                        onChange={(val) => setPatientForm({ ...patientForm, pincode: val.replace(/\D/g, "") })}
+                    />
+                </Field>
+            </div>
+        </div>
+    );
+
+    // STEP 3: APPOINTMENT DETAILS PANEL
+    const renderStep3AppointmentDetails = () => (
+        <div className="space-y-6">
+            <div className="border-b border-slate-100 pb-3">
+                <h3 className="text-[15px] font-bold text-slate-800">Step 3: Appointment Details & Slots</h3>
+                <p className="text-[12.5px] text-muted-foreground">Select department, doctor, unit, date, time slot, visit type, and priority</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-4">
+                <Field label="Department" required>
+                    <SelectField
+                        options={["Gynecology", "Cardiology", "Orthopedics", "Dermatology"]}
+                        placeholder="Choose Department"
+                        value={bookDept}
+                        onChange={(val) => {
+                            setBookDept(val);
+                            setBookDoctor("");
+                            setBookErrors((prev) => ({ ...prev, dept: "" }));
+                        }}
+                    />
+                    {bookErrors.dept && <span className="text-xs text-red-500 mt-1 block font-medium">{bookErrors.dept}</span>}
+                </Field>
+
+                <Field label="Doctor Name" required>
+                    <SelectField
+                        options={DEPT_DOCTORS_MAP[bookDept] || []}
+                        placeholder="Choose Doctor"
+                        value={bookDoctor}
+                        onChange={(val) => {
+                            setBookDoctor(val);
+                            setBookErrors((prev) => ({ ...prev, doctor: "" }));
+                        }}
+                    />
+                    {bookErrors.doctor && <span className="text-xs text-red-500 mt-1 block font-medium">{bookErrors.doctor}</span>}
+                </Field>
+
+                <Field label="Appointment Date" required>
+                    <DateField
+                        value={bookDate ? new Date(bookDate) : undefined}
+                        onChange={(d) => {
+                            setBookDate(d ? format(d, "yyyy-MM-dd") : "");
+                            setBookErrors((prev) => ({ ...prev, date: "" }));
+                        }}
+                    />
+                    {bookErrors.date && <span className="text-xs text-red-500 mt-1 block font-medium">{bookErrors.date}</span>}
+                </Field>
+
+                <Field label="Unit" required>
+                    <SelectField
+                        options={["Unit 1", "Unit 2", "Unit 3", "Unit 4"]}
+                        placeholder="Choose Unit"
+                        value={bookUnit}
+                        onChange={(val) => {
+                            setBookUnit(val);
+                            setBookSlot("");
+                            setBookErrors((prev) => ({ ...prev, unit: "" }));
+                        }}
+                    />
+                    {bookErrors.unit && <span className="text-xs text-red-500 mt-1 block font-medium">{bookErrors.unit}</span>}
+                </Field>
+            </div>
+
+            {/* Time Slot Selection Grid */}
+            <Field label="Available Time Slots" required>
+                {!bookUnit ? (
+                    <div className="text-xs text-muted-foreground py-2 italic">
+                        Please select a Unit to view available time slots.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-1">
+                        {(UNIT_SLOTS[bookUnit] || []).map((slot) => {
+                            const isBooked = (UNIT_BOOKED[bookUnit] || []).includes(slot);
+                            const isSelected = bookSlot === slot;
+                            return (
+                                <button
+                                    key={slot}
+                                    type="button"
+                                    disabled={isBooked}
+                                    onClick={() => {
+                                        setBookSlot(slot);
+                                        setBookErrors((prev) => ({ ...prev, slot: "" }));
+                                    }}
+                                    className={`py-2 px-2 text-center text-xs font-semibold rounded border transition-all cursor-pointer ${
+                                        isBooked
+                                            ? "bg-slate-100 text-slate-400 border-slate-200 line-through cursor-not-allowed"
+                                            : isSelected
+                                                ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                                                : "bg-white text-slate-800 border-slate-200 hover:border-blue-500 hover:text-blue-600"
+                                    }`}
+                                >
+                                    {slot}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
+                <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                        <i className="w-3 h-3 rounded bg-white border border-slate-300 inline-block"></i> Available
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <i className="w-3 h-3 rounded bg-blue-600 inline-block"></i> Selected
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <i className="w-3 h-3 rounded bg-slate-200 inline-block"></i> Booked / Full
+                    </span>
+                </div>
+                {bookErrors.slot && <span className="text-xs text-red-500 mt-1 block font-medium">{bookErrors.slot}</span>}
+            </Field>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-4">
+                <Field label="Visit Type" required>
+                    <SelectField
+                        options={["Reception", "Phone", "Online"]}
+                        value={bookSource}
+                        onChange={(val) => {
+                            setBookSource(val as any);
+                            setBookErrors((prev) => ({ ...prev, source: "" }));
+                        }}
+                    />
+                    {bookErrors.source && <span className="text-xs text-red-500 mt-1 block font-medium">{bookErrors.source}</span>}
+                </Field>
+
+                <Field label="Priority / Reason">
+                    <SelectField
+                        options={["Consultation", "Follow-up", "Emergency", "Procedure"]}
+                        value={bookPriority}
+                        onChange={(val) => setBookPriority(val)}
+                    />
+                </Field>
+
+                <Field label="Remarks">
+                    <TextField
+                        placeholder="Enter visit remarks"
+                        value={bookRemarks}
+                        onChange={(val) => setBookRemarks(val)}
+                    />
+                </Field>
+            </div>
+        </div>
+    );
+
+    // STEP 4: REVIEW & CONFIRM PANEL
+    const renderStep4ReviewConfirm = () => (
+        <div className="space-y-6">
+            <div className="border-b border-slate-100 pb-3">
+                <h3 className="text-[15px] font-bold text-slate-800">Step 4: Review & Confirm Appointment</h3>
+                <p className="text-[12.5px] text-muted-foreground">Verify patient details and appointment booking information before submitting</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Patient Summary Card */}
+                <div className="p-5 border border-slate-200 rounded-xl bg-slate-50/50 space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wider">Patient Summary</h4>
+                        <button
+                            type="button"
+                            onClick={() => setWizardStep(2)}
+                            className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
+                        >
+                            Edit Patient
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <span className="block text-slate-500 font-medium">Patient Name</span>
+                            <span className="font-bold text-slate-900 text-sm">
+                                {patientForm.title ? `${patientForm.title}. ` : ""}{patientForm.name}
+                            </span>
+                        </div>
+                        <div>
+                            <span className="block text-slate-500 font-medium">Mobile Number</span>
+                            <span className="font-semibold text-slate-900">+91 {patientForm.mobile}</span>
+                        </div>
+                        <div>
+                            <span className="block text-slate-500 font-medium">Gender / Age</span>
+                            <span className="font-semibold text-slate-900">{patientForm.gender} / {patientForm.age || "25"} Years</span>
+                        </div>
+                        <div>
+                            <span className="block text-slate-500 font-medium">Blood Group</span>
+                            <span className="font-semibold text-slate-900">{patientForm.bloodGroup}</span>
+                        </div>
+                        <div>
+                            <span className="block text-slate-500 font-medium">Patient Category</span>
+                            <span className="font-semibold text-slate-900">{patientForm.category}</span>
+                        </div>
+                        <div className="col-span-2">
+                            <span className="block text-slate-500 font-medium">Address</span>
+                            <span className="font-semibold text-slate-900">
+                                {[patientForm.address, patientForm.city, patientForm.state, patientForm.pincode].filter(Boolean).join(", ") || "—"}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Appointment Summary Card */}
+                <div className="p-5 border border-slate-200 rounded-xl bg-slate-50/50 space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wider">Appointment Summary</h4>
+                        <button
+                            type="button"
+                            onClick={() => setWizardStep(3)}
+                            className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
+                        >
+                            Edit Appointment
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <span className="block text-slate-500 font-medium">Department</span>
+                            <span className="font-bold text-slate-900">{bookDept}</span>
+                        </div>
+                        <div>
+                            <span className="block text-slate-500 font-medium">Doctor Name</span>
+                            <span className="font-bold text-slate-900">{bookDoctor}</span>
+                        </div>
+                        <div>
+                            <span className="block text-slate-500 font-medium">Appointment Date</span>
+                            <span className="font-semibold text-slate-900">{bookDate}</span>
+                        </div>
+                        <div>
+                            <span className="block text-slate-500 font-medium">Unit & Slot</span>
+                            <span className="font-semibold text-blue-600">{bookUnit} ({bookSlot})</span>
+                        </div>
+                        <div>
+                            <span className="block text-slate-500 font-medium">Visit Type</span>
+                            <Badge variant="outline" className="text-xs font-bold">{bookSource}</Badge>
+                        </div>
+                        <div>
+                            <span className="block text-slate-500 font-medium">Priority</span>
+                            <span className="font-semibold text-slate-900">{bookPriority}</span>
+                        </div>
+                        {bookRemarks && (
+                            <div className="col-span-2">
+                                <span className="block text-slate-500 font-medium">Remarks</span>
+                                <span className="font-semibold text-slate-900">{bookRemarks}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
+                <span>
+                    Please review all patient and appointment details. Clicking <b>Confirm & Book Appointment</b> will issue the booking reference.
+                </span>
+            </div>
+        </div>
+    );
+
+    const wizardPanels: Record<WizardStepKey, React.ReactNode> = {
+        1: renderStep1PatientSearch(),
+        2: renderStep2PatientDetails(),
+        3: renderStep3AppointmentDetails(),
+        4: renderStep4ReviewConfirm(),
     };
 
     return (
         <div className="space-y-5">
-            {/* Module Header Bar matching Application Architecture */}
-            <div className="flex items-center justify-between">
+            {/* Header Bar matching OP Registration Screen design */}
+            <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div
                         className="flex h-12 w-12 items-center justify-center rounded-lg"
@@ -804,13 +1592,17 @@ const AppointmentModule: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Action Buttons styled like OP Registration */}
                 <div className="flex items-center gap-3">
                     <Button
                         variant={activeTab === "appointments" ? "default" : "outline"}
                         onClick={() => setActiveTab("appointments")}
-                        className="cursor-pointer text-[13px]"
-                        style={activeTab === "appointments" ? { background: "var(--blue-btn)" } : undefined}
+                        className="gap-2 text-[13px] cursor-pointer"
+                        style={
+                            activeTab === "appointments"
+                                ? { background: "var(--blue-btn)", color: "#fff" }
+                                : { color: "var(--blue-text-color)" }
+                        }
                     >
                         Appointments List
                     </Button>
@@ -821,590 +1613,298 @@ const AppointmentModule: React.FC = () => {
                             setActiveTab("patient");
                             resetPatientFlow();
                         }}
-                        className="cursor-pointer text-[13px]"
-                        style={activeTab === "patient" ? { background: "var(--blue-btn)" } : undefined}
+                        className="gap-2 text-[13px] cursor-pointer"
+                        style={
+                            activeTab === "patient"
+                                ? { background: "var(--blue-btn)", color: "#fff" }
+                                : { color: "var(--blue-text-color)" }
+                        }
                     >
-                        <UserPlus className="h-4 w-4 mr-1.5" /> Book Appointment
+                        <UserPlus className="h-4 w-4" />
+                        Book Appointment
                     </Button>
                 </div>
             </div>
 
-            <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden p-6">
-                {/* ==================================================== */}
-                {/* TAB 1: APPOINTMENTS ADMIN LIST VIEW */}
-                {/* ==================================================== */}
-                {activeTab === "appointments" && (
-                    <div>
-                        {/* Header Toolbar Row */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                            <div>
-                                <h2 className="text-xl font-bold text-foreground relative inline-block pb-1">
-                                    Appointments
-                                    <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-blue-600 rounded-full"></span>
-                                </h2>
+            {/* ==================================================== */}
+            {/* TAB 1: APPOINTMENTS ADMIN LIST VIEW */}
+            {/* ==================================================== */}
+            {activeTab === "appointments" && (
+                <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden p-6">
+                    {/* Header Toolbar Row */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 className="text-xl font-bold text-foreground relative inline-block pb-1">
+                                Appointments
+                                <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-blue-600 rounded-full"></span>
+                            </h2>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-end">
+                            {/* Search Box Pill */}
+                            <div className="shrink-0">
+                                <TableSearch
+                                    placeholder="Search..."
+                                    value={search}
+                                    onChange={(val) => {
+                                        setSearch(val);
+                                        setCurrentPage(1);
+                                    }}
+                                />
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-end">
-                                {/* Search Box Pill */}
-                                <div className="shrink-0">
-                                    <TableSearch
-                                        placeholder="Search..."
-                                        value={search}
-                                        onChange={(val) => {
-                                            setSearch(val);
-                                            setCurrentPage(1);
-                                        }}
-                                    />
-                                </div>
+                            {/* Horizontal Options Popover Trigger */}
+                            <div className="relative" ref={toolsRef}>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => setIsToolsPopoverOpen(!isToolsPopoverOpen)}
+                                    className={`h-9 w-9 cursor-pointer ${
+                                        hasActiveDrawerFilters ? "border-blue-600 text-blue-600 bg-blue-50/50" : ""
+                                    }`}
+                                    title="Options Menu"
+                                >
+                                    <SlidersHorizontal className="h-4 w-4" />
+                                </Button>
 
-                                {/* Horizontal Options Popover Trigger */}
-                                <div className="relative" ref={toolsRef}>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() => setIsToolsPopoverOpen(!isToolsPopoverOpen)}
-                                        className={`h-9 w-9 cursor-pointer ${hasActiveDrawerFilters ? "border-blue-600 text-blue-600 bg-blue-50/50" : ""
-                                            }`}
-                                        title="Options Menu"
+                                {/* Options Menu Popover Dropdown */}
+                                {isToolsPopoverOpen && (
+                                    <div className="absolute right-0 top-11 bg-background border border-border rounded-xl shadow-lg p-1.5 flex items-center gap-1 z-50">
+                                        <button
+                                            onClick={() => {
+                                                setIsToolsPopoverOpen(false);
+                                                setTempFilters({ ...filters });
+                                                setIsFilterDrawerOpen(true);
+                                            }}
+                                            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-blue-600 transition cursor-pointer"
+                                            title="Filter Appointments"
+                                        >
+                                            <Filter className="h-4 w-4" />
+                                        </button>
+
+                                        <button
+                                            onClick={handleExportCSV}
+                                            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-green-600 transition cursor-pointer"
+                                            title="Export to Excel / CSV"
+                                        >
+                                            <FileSpreadsheet className="h-4 w-4" />
+                                        </button>
+
+                                        <button
+                                            onClick={handlePrint}
+                                            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-purple-600 transition cursor-pointer"
+                                            title="Print Appointments"
+                                        >
+                                            <Printer className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Primary Add Appointment Button */}
+                            <Button
+                                onClick={() => {
+                                    setAddForm({
+                                        patient: "",
+                                        uhid: "",
+                                        regNo: "",
+                                        doctor: "Dr. Madhumitha",
+                                        apptDate: new Date().toISOString().split("T")[0],
+                                        apptTime: "10:00",
+                                        type: "Online",
+                                        status: "Upcoming",
+                                    });
+                                    setIsAddDrawerOpen(true);
+                                }}
+                                className="h-9 px-4 text-white font-medium cursor-pointer"
+                                style={{ background: "var(--blue-btn)" }}
+                                title="Add Appointment"
+                            >
+                                <Plus className="h-4 w-4 mr-1" />
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Active Drawer Filters Reset Indicator */}
+                    {hasActiveDrawerFilters && (
+                        <div className="flex items-center gap-2 mb-4 bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-200 dark:border-blue-800 text-xs text-blue-700 dark:text-blue-300">
+                            <span className="font-semibold">Active Filters:</span>
+                            {filters.apptNo && <Badge variant="secondary">Appt No: {filters.apptNo}</Badge>}
+                            {filters.patientName && <Badge variant="secondary">Patient: {filters.patientName}</Badge>}
+                            {filters.doctorName && <Badge variant="secondary">Doctor: {filters.doctorName}</Badge>}
+                            {filters.type && <Badge variant="secondary">Type: {filters.type}</Badge>}
+                            {filters.status && <Badge variant="secondary">Status: {filters.status}</Badge>}
+                            {filters.from && <Badge variant="secondary">From: {filters.from}</Badge>}
+                            {filters.to && <Badge variant="secondary">To: {filters.to}</Badge>}
+                            <button
+                                onClick={() =>
+                                    setFilters({
+                                        apptNo: "",
+                                        patientName: "",
+                                        doctorName: "",
+                                        type: "",
+                                        status: "",
+                                        from: "",
+                                        to: "",
+                                    })
+                                }
+                                className="ml-auto text-blue-600 hover:underline font-semibold cursor-pointer"
+                            >
+                                Clear All
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Reusable Data Table Component */}
+                    <DataTable columns={columns} data={paginatedAppointments} />
+
+                    {/* Reusable Pagination Component */}
+                    <div className="mt-4 border-t border-border pt-4">
+                        <Pagination table={tableObject} totalCount={filteredAppointments.length} />
+                    </div>
+                </div>
+            )}
+
+            {/* ==================================================== */}
+            {/* TAB 2: 4-STEP BOOK APPOINTMENT WIZARD FORM */}
+            {/* Structure matching OP Registration Wizard exactly */}
+            {/* ==================================================== */}
+            {activeTab === "patient" && (
+                <div
+                    className="rounded-md border border-slate-200 bg-white"
+                    style={{ background: "var(--background)" }}
+                >
+                    {/* OP Registration Stepper Component */}
+                    <div className="flex items-center px-4 sm:px-6 py-4 sm:py-5 overflow-x-auto border-b border-slate-100">
+                        {[
+                            { key: 1, label: "Patient Search" },
+                            { key: 2, label: "Patient Details" },
+                            { key: 3, label: "Appointment Details" },
+                            { key: 4, label: "Review & Confirm" },
+                        ].map((s, index) => {
+                            const stepNum = s.key as WizardStepKey;
+                            const label = s.label;
+                            const isActive = stepNum === wizardStep;
+                            const isCompleted = stepNum < wizardStep;
+
+                            return (
+                                <div key={label} className="flex flex-1 items-center last:flex-none min-w-fit">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleStepClick(stepNum)}
+                                        className="flex items-center gap-1 sm:gap-2 text-left cursor-pointer hover:opacity-80 transition-opacity outline-none"
                                     >
-                                        <SlidersHorizontal className="h-4 w-4" />
-                                    </Button>
-
-                                    {/* Options Menu Popover Dropdown */}
-                                    {isToolsPopoverOpen && (
-                                        <div className="absolute right-0 top-11 bg-background border border-border rounded-xl shadow-lg p-1.5 flex items-center gap-1 z-50">
-                                            <button
-                                                onClick={() => {
-                                                    setIsToolsPopoverOpen(false);
-                                                    setTempFilters({ ...filters });
-                                                    setIsFilterDrawerOpen(true);
-                                                }}
-                                                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-blue-600 transition cursor-pointer"
-                                                title="Filter Appointments"
-                                            >
-                                                <Filter className="h-4 w-4" />
-                                            </button>
-
-                                            <button
-                                                onClick={handleExportCSV}
-                                                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-green-600 transition cursor-pointer"
-                                                title="Export to Excel / CSV"
-                                            >
-                                                <FileSpreadsheet className="h-4 w-4" />
-                                            </button>
-
-                                            <button
-                                                onClick={handlePrint}
-                                                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-purple-600 transition cursor-pointer"
-                                                title="Print Appointments"
-                                            >
-                                                <Printer className="h-4 w-4" />
-                                            </button>
+                                        <div
+                                            style={
+                                                isActive || isCompleted
+                                                    ? {
+                                                        background: "var(--blue-text-color)",
+                                                    }
+                                                    : undefined
+                                            }
+                                            className={`flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full text-[11px] sm:text-[14px] font-semibold transition-all duration-200 ${
+                                                isActive
+                                                    ? "text-white shadow-md"
+                                                    : isCompleted
+                                                    ? "text-white opacity-80"
+                                                    : "border border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-600"
+                                            }`}
+                                        >
+                                            {isCompleted ? (
+                                                <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            ) : (
+                                                stepNum
+                                            )}
                                         </div>
+
+                                        <span
+                                            className={`whitespace-nowrap text-[11px] sm:text-[13px] transition-all duration-200 ${
+                                                isActive
+                                                    ? "font-bold"
+                                                    : isCompleted
+                                                    ? "font-semibold text-slate-700"
+                                                    : "font-medium text-slate-400 hover:text-slate-600"
+                                            }`}
+                                            style={
+                                                isActive
+                                                    ? {
+                                                        color: "var(--blue-text-color)",
+                                                    }
+                                                    : undefined
+                                            }
+                                        >
+                                            {label}
+                                        </span>
+                                    </button>
+
+                                    {index !== 3 && (
+                                        <div
+                                            className={`mx-2 sm:mx-4 h-px flex-1 transition-all duration-300 ${
+                                                isCompleted ? "bg-blue-500 opacity-60" : "bg-slate-200"
+                                            }`}
+                                            style={
+                                                isCompleted
+                                                    ? {
+                                                        background: "var(--blue-text-color)",
+                                                        opacity: 0.5,
+                                                    }
+                                                    : undefined
+                                            }
+                                        />
                                     )}
                                 </div>
+                            );
+                        })}
+                    </div>
 
-                                {/* Primary Add Appointment Button */}
+                    {/* Step Panels Content */}
+                    <div className="px-6 py-6">
+                        {wizardPanels[wizardStep]}
+
+                        {/* Action Buttons matching OP Registration */}
+                        <div className="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-5">
+                            {wizardStep > 1 && (
                                 <Button
-                                    onClick={() => {
-                                        setAddForm({
-                                            patient: "",
-                                            uhid: "",
-                                            regNo: "",
-                                            doctor: "Dr. Madhumitha",
-                                            apptDate: new Date().toISOString().split("T")[0],
-                                            apptTime: "10:00",
-                                            type: "Online",
-                                            status: "Upcoming",
-                                        });
-                                        setIsAddDrawerOpen(true);
-                                    }}
-                                    className="h-9 px-4 text-white font-medium cursor-pointer"
-                                    style={{ background: "var(--blue-btn)" }}
-                                    title="Add Appointment"
+                                    variant="outline"
+                                    onClick={goBack}
+                                    className="gap-1.5 text-[13px] font-medium text-slate-600 cursor-pointer"
                                 >
-                                    <Plus className="h-4 w-4 mr-1" />
+                                    <ArrowLeft className="h-3.5 w-3.5" />
+                                    Back
                                 </Button>
-                            </div>
-                        </div>
-
-                        {/* Active Drawer Filters Reset Indicator */}
-                        {hasActiveDrawerFilters && (
-                            <div className="flex items-center gap-2 mb-4 bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-200 dark:border-blue-800 text-xs text-blue-700 dark:text-blue-300">
-                                <span className="font-semibold">Active Filters:</span>
-                                {filters.apptNo && <Badge variant="secondary">Appt No: {filters.apptNo}</Badge>}
-                                {filters.patientName && <Badge variant="secondary">Patient: {filters.patientName}</Badge>}
-                                {filters.doctorName && <Badge variant="secondary">Doctor: {filters.doctorName}</Badge>}
-                                {filters.type && <Badge variant="secondary">Type: {filters.type}</Badge>}
-                                {filters.status && <Badge variant="secondary">Status: {filters.status}</Badge>}
-                                {filters.from && <Badge variant="secondary">From: {filters.from}</Badge>}
-                                {filters.to && <Badge variant="secondary">To: {filters.to}</Badge>}
-                                <button
-                                    onClick={() =>
-                                        setFilters({
-                                            apptNo: "",
-                                            patientName: "",
-                                            doctorName: "",
-                                            type: "",
-                                            status: "",
-                                            from: "",
-                                            to: "",
-                                        })
-                                    }
-                                    className="ml-auto text-blue-600 hover:underline font-semibold cursor-pointer"
-                                >
-                                    Clear All
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Reusable Data Table Component */}
-                        <DataTable columns={columns} data={paginatedAppointments} />
-
-                        {/* Reusable Pagination Component */}
-                        <div className="mt-4 border-t border-border pt-4">
-                            <Pagination table={tableObject} totalCount={filteredAppointments.length} />
+                            )}
+                            <Button
+                                variant="outline"
+                                onClick={clearWizardDraft}
+                                className="text-[13px] font-medium text-slate-600 cursor-pointer"
+                            >
+                                Clear
+                            </Button>
+                            <Button
+                                onClick={goNext}
+                                disabled={
+                                    wizardStep === 1
+                                        ? (!isValidMobileNumber(searchMobile) || (searchStatus === "found" && !selectedPatientId))
+                                        : false
+                                }
+                                className="gap-1.5 text-white text-[13px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ background: "var(--blue-btn)", padding: "18px 18px", borderRadius: "8px" }}
+                            >
+                                {wizardStep === 1
+                                    ? searchStatus === "found"
+                                        ? "Continue to Appointment"
+                                        : "Search & Continue"
+                                    : wizardStep === 4
+                                    ? "Confirm & Book Appointment"
+                                    : "Save & Next"}
+                                <ArrowRight className="h-3.5 w-3.5" />
+                            </Button>
                         </div>
                     </div>
-                )}
-
-                {/* ==================================================== */}
-                {/* TAB 2: PATIENT BOOKING MODULE FLOW */}
-                {/* ==================================================== */}
-                {activeTab === "patient" && (
-                    <div className="max-w-3xl mx-auto">
-                        {/* Step Progress Indicator Bar */}
-                        <div className="flex items-center justify-start gap-4 p-3.5 px-5 bg-card border border-border rounded-lg mb-6">
-                            <div className={`flex items-center gap-2 text-sm font-semibold ${patientStep !== "book" ? "text-blue-600" : "text-emerald-600"}`}>
-                                <span
-                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${patientStep !== "book" ? "bg-blue-600 text-white" : "bg-emerald-600 text-white"
-                                        }`}
-                                >
-                                    1
-                                </span>
-                                <span>{patientStep === "register" ? "Register Patient" : "Select Patient"}</span>
-                            </div>
-
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-
-                            <div className={`flex items-center gap-2 text-sm font-semibold ${patientStep === "book" ? "text-blue-600" : "text-muted-foreground"}`}>
-                                <span
-                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${patientStep === "book" ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600 dark:bg-slate-800"
-                                        }`}
-                                >
-                                    2
-                                </span>
-                                <span>Book Appointment</span>
-                            </div>
-                        </div>
-
-                        {/* STEP 1A: SEARCH MOBILE SCREEN */}
-                        {patientStep === "search" && (
-                            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden max-w-md mx-auto">
-                                <div className="p-5 text-white" style={{ background: "var(--sidebar-top-bg)" }}>
-                                    <h3 className="text-base font-bold">Search Patient</h3>
-                                    <p className="text-xs text-slate-300">Enter the registered 10-digit mobile number</p>
-                                </div>
-                                <div className="p-6 space-y-4">
-                                    <Field label="Search Mobile Number" required>
-                                        <div className="flex items-center border border-border rounded-md overflow-hidden bg-background focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/20">
-                                            <span className="px-3 bg-muted font-bold text-foreground text-sm border-r border-border h-9 flex items-center">
-                                                +91
-                                            </span>
-                                            <TextField
-                                                placeholder="Enter 10-digit mobile number"
-                                                value={searchMobile}
-                                                onChange={(val) => setSearchMobile(val.replace(/\D/g, ""))}
-                                            />
-                                        </div>
-                                    </Field>
-                                    <Button
-                                        onClick={handleSearchMobile}
-                                        disabled={searchMobile.length !== 10}
-                                        className="w-full h-10 text-white font-semibold cursor-pointer"
-                                        style={{ background: "var(--blue-btn)" }}
-                                    >
-                                        Search
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* STEP 1B: SELECT PATIENT CARDS SCREEN */}
-                        {patientStep === "select" && (
-                            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden max-w-md mx-auto">
-                                <div className="p-5 text-white" style={{ background: "var(--sidebar-top-bg)" }}>
-                                    <h3 className="text-base font-bold">Select Patient</h3>
-                                    <p className="text-xs text-slate-300">Profiles linked to +91 {searchMobile}</p>
-                                </div>
-
-                                <div className="p-5 space-y-3">
-                                    {(patientsDb[searchMobile] || []).map((p) => {
-                                        const isSelected = selectedPatientProfile?.id === p.id;
-                                        return (
-                                            <div
-                                                key={p.id}
-                                                onClick={() => setSelectedPatientProfile(p)}
-                                                className={`p-3.5 border rounded-lg cursor-pointer transition-all flex items-center justify-between ${isSelected
-                                                    ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/40 shadow-sm ring-2 ring-blue-600/20"
-                                                    : "border-border hover:border-blue-400 hover:bg-slate-50 dark:hover:bg-slate-900"
-                                                    }`}
-                                            >
-                                                <div>
-                                                    <div className="font-bold text-foreground text-base">{p.name}</div>
-                                                    <div className="text-xs text-muted-foreground font-medium">{p.age}Y / {p.gender}</div>
-                                                    <div className="text-xs text-blue-600 font-semibold mt-1">UHID : {p.uhid}</div>
-                                                </div>
-                                                {isSelected && <CheckCircle2 className="h-5 w-5 text-blue-600" />}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Add New Patient Trigger */}
-                                <button
-                                    onClick={() => {
-                                        setRegForm({
-                                            name: "",
-                                            gender: "Male",
-                                            dob: "",
-                                            address: "",
-                                            city: "",
-                                            state: "",
-                                            pincode: "",
-                                        });
-                                        setRegErrors({ name: "", dob: "" });
-                                        setPatientStep("register");
-                                    }}
-                                    className="w-full p-4 border-t border-b border-border bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-900 text-left flex items-center gap-3 cursor-pointer transition-colors"
-                                >
-                                    <span className="text-blue-600 font-bold text-lg">+</span>
-                                    <div>
-                                        <div className="font-bold text-sm text-foreground">Add Patient</div>
-                                        <div className="text-xs text-muted-foreground">Register new patient</div>
-                                    </div>
-                                </button>
-
-                                <div className="p-5">
-                                    <Button
-                                        onClick={() => {
-                                            if (selectedPatientProfile) {
-                                                setBookDept("");
-                                                setBookDoctor("");
-                                                setBookDate(new Date().toISOString().split("T")[0]);
-                                                setBookUnit("");
-                                                setBookSlot("");
-                                                setBookSource("");
-                                                setBookErrors({ dept: "", doctor: "", date: "", unit: "", slot: "", source: "" });
-                                                setPatientStep("book");
-                                            }
-                                        }}
-                                        disabled={!selectedPatientProfile}
-                                        className="w-full h-10 text-white font-semibold cursor-pointer"
-                                        style={{ background: "var(--blue-btn)" }}
-                                    >
-                                        Continue
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* STEP 1C: REGISTER PATIENT SCREEN */}
-                        {patientStep === "register" && (
-                            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden max-w-xl mx-auto">
-                                <div className="p-5 text-white" style={{ background: "var(--sidebar-top-bg)" }}>
-                                    <h3 className="text-lg font-bold">Register Patient</h3>
-                                    <p className="text-xs text-slate-300">New account setup</p>
-                                </div>
-                                <div className="p-6 space-y-4">
-                                    <p className="text-xs text-muted-foreground">
-                                        We couldn't find an account for this number. Please complete your details to continue.
-                                    </p>
-
-                                    <Field label="MOBILE NUMBER">
-                                        <div className="px-3 py-2 border border-border rounded bg-muted text-muted-foreground text-sm font-semibold">
-                                            +91 {searchMobile}
-                                        </div>
-                                    </Field>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <Field label="FULL NAME" required>
-                                            <TextField
-                                                placeholder="e.g. Priya Kumar"
-                                                value={regForm.name}
-                                                onChange={(val) => setRegForm({ ...regForm, name: val })}
-                                            />
-                                            {regErrors.name && <span className="text-xs text-red-500 mt-1 block">{regErrors.name}</span>}
-                                        </Field>
-
-                                        <Field label="GENDER">
-                                            <SelectField
-                                                options={["Male", "Female", "Other"]}
-                                                value={regForm.gender}
-                                                onChange={(val) => setRegForm({ ...regForm, gender: val })}
-                                            />
-                                        </Field>
-
-                                        <Field label="DATE OF BIRTH" required>
-                                            <DateField
-                                                value={regForm.dob ? new Date(regForm.dob) : undefined}
-                                                onChange={(d) => setRegForm({ ...regForm, dob: d ? format(d, "yyyy-MM-dd") : "" })}
-                                            />
-                                            {regErrors.dob && <span className="text-xs text-red-500 mt-1 block">{regErrors.dob}</span>}
-                                        </Field>
-
-                                        <Field label="AGE">
-                                            <div className="px-3 py-2 border border-border rounded bg-muted text-muted-foreground text-sm font-semibold h-9 flex items-center">
-                                                {regForm.dob
-                                                    ? `${Math.abs(new Date(Date.now() - new Date(regForm.dob).getTime()).getUTCFullYear() - 1970)} Years`
-                                                    : "—"}
-                                            </div>
-                                        </Field>
-
-                                        <Field label="ADDRESS">
-                                            <TextField
-                                                placeholder="House no, street"
-                                                value={regForm.address}
-                                                onChange={(val) => setRegForm({ ...regForm, address: val })}
-                                            />
-                                        </Field>
-
-                                        <Field label="CITY">
-                                            <TextField
-                                                placeholder="e.g. Chennai"
-                                                value={regForm.city}
-                                                onChange={(val) => setRegForm({ ...regForm, city: val })}
-                                            />
-                                        </Field>
-
-                                        <Field label="STATE">
-                                            <TextField
-                                                placeholder="e.g. Tamil Nadu"
-                                                value={regForm.state}
-                                                onChange={(val) => setRegForm({ ...regForm, state: val })}
-                                            />
-                                        </Field>
-
-                                        <Field label="PIN CODE">
-                                            <TextField
-                                                placeholder="6-digit PIN"
-                                                value={regForm.pincode}
-                                                onChange={(val) => setRegForm({ ...regForm, pincode: val.replace(/\D/g, "") })}
-                                            />
-                                        </Field>
-                                    </div>
-
-                                    <div className="flex gap-3 pt-2">
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => {
-                                                if ((patientsDb[searchMobile] || []).length > 0) {
-                                                    setPatientStep("select");
-                                                } else {
-                                                    setPatientStep("search");
-                                                }
-                                            }}
-                                            className="flex-1 cursor-pointer"
-                                        >
-                                            Back
-                                        </Button>
-                                        <Button
-                                            onClick={handleRegisterPatient}
-                                            className="flex-[2] text-white font-semibold cursor-pointer"
-                                            style={{ background: "var(--blue-btn)" }}
-                                        >
-                                            Register & Continue
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* STEP 2: BOOK APPOINTMENT SCREEN */}
-                        {patientStep === "book" && selectedPatientProfile && (
-                            <div className="space-y-4">
-                                {/* Patient Summary Header Bar */}
-                                <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg flex flex-wrap items-center justify-between gap-3">
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        <span className="font-bold text-blue-900 dark:text-blue-200 text-base">
-                                            {selectedPatientProfile.name}
-                                        </span>
-                                        <span className="text-xs font-semibold bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-100 px-2.5 py-0.5 rounded-full">
-                                            {selectedPatientProfile.age}Y / {selectedPatientProfile.gender}
-                                        </span>
-                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                                            UHID: {selectedPatientProfile.uhid}
-                                        </span>
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            if ((patientsDb[searchMobile] || []).length > 1) {
-                                                setPatientStep("select");
-                                            } else {
-                                                setPatientStep("search");
-                                            }
-                                        }}
-                                        className="cursor-pointer text-xs"
-                                    >
-                                        Change Patient
-                                    </Button>
-                                </div>
-
-                                <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                                    <div className="p-5 text-white" style={{ background: "var(--sidebar-top-bg)" }}>
-                                        <h3 className="text-base font-bold">Book Appointment</h3>
-                                        <p className="text-xs text-slate-300">Select department, doctor, date, unit, slot, and source</p>
-                                    </div>
-
-                                    <div className="p-6 space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <Field label="Department" required>
-                                                <SelectField
-                                                    options={["Gynecology", "Cardiology", "Orthopedics", "Dermatology"]}
-                                                    placeholder="Choose Department"
-                                                    value={bookDept}
-                                                    onChange={(val) => {
-                                                        setBookDept(val);
-                                                        setBookDoctor("");
-                                                        setBookErrors((prev) => ({ ...prev, dept: "" }));
-                                                    }}
-                                                />
-                                                {bookErrors.dept && <span className="text-xs text-red-500 mt-1 block">{bookErrors.dept}</span>}
-                                            </Field>
-
-                                            <Field label="Doctor" required>
-                                                <SelectField
-                                                    options={DEPT_DOCTORS_MAP[bookDept] || []}
-                                                    placeholder="Choose Doctor"
-                                                    value={bookDoctor}
-                                                    onChange={(val) => {
-                                                        setBookDoctor(val);
-                                                        setBookErrors((prev) => ({ ...prev, doctor: "" }));
-                                                    }}
-                                                />
-                                                {bookErrors.doctor && <span className="text-xs text-red-500 mt-1 block">{bookErrors.doctor}</span>}
-                                            </Field>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <Field label="Appointment Date" required>
-                                                <DateField
-                                                    value={bookDate ? new Date(bookDate) : undefined}
-                                                    onChange={(d) => {
-                                                        setBookDate(d ? format(d, "yyyy-MM-dd") : "");
-                                                        setBookErrors((prev) => ({ ...prev, date: "" }));
-                                                    }}
-                                                />
-                                                {bookErrors.date && <span className="text-xs text-red-500 mt-1 block">{bookErrors.date}</span>}
-                                            </Field>
-
-                                            <Field label="Unit" required>
-                                                <SelectField
-                                                    options={["Unit 1", "Unit 2", "Unit 3", "Unit 4"]}
-                                                    placeholder="Choose Unit"
-                                                    value={bookUnit}
-                                                    onChange={(val) => {
-                                                        setBookUnit(val);
-                                                        setBookSlot("");
-                                                        setBookErrors((prev) => ({ ...prev, unit: "" }));
-                                                    }}
-                                                />
-                                                {bookErrors.unit && <span className="text-xs text-red-500 mt-1 block">{bookErrors.unit}</span>}
-                                            </Field>
-                                        </div>
-
-                                        {/* Time Slot Grid Section */}
-                                        <Field label="Available Time Slots" required>
-                                            {!bookUnit ? (
-                                                <div className="text-xs text-muted-foreground py-2">
-                                                    Please select a Unit to view available time slots.
-                                                </div>
-                                            ) : (
-                                                <div className="grid grid-cols-3 gap-2 mt-1">
-                                                    {(UNIT_SLOTS[bookUnit] || []).map((slot) => {
-                                                        const isBooked = (UNIT_BOOKED[bookUnit] || []).includes(slot);
-                                                        const isSelected = bookSlot === slot;
-                                                        return (
-                                                            <button
-                                                                key={slot}
-                                                                disabled={isBooked}
-                                                                onClick={() => {
-                                                                    setBookSlot(slot);
-                                                                    setBookErrors((prev) => ({ ...prev, slot: "" }));
-                                                                }}
-                                                                className={`py-2 px-1 text-center text-xs font-semibold rounded border transition-all cursor-pointer ${isBooked
-                                                                    ? "bg-slate-100 text-slate-400 border-slate-200 line-through cursor-not-allowed dark:bg-slate-800 dark:text-slate-500"
-                                                                    : isSelected
-                                                                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                                                                        : "bg-background text-foreground border-border hover:border-blue-500 hover:text-blue-600"
-                                                                    }`}
-                                                            >
-                                                                {slot}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-
-                                            <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
-                                                <span className="flex items-center gap-1.5">
-                                                    <i className="w-3 h-3 rounded bg-background border border-border inline-block"></i> Available
-                                                </span>
-                                                <span className="flex items-center gap-1.5">
-                                                    <i className="w-3 h-3 rounded bg-blue-600 inline-block"></i> Selected
-                                                </span>
-                                                <span className="flex items-center gap-1.5">
-                                                    <i className="w-3 h-3 rounded bg-slate-200 inline-block"></i> Booked/Full
-                                                </span>
-                                            </div>
-                                            {bookErrors.slot && <span className="text-xs text-red-500 mt-1 block">{bookErrors.slot}</span>}
-                                        </Field>
-
-                                        {/* Booking Source (Reception / Phone) */}
-                                        <Field label="Type" required>
-                                            <SelectField
-                                                options={["Reception", "Phone"]}
-                                                placeholder="Select Type"
-                                                value={bookSource}
-                                                onChange={(val) => {
-                                                    setBookSource(val as "Reception" | "Phone");
-                                                    setBookErrors((prev) => ({ ...prev, source: "" }));
-                                                }}
-                                            />
-                                            {bookErrors.source && <span className="text-xs text-red-500 mt-1 block">{bookErrors.source}</span>}
-                                        </Field>
-
-                                        <div className="flex gap-3 pt-4 border-t border-border">
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => {
-                                                    if ((patientsDb[searchMobile] || []).length > 0) {
-                                                        setPatientStep("select");
-                                                    } else {
-                                                        setPatientStep("search");
-                                                    }
-                                                }}
-                                                className="flex-1 cursor-pointer"
-                                            >
-                                                Back
-                                            </Button>
-                                            <Button
-                                                onClick={handleConfirmBookClick}
-                                                className="flex-[2] text-white font-semibold cursor-pointer"
-                                                style={{ background: "var(--blue-btn)" }}
-                                            >
-                                                Confirm & Book Appointment
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* ==================================================== */}
             {/* FILTER APPOINTMENTS DRAWER */}
@@ -1794,7 +2294,7 @@ const AppointmentModule: React.FC = () => {
                         </div>
                         <h3 className="text-xl font-bold text-foreground mb-1">Confirm your appointment</h3>
                         <p className="text-xs text-muted-foreground mb-4">
-                            Enter the OTP sent to <b className="text-foreground">+91 {selectedPatientProfile?.mobile}</b>
+                            Enter the OTP sent to <b className="text-foreground">+91 {patientForm.mobile || selectedPatientProfile?.mobile || searchMobile}</b>
                         </p>
 
                         <div className="bg-blue-50/50 dark:bg-blue-950/30 border border-dashed border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
