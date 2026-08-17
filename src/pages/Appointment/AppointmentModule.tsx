@@ -8,13 +8,11 @@ import {
     Plus,
     CheckCircle2,
     Filter,
-    Eye,
-    Pencil,
-    Trash2,
     CalendarClock,
     UserPlus,
     ArrowLeft,
     ArrowRight,
+    X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,17 +22,10 @@ import TableSearch from "@/common/TableSearch";
 import CustomPanel from "@/common/CustomPanel";
 import { DeleteConfirmationDialog } from "@/common/DeleteConfirmationDialog";
 import { ActionMenu } from "@/common/ActionMenu";
-import { StandardModuleTable } from "@/common/StandardModuleTable";
 import { Field, TextField, SelectField, DateField, DobDateField } from "@/components/FormPrimitives";
 import { notify } from "@/lib/notify";
 import { toast } from "@/components/ui/toast";
 import { mockAppointments } from "@/data/mockAppointments";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 // ==========================================
 // TYPES & DATA STRUCTURES
@@ -67,98 +58,98 @@ export interface PatientProfile {
     mobile: string;
 }
 
-const INITIAL_APPOINTMENTS: Appointment[] = [
-    {
-        id: "1",
-        apptNo: "APT-20260801-01",
-        patient: "Priya Kumar",
-        uhid: "UHID-100234",
-        regNo: "–",
-        doctor: "Dr. Madhumitha",
-        apptOn: "12-08-2026 09:30 AM",
-        rawDate: "2026-08-12",
-        rawTime: "09:30",
-        type: "Online",
-        status: "Upcoming",
-        gender: "Female",
-        age: 29,
-        mobile: "9876543210",
-        bookedOn: "05-08-2026 11:20 AM",
-        dept: "Gynecology",
-    },
-    {
-        id: "2",
-        apptNo: "APT-20260801-02",
-        patient: "Anitha Raj",
-        uhid: "UHID-100987",
-        regNo: "–",
-        doctor: "Dr. Ravi",
-        apptOn: "12-08-2026 10:00 AM",
-        rawDate: "2026-08-12",
-        rawTime: "10:00",
-        type: "Reception",
-        status: "Upcoming",
-        gender: "Female",
-        age: 41,
-        mobile: "9884512233",
-        bookedOn: "06-08-2026 09:05 AM",
-        dept: "Cardiology",
-    },
-    {
-        id: "3",
-        apptNo: "APT-20260801-03",
-        patient: "Meena Sundar",
-        uhid: "–",
-        regNo: "REG-55110",
-        doctor: "Dr. Ganesh",
-        apptOn: "11-08-2026 04:15 PM",
-        rawDate: "2026-08-11",
-        rawTime: "16:15",
-        type: "Phone",
-        status: "Visited",
-        gender: "Female",
-        age: 34,
-        mobile: "9790123456",
-        bookedOn: "10-08-2026 02:40 PM",
-        dept: "Orthopedics",
-    },
-    {
-        id: "4",
-        apptNo: "APT-20260801-04",
-        patient: "Kavya Iyer",
-        uhid: "–",
-        regNo: "REG-55144",
-        doctor: "Dr. Anu",
-        apptOn: "10-08-2026 11:45 AM",
-        rawDate: "2026-08-10",
-        rawTime: "11:45",
-        type: "Online",
-        status: "Upcoming",
-        gender: "Female",
-        age: 26,
-        mobile: "9345678901",
-        bookedOn: "08-08-2026 04:15 PM",
-        dept: "Dermatology",
-    },
-    {
-        id: "5",
-        apptNo: "APT-20260801-05",
-        patient: "Divya Prasad",
-        uhid: "–",
-        regNo: "REG-55190",
-        doctor: "Dr. Madhumitha",
-        apptOn: "09-08-2026 09:00 AM",
-        rawDate: "2026-08-09",
-        rawTime: "09:00",
-        type: "Reception",
-        status: "Visited",
-        gender: "Female",
-        age: 31,
-        mobile: "9944556677",
-        bookedOn: "02-08-2026 10:00 AM",
-        dept: "Gynecology",
-    },
-];
+// const INITIAL_APPOINTMENTS: Appointment[] = [
+//     {
+//         id: "1",
+//         apptNo: "APT-20260801-01",
+//         patient: "Priya Kumar",
+//         uhid: "UHID-100234",
+//         regNo: "–",
+//         doctor: "Dr. Madhumitha",
+//         apptOn: "12-08-2026 09:30 AM",
+//         rawDate: "2026-08-12",
+//         rawTime: "09:30",
+//         type: "Online",
+//         status: "Upcoming",
+//         gender: "Female",
+//         age: 29,
+//         mobile: "9876543210",
+//         bookedOn: "05-08-2026 11:20 AM",
+//         dept: "Gynecology",
+//     },
+//     {
+//         id: "2",
+//         apptNo: "APT-20260801-02",
+//         patient: "Anitha Raj",
+//         uhid: "UHID-100987",
+//         regNo: "–",
+//         doctor: "Dr. Ravi",
+//         apptOn: "12-08-2026 10:00 AM",
+//         rawDate: "2026-08-12",
+//         rawTime: "10:00",
+//         type: "Reception",
+//         status: "Upcoming",
+//         gender: "Female",
+//         age: 41,
+//         mobile: "9884512233",
+//         bookedOn: "06-08-2026 09:05 AM",
+//         dept: "Cardiology",
+//     },
+//     {
+//         id: "3",
+//         apptNo: "APT-20260801-03",
+//         patient: "Meena Sundar",
+//         uhid: "–",
+//         regNo: "REG-55110",
+//         doctor: "Dr. Ganesh",
+//         apptOn: "11-08-2026 04:15 PM",
+//         rawDate: "2026-08-11",
+//         rawTime: "16:15",
+//         type: "Phone",
+//         status: "Visited",
+//         gender: "Female",
+//         age: 34,
+//         mobile: "9790123456",
+//         bookedOn: "10-08-2026 02:40 PM",
+//         dept: "Orthopedics",
+//     },
+//     {
+//         id: "4",
+//         apptNo: "APT-20260801-04",
+//         patient: "Kavya Iyer",
+//         uhid: "–",
+//         regNo: "REG-55144",
+//         doctor: "Dr. Anu",
+//         apptOn: "10-08-2026 11:45 AM",
+//         rawDate: "2026-08-10",
+//         rawTime: "11:45",
+//         type: "Online",
+//         status: "Upcoming",
+//         gender: "Female",
+//         age: 26,
+//         mobile: "9345678901",
+//         bookedOn: "08-08-2026 04:15 PM",
+//         dept: "Dermatology",
+//     },
+//     {
+//         id: "5",
+//         apptNo: "APT-20260801-05",
+//         patient: "Divya Prasad",
+//         uhid: "–",
+//         regNo: "REG-55190",
+//         doctor: "Dr. Madhumitha",
+//         apptOn: "09-08-2026 09:00 AM",
+//         rawDate: "2026-08-09",
+//         rawTime: "09:00",
+//         type: "Reception",
+//         status: "Visited",
+//         gender: "Female",
+//         age: 31,
+//         mobile: "9944556677",
+//         bookedOn: "02-08-2026 10:00 AM",
+//         dept: "Gynecology",
+//     },
+// ];
 
 const INITIAL_PATIENTS_DB: Record<string, PatientProfile[]> = {
     "9876543210": [
@@ -1018,26 +1009,24 @@ const AppointmentModule: React.FC = () => {
                         </Button>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                         {foundPatients.map((patient) => {
                             const isSelected = selectedPatientId === patient.id;
                             return (
                                 <div
                                     key={patient.id}
                                     onClick={() => handleSelectPatientCard(patient)}
-                                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                                        isSelected
-                                            ? "border-blue-600 bg-blue-50/50 shadow-xs ring-1 ring-blue-600"
-                                            : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50/60"
-                                    }`}
+                                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${isSelected
+                                        ? "border-blue-600 bg-blue-50/50 shadow-xs ring-1 ring-blue-600"
+                                        : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50/60"
+                                        }`}
                                 >
                                     <div className="flex items-center gap-3.5">
                                         <div
-                                            className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
-                                                isSelected
-                                                    ? "border-blue-600 bg-blue-600"
-                                                    : "border-slate-300 bg-white"
-                                            }`}
+                                            className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${isSelected
+                                                ? "border-blue-600 bg-blue-600"
+                                                : "border-slate-300 bg-white"
+                                                }`}
                                         >
                                             {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                                         </div>
@@ -1100,11 +1089,10 @@ const AppointmentModule: React.FC = () => {
                 <div className="space-y-4">
                     <Field label="Mobile Number" required>
                         <div
-                            className={`flex items-center rounded-md border overflow-hidden bg-white transition-all ${
-                                searchMobileError
-                                    ? "border-red-500 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500"
-                                    : "border-slate-200 focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
-                            }`}
+                            className={`flex items-center rounded-md border overflow-hidden bg-white transition-all ${searchMobileError
+                                ? "border-red-500 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500"
+                                : "border-slate-200 focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
+                                }`}
                         >
                             <span className="px-3 py-2 bg-slate-100 font-bold text-slate-700 text-xs border-r border-slate-200 shrink-0">
                                 +91
@@ -1370,13 +1358,12 @@ const AppointmentModule: React.FC = () => {
                                         setBookSlot(slot);
                                         setBookErrors((prev) => ({ ...prev, slot: "" }));
                                     }}
-                                    className={`py-2 px-2 text-center text-xs font-semibold rounded border transition-all cursor-pointer ${
-                                        isBooked
-                                            ? "bg-slate-100 text-slate-400 border-slate-200 line-through cursor-not-allowed"
-                                            : isSelected
-                                                ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                                                : "bg-white text-slate-800 border-slate-200 hover:border-blue-500 hover:text-blue-600"
-                                    }`}
+                                    className={`py-2 px-2 text-center text-xs font-semibold rounded border transition-all cursor-pointer ${isBooked
+                                        ? "bg-slate-100 text-slate-400 border-slate-200 line-through cursor-not-allowed"
+                                        : isSelected
+                                            ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                                            : "bg-white text-slate-800 border-slate-200 hover:border-blue-500 hover:text-blue-600"
+                                        }`}
                                 >
                                     {slot}
                                 </button>
@@ -1550,49 +1537,312 @@ const AppointmentModule: React.FC = () => {
     };
 
     return (
-        <div>
-            {activeTab === "appointments" ? (
-                <StandardModuleTable
-                    title="Appointments & Patient Booking"
-                    countUnit="Records"
-                    icon={CalendarClock}
-                    searchPlaceholder="Search appointment no, patient name, doctor, status..."
-                    columns={columns}
-                    data={appointments}
-                    hideDateFilters={false}
-                    onAdd={() => {
-                        setActiveTab("patient");
-                        resetPatientFlow();
-                    }}
-                    filterFields={[
-                        { label: "Doctor Name", key: "doctor", type: "text" },
-                        { label: "Department", key: "dept", type: "select", options: ["Gynecology", "Cardiology", "Orthopedics", "Dermatology"] },
-                        { label: "Status", key: "status", type: "select", options: ["Upcoming", "Visited", "Cancelled"] },
-                        { label: "Type", key: "type", type: "select", options: ["Online", "Reception", "Phone"] },
-                    ]}
-                    searchField={(r) => `${r.apptNo} ${r.patient} ${r.doctor} ${r.dept} ${r.uhid} ${r.status}`}
-                />
-            ) : (
+        <div className="space-y-5">
+            {/* Header Bar matching OP Registration Screen design */}
+            <div className="mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <div
+                        className="flex h-12 w-12 items-center justify-center rounded-lg shrink-0"
+                        style={{
+                            background: "var(--side-menu)",
+                            color: "var(--blue-text-color)",
+                        }}
+                    >
+                        <CalendarClock className="h-5 w-5" />
+                    </div>
+
+                    <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h1 className="text-[17px] font-semibold text-foreground">Appointments & Patient Booking</h1>
+                            <Badge variant="secondary" className="text-xs shrink-0">
+                                {filteredAppointments.length} Records
+                            </Badge>
+                        </div>
+                        <p className="text-[12.5px] text-muted-foreground">
+                            Manage doctor appointments, patient registration, and slot bookings
+                        </p>
+                    </div>
+                </div>
+
+                {/* Action Buttons styled like OP Registration */}
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto">
+                    <Button
+                        variant={activeTab === "appointments" ? "default" : "outline"}
+                        onClick={() => setActiveTab("appointments")}
+                        className="gap-2 text-[13px] cursor-pointer flex-1 sm:flex-none justify-center"
+                        style={
+                            activeTab === "appointments"
+                                ? { background: "var(--blue-btn)", color: "#fff" }
+                                : { color: "var(--blue-text-color)" }
+                        }
+                    >
+                        Appointments List
+                    </Button>
+
+                    <Button
+                        variant={activeTab === "patient" ? "default" : "outline"}
+                        onClick={() => {
+                            setActiveTab("patient");
+                            resetPatientFlow();
+                        }}
+                        className="gap-2 text-[13px] cursor-pointer flex-1 sm:flex-none justify-center"
+                        style={
+                            activeTab === "patient"
+                                ? { background: "var(--blue-btn)", color: "#fff" }
+                                : { color: "var(--blue-text-color)" }
+                        }
+                    >
+                        <UserPlus className="h-4 w-4" />
+                        Book Appointment
+                    </Button>
+                </div>
+            </div>
+
+            {/* ==================================================== */}
+            {/* TAB 1: APPOINTMENTS ADMIN LIST VIEW */}
+            {/* ==================================================== */}
+            {activeTab === "appointments" && (
+                <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden p-4 sm:p-6">
+                    {/* Header Toolbar Row */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6 w-full">
+                        <div>
+                            <h2 className="text-xl font-bold text-foreground relative inline-block pb-1">
+                                Appointments
+                                <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-blue-600 rounded-full"></span>
+                            </h2>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto justify-end">
+                            {/* Search Box Pill */}
+                            <div className="w-full sm:w-auto flex-1 sm:flex-none">
+                                <TableSearch
+                                    placeholder="Search..."
+                                    value={search}
+                                    onChange={(val) => {
+                                        setSearch(val);
+                                        setCurrentPage(1);
+                                    }}
+                                />
+                            </div>
+
+                            {/* Control Icons & Buttons Row */}
+                            <div className="flex items-center gap-2 justify-end">
+                                {/* Horizontal Options Popover Trigger */}
+                                <div className="relative" ref={toolsRef}>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setIsToolsPopoverOpen(!isToolsPopoverOpen)}
+                                        className={`h-9 w-9 cursor-pointer ${hasActiveDrawerFilters ? "border-blue-600 text-blue-600 bg-blue-50/50" : ""
+                                            }`}
+                                        title="Options Menu"
+                                    >
+                                        <SlidersHorizontal className="h-4 w-4" />
+                                    </Button>
+
+                                    {/* Options Menu Popover Dropdown */}
+                                    {isToolsPopoverOpen && (
+                                        <div className="absolute right-0 top-11 bg-background border border-border rounded-xl shadow-lg p-1.5 flex items-center gap-1 z-50">
+                                            <button
+                                                onClick={() => {
+                                                    setIsToolsPopoverOpen(false);
+                                                    setTempFilters({ ...filters });
+                                                    setIsFilterDrawerOpen(true);
+                                                }}
+                                                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-blue-600 transition cursor-pointer"
+                                                title="Filter Appointments"
+                                            >
+                                                <Filter className="h-4 w-4" />
+                                            </button>
+
+                                            <button
+                                                onClick={handleExportCSV}
+                                                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-green-600 transition cursor-pointer"
+                                                title="Export to Excel / CSV"
+                                            >
+                                                <FileSpreadsheet className="h-4 w-4" />
+                                            </button>
+
+                                            <button
+                                                onClick={handlePrint}
+                                                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-purple-600 transition cursor-pointer"
+                                                title="Print Appointments"
+                                            >
+                                                <Printer className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Close (X) Reset Button immediately beside Options Menu */}
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => {
+                                        setSearch("");
+                                        setFilters({
+                                            apptNo: "",
+                                            patientName: "",
+                                            doctorName: "",
+                                            type: "",
+                                            status: "",
+                                            from: "",
+                                            to: "",
+                                        });
+                                        setCurrentPage(1);
+                                        toast.info("Search and filters reset");
+                                    }}
+                                    className="h-9 w-9 cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"
+                                    title="Close / Reset Search & Filters"
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+
+                                {/* Primary Add Appointment Button */}
+                                <Button
+                                    onClick={() => {
+                                        setAddForm({
+                                            patient: "",
+                                            uhid: "",
+                                            regNo: "",
+                                            doctor: "Dr. Madhumitha",
+                                            apptDate: new Date().toISOString().split("T")[0],
+                                            apptTime: "10:00",
+                                            type: "Online",
+                                            status: "Upcoming",
+                                        });
+                                        setIsAddDrawerOpen(true);
+                                    }}
+                                    className="h-9 px-4 text-white font-medium cursor-pointer shrink-0"
+                                    style={{ background: "var(--blue-btn)" }}
+                                    title="Add Appointment"
+                                >
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    <span className="hidden sm:inline">Add</span>
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Active Drawer Filters Reset Indicator */}
+                    {hasActiveDrawerFilters && (
+                        <div className="flex flex-wrap items-center gap-2 mb-4 bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-200 dark:border-blue-800 text-xs text-blue-700 dark:text-blue-300">
+                            <span className="font-semibold">Active Filters:</span>
+                            {filters.apptNo && <Badge variant="secondary">Appt No: {filters.apptNo}</Badge>}
+                            {filters.patientName && <Badge variant="secondary">Patient: {filters.patientName}</Badge>}
+                            {filters.doctorName && <Badge variant="secondary">Doctor: {filters.doctorName}</Badge>}
+                            {filters.type && <Badge variant="secondary">Type: {filters.type}</Badge>}
+                            {filters.status && <Badge variant="secondary">Status: {filters.status}</Badge>}
+                            {filters.from && <Badge variant="secondary">From: {filters.from}</Badge>}
+                            {filters.to && <Badge variant="secondary">To: {filters.to}</Badge>}
+                            <button
+                                onClick={() =>
+                                    setFilters({
+                                        apptNo: "",
+                                        patientName: "",
+                                        doctorName: "",
+                                        type: "",
+                                        status: "",
+                                        from: "",
+                                        to: "",
+                                    })
+                                }
+                                className="ml-auto text-blue-600 hover:underline font-semibold cursor-pointer"
+                            >
+                                Clear All
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Desktop View: Reusable Data Table Component (>= 768px) */}
+                    <div className="hidden md:block">
+                        <DataTable columns={columns} data={paginatedAppointments} />
+                    </div>
+
+                    {/* Mobile View: Responsive Card List (< 768px) */}
+                    <div className="block md:hidden space-y-3">
+                        {paginatedAppointments.length > 0 ? (
+                            paginatedAppointments.map((appt) => (
+                                <div
+                                    key={appt.id}
+                                    className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs space-y-3"
+                                >
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-sm text-blue-600">{appt.apptNo}</span>
+                                            <Badge
+                                                variant="outline"
+                                                className={`text-[11px] font-semibold ${appt.status === "Visited"
+                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                    : appt.status === "Cancelled"
+                                                        ? "bg-red-50 text-red-700 border-red-200"
+                                                        : "bg-blue-50 text-blue-700 border-blue-200"
+                                                    }`}
+                                            >
+                                                {appt.status}
+                                            </Badge>
+                                        </div>
+                                        <ActionMenu
+                                            item={appt}
+                                            onView={(p) => {
+                                                setSelectedAppointment(p);
+                                                setIsViewDrawerOpen(true);
+                                            }}
+                                            onEdit={(p) => {
+                                                setEditForm({ ...p });
+                                                setIsEditDrawerOpen(true);
+                                            }}
+                                            onPrint={() => handlePrint()}
+                                            onDelete={(p) => {
+                                                setAppointments((prev) => prev.filter((a) => a.id !== p.id));
+                                                notify.deleteSuccess("Appointment deleted successfully.");
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5 text-xs text-slate-600">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-slate-400">Patient:</span>
+                                            <span className="font-semibold text-slate-800">{appt.patient} ({appt.gender || "–"}, {appt.age || "–"})</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-slate-400">UHID / Mobile:</span>
+                                            <span className="font-medium text-slate-700">{appt.uhid !== "–" ? appt.uhid : appt.mobile || "–"}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-slate-400">Doctor / Dept:</span>
+                                            <span className="font-medium text-slate-700">{appt.doctor} ({appt.dept || "Gen"})</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-slate-400">Appt Date & Time:</span>
+                                            <span className="font-semibold text-slate-900">{appt.apptOn}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="p-8 text-center text-sm text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                No appointment records found.
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Reusable Pagination Component */}
+                    <div className="mt-4 border-t border-border pt-4 overflow-x-auto">
+                        <Pagination table={tableObject} totalCount={filteredAppointments.length} />
+                    </div>
+                </div>
+            )}
+
+            {/* ==================================================== */}
+            {/* TAB 2: 4-STEP BOOK APPOINTMENT WIZARD FORM */}
+            {/* Structure matching OP Registration Wizard exactly */}
+            {/* ==================================================== */}
+            {activeTab === "patient" && (
                 <div
                     className="rounded-md border border-slate-200 bg-white"
                     style={{ background: "var(--background)" }}
                 >
-                    {/* Top Back Navigation Bar */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setActiveTab("appointments")}
-                            className="gap-1.5 text-xs font-semibold text-slate-700 hover:text-blue-600 border-slate-200 hover:border-blue-300 cursor-pointer"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                            Back to Appointments List
-                        </Button>
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            Book Appointment Wizard
-                        </span>
-                    </div>
                     {/* OP Registration Stepper Component */}
                     <div className="flex items-center px-4 sm:px-6 py-4 sm:py-5 overflow-x-auto border-b border-slate-100">
                         {[
@@ -1621,13 +1871,12 @@ const AppointmentModule: React.FC = () => {
                                                     }
                                                     : undefined
                                             }
-                                            className={`flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full text-[11px] sm:text-[14px] font-semibold transition-all duration-200 ${
-                                                isActive
-                                                    ? "text-white shadow-md"
-                                                    : isCompleted
+                                            className={`flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full text-[11px] sm:text-[14px] font-semibold transition-all duration-200 ${isActive
+                                                ? "text-white shadow-md"
+                                                : isCompleted
                                                     ? "text-white opacity-80"
                                                     : "border border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-600"
-                                            }`}
+                                                }`}
                                         >
                                             {isCompleted ? (
                                                 <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1639,13 +1888,12 @@ const AppointmentModule: React.FC = () => {
                                         </div>
 
                                         <span
-                                            className={`whitespace-nowrap text-[11px] sm:text-[13px] transition-all duration-200 ${
-                                                isActive
-                                                    ? "font-bold"
-                                                    : isCompleted
+                                            className={`whitespace-nowrap text-[11px] sm:text-[13px] transition-all duration-200 ${isActive
+                                                ? "font-bold"
+                                                : isCompleted
                                                     ? "font-semibold text-slate-700"
                                                     : "font-medium text-slate-400 hover:text-slate-600"
-                                            }`}
+                                                }`}
                                             style={
                                                 isActive
                                                     ? {
@@ -1660,9 +1908,8 @@ const AppointmentModule: React.FC = () => {
 
                                     {index !== 3 && (
                                         <div
-                                            className={`mx-2 sm:mx-4 h-px flex-1 transition-all duration-300 ${
-                                                isCompleted ? "bg-blue-500 opacity-60" : "bg-slate-200"
-                                            }`}
+                                            className={`mx-2 sm:mx-4 h-px flex-1 transition-all duration-300 ${isCompleted ? "bg-blue-500 opacity-60" : "bg-slate-200"
+                                                }`}
                                             style={
                                                 isCompleted
                                                     ? {
@@ -1716,8 +1963,8 @@ const AppointmentModule: React.FC = () => {
                                         ? "Continue to Appointment"
                                         : "Search & Continue"
                                     : wizardStep === 4
-                                    ? "Confirm & Book Appointment"
-                                    : "Save & Next"}
+                                        ? "Confirm & Book Appointment"
+                                        : "Save & Next"}
                                 <ArrowRight className="h-3.5 w-3.5" />
                             </Button>
                         </div>
