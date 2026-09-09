@@ -25,6 +25,7 @@ import {
   LayoutDashboard,
   Settings as SettingsIcon,
   ShieldCheck,
+  FileCode2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +60,10 @@ const HEADER_CONFIG: Record<string, { icon: any; subtitle: string }> = {
   "Referral Master": { icon: Network, subtitle: "Manage referral information" },
   "Referral Master Records": { icon: Network, subtitle: "Manage referral information" },
   "HIU": { icon: ShieldCheck, subtitle: "Manage Health Information User (HIU) consent requests and patient data access" },
+  "Consent Management": { icon: ShieldCheck, subtitle: "Manage Health Information User (HIU) consent requests and patient data access" },
+
   "HIU Consent Records": { icon: ShieldCheck, subtitle: "Manage Health Information User (HIU) consent requests and patient data access" },
+  "FHIR Viewer": { icon: FileCode2, subtitle: "Upload, parse, and inspect ABDM/NDHM FHIR Bundle JSON documents" },
   "Notifications": { icon: Bell, subtitle: "View and manage notifications" },
   "Documents": { icon: FileText, subtitle: "Manage hospital documents" },
   "Dashboard": { icon: LayoutDashboard, subtitle: "Hospital Management Dashboard" },
@@ -122,6 +126,8 @@ export function StandardModuleTable<TData extends Record<string, any>>({
   // Active filters & temp filters
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [tempFilters, setTempFilters] = useState<Record<string, string>>({});
+  const [tempFromDate, setTempFromDate] = useState<Date | undefined>(undefined);
+  const [tempToDate, setTempToDate] = useState<Date | undefined>(undefined);
 
   const hasActiveFilters =
     Object.keys(filters).length > 0 || Boolean(fromDate) || Boolean(toDate) || Boolean(search.trim());
@@ -189,20 +195,20 @@ export function StandardModuleTable<TData extends Record<string, any>>({
             const itemStatus = (item.status || "active").toLowerCase();
             return itemStatus === valLower;
           }
-          
+
           const itemVal = item[key];
           if (itemVal === undefined || itemVal === null) return false;
-          
+
           // Check if this field is a select field
           const isSelectField = derivedFilterFields.some(
             field => field.key === key && field.type === "select"
           );
-          
+
           // For select fields, do exact match (case-insensitive)
           if (isSelectField) {
             return String(itemVal).toLowerCase() === String(value).toLowerCase();
           }
-          
+
           // For text fields, do partial match (case-insensitive)
           return String(itemVal).toLowerCase().includes(String(value).toLowerCase());
         });
@@ -212,13 +218,22 @@ export function StandardModuleTable<TData extends Record<string, any>>({
     // From Date -> To Date Filtering
     if (fromDate || toDate) {
       result = result.filter((item) => {
-        const dateStr = item.registrationDate || item.ancDate || item.cancelledDate || item.date || item.createdDate;
+        const dateStr = item.expiresOnDate || item.registrationDate || item.ancDate || item.cancelledDate || item.date || item.createdDate;
         if (!dateStr) return true;
-        const itemDate = new Date(dateStr);
+        const normalizedStr = String(dateStr).replace(/Sept/g, "Sep").replace(/\b(\d{2})$/, "20$1");
+        const itemDate = new Date(normalizedStr);
         if (isNaN(itemDate.getTime())) return true;
 
-        if (fromDate && itemDate < fromDate) return false;
-        if (toDate && itemDate > toDate) return false;
+        if (fromDate) {
+          const fDate = new Date(fromDate);
+          fDate.setHours(0, 0, 0, 0);
+          if (itemDate < fDate) return false;
+        }
+        if (toDate) {
+          const tDate = new Date(toDate);
+          tDate.setHours(23, 59, 59, 999);
+          if (itemDate > tDate) return false;
+        }
         return true;
       });
     }
@@ -234,6 +249,8 @@ export function StandardModuleTable<TData extends Record<string, any>>({
   // Open Filter Panel
   const handleOpenFilterPanel = () => {
     setTempFilters({ ...filters });
+    setTempFromDate(fromDate);
+    setTempToDate(toDate);
     setIsFilterPanelOpen(true);
     setShowActions(false);
   };
@@ -241,6 +258,8 @@ export function StandardModuleTable<TData extends Record<string, any>>({
   // Apply Filter
   const handleApplyFilter = () => {
     setFilters({ ...tempFilters });
+    setFromDate(tempFromDate);
+    setToDate(tempToDate);
     setIsFilterPanelOpen(false);
   };
 
@@ -251,6 +270,8 @@ export function StandardModuleTable<TData extends Record<string, any>>({
     setTempFilters({});
     setFromDate(undefined);
     setToDate(undefined);
+    setTempFromDate(undefined);
+    setTempToDate(undefined);
   };
 
   // Pagination calculation
@@ -519,7 +540,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
         />
       </div>
 
-      {/* Dynamic Filter Panel Drawer - UPDATED: Removed "All" option */}
+      {/* Dynamic Filter Panel Drawer - UPDATED: Added Date Range & Field Filters */}
       <CustomPanel
         isOpen={isFilterPanelOpen}
         title="Filter Records"
@@ -529,6 +550,83 @@ export function StandardModuleTable<TData extends Record<string, any>>({
         width="450px"
       >
         <div className="space-y-4">
+          {/* Date Range Section */}
+          <div className="grid grid-cols-2 gap-3 pb-2 border-b border-slate-100">
+            <Field label="From Date">
+              <div className="relative flex items-center">
+                <Popover>
+                  <PopoverTrigger className="w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "w-full justify-start text-left font-normal cursor-pointer text-xs h-9 pr-7",
+                        !tempFromDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5 shrink-0" />
+                      {tempFromDate ? format(tempFromDate, "dd MMM yyyy") : <span>From Date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={tempFromDate}
+                      onSelect={(date: any) => setTempFromDate(date)}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {tempFromDate && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 h-6 w-6 p-0 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    onClick={() => setTempFromDate(undefined)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            </Field>
+
+            <Field label="To Date">
+              <div className="relative flex items-center">
+                <Popover>
+                  <PopoverTrigger className="w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "w-full justify-start text-left font-normal cursor-pointer text-xs h-9 pr-7",
+                        !tempToDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5 shrink-0" />
+                      {tempToDate ? format(tempToDate, "dd MMM yyyy") : <span>To Date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={tempToDate}
+                      onSelect={(date: any) => setTempToDate(date)}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {tempToDate && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 h-6 w-6 p-0 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    onClick={() => setTempToDate(undefined)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            </Field>
+          </div>
+
           {derivedFilterFields.map((field) => (
             <Field key={field.key} label={field.label}>
               {field.type === "select" && field.options ? (

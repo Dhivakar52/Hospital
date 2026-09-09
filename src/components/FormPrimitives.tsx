@@ -97,11 +97,19 @@ export function DateField({
   defaultLabel,
   value,
   onChange,
+  disabled,
+  disabledDays,
+  minDate,
+  maxDate,
 }: {
   placeholder?: string;
   defaultLabel?: string;
   value?: Date;
   onChange?: (date: Date | undefined) => void;
+  disabled?: boolean;
+  disabledDays?: (date: Date) => boolean;
+  minDate?: Date;
+  maxDate?: Date;
 }) {
   const [internalDate, setInternalDate] = React.useState<Date | undefined>();
   const date = value !== undefined ? value : internalDate;
@@ -114,13 +122,30 @@ export function DateField({
     }
   };
 
+  const isDateDisabled = (d: Date) => {
+    if (disabled) return true;
+    if (disabledDays && disabledDays(d)) return true;
+    if (minDate) {
+      const min = new Date(minDate);
+      min.setHours(0, 0, 0, 0);
+      if (d < min) return true;
+    }
+    if (maxDate) {
+      const max = new Date(maxDate);
+      max.setHours(23, 59, 59, 999);
+      if (d > max) return true;
+    }
+    return false;
+  };
+
   return (
     <Popover>
-      <PopoverTrigger className="w-full">
+      <PopoverTrigger className="w-full" disabled={disabled}>
         <Button
           variant="outline"
+          disabled={disabled}
           className={cn(
-            "h-9 w-full justify-start px-3 text-left text-[13px] font-normal text-slate-700 rounded-[4px]", // ✅ Added rounded-[4px]
+            "h-9 w-full justify-start px-3 text-left text-[13px] font-normal text-slate-700 rounded-[4px]",
             !date && !defaultLabel && "text-slate-400"
           )}
         >
@@ -129,7 +154,7 @@ export function DateField({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="single" selected={date} onSelect={handleSelect} />
+        <Calendar mode="single" selected={date} onSelect={handleSelect} disabled={isDateDisabled} />
       </PopoverContent>
     </Popover>
   );

@@ -65,7 +65,7 @@ export function DataTable<TData, TValue>({
       <Table>
         <TableHeader className="" style={{ background: "var(--sidebar-top-bg)" }}>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow key={headerGroup.id} className="hover:bg-transparent">
               {headerGroup.headers.map((header) => {
                 const isSortable = header.column.getCanSort()
                 const sortDirection = header.column.getIsSorted()

@@ -80,7 +80,7 @@ export const menuConfig: MenuItem[] = [
   },
   {
     title: "HIU",
-    url: "/hiu",
+    url: "/consent-management",
     icon: ShieldCheck
   },
 
@@ -264,9 +264,23 @@ export const getRoutes = () => {
       protected: true,
     },
     {
-      path: "/hiu",
+      path: "/consent-management",
       name: "HIU",
       component: lazy(() => import("@/pages/HIU/HiuModule")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/abdm-viewer",
+      name: "ABDM Viewer",
+      component: lazy(() => import("@/pages/HIU/FhirViewerPage")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/fhir-viewer",
+      name: "FHIR Viewer",
+      component: lazy(() => import("@/pages/HIU/FhirViewerPage")),
       exact: true,
       protected: true,
     },
