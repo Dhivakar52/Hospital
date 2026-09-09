@@ -7,6 +7,7 @@ import {
   Baby,
   Building2,
   UserCheck,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react"
 import { lazy } from "react"
@@ -77,6 +78,12 @@ export const menuConfig: MenuItem[] = [
       { title: "Appointment", url: "/appointment", icon: CalendarClock },
     ],
   },
+  {
+    title: "HIU",
+    url: "/hiu",
+    icon: ShieldCheck
+  },
+
 
 
   //     { 
@@ -256,7 +263,13 @@ export const getRoutes = () => {
       exact: true,
       protected: true,
     },
-
+    {
+      path: "/hiu",
+      name: "HIU",
+      component: lazy(() => import("@/pages/HIU/HiuModule")),
+      exact: true,
+      protected: true,
+    },
 
     // {
     //   path: "/analytics",

@@ -120,3 +120,176 @@ export const GENERATED_REFERRAL_RECORDS: ReferralRow[] = Array.from({ length: 10
     contactNo: `98400${String(10000 + i * 87).slice(-5)}`,
   };
 });
+
+export interface HiuConsentRow {
+  consentId: string;
+  requestedOnDate: string;
+  requestedOnTime: string;
+  lastUpdatedDate: string;
+  lastUpdatedTime: string;
+  sharedFor: string;
+  expiresInDays: string;
+  expiresOnDate: string;
+  status: "Pending" | "Success" | "INIT_ERROR";
+  patientName?: string;
+  uhidNo?: string;
+  hiTypes?: string;
+  purpose?: string;
+}
+
+export const INITIAL_HIU_RECORDS: HiuConsentRow[] = [
+  {
+    consentId: "c28c16f3-b52f-4d7b-9cbf-c842aa02b981",
+    requestedOnDate: "08 Sept 26",
+    requestedOnTime: "04:54 pm",
+    lastUpdatedDate: "08 Sept 26",
+    lastUpdatedTime: "04:54 pm",
+    sharedFor: "184 Days",
+    expiresInDays: "29 days",
+    expiresOnDate: "08 Oct 26",
+    status: "Pending",
+    patientName: "NITESH KUMAR",
+    uhidNo: "3995901",
+    hiTypes: "Diagnostic Report, Prescription",
+    purpose: "General Consultation"
+  },
+  {
+    consentId: "fab5ca0f-6619-43ee-8914-c9aa2274aa3c",
+    requestedOnDate: "08 Sept 26",
+    requestedOnTime: "04:41 pm",
+    lastUpdatedDate: "08 Sept 26",
+    lastUpdatedTime: "04:41 pm",
+    sharedFor: "184 Days",
+    expiresInDays: "180 days",
+    expiresOnDate: "08 Mar 27",
+    status: "Pending",
+    patientName: "SUVETHA PANDA",
+    uhidNo: "3995902",
+    hiTypes: "OPD Record, Discharge Summary",
+    purpose: "Referral Evaluation"
+  },
+  {
+    consentId: "45ea4174-6659-4ae1-9bc4-f9ad69ff623c",
+    requestedOnDate: "08 Sept 26",
+    requestedOnTime: "04:26 pm",
+    lastUpdatedDate: "08 Sept 26",
+    lastUpdatedTime: "04:34 pm",
+    sharedFor: "25 Days",
+    expiresInDays: "21 days",
+    expiresOnDate: "30 Sept 26",
+    status: "Success",
+    patientName: "ERGAMREDDY VEERASAMY",
+    uhidNo: "3995903",
+    hiTypes: "Diagnostic Report, Prescriptions, Immunization Record",
+    purpose: "Specialist Review"
+  },
+  {
+    consentId: "7d312a41-d930-4815-912c-86797f6131ac",
+    requestedOnDate: "08 Sept 26",
+    requestedOnTime: "01:26 pm",
+    lastUpdatedDate: "08 Sept 26",
+    lastUpdatedTime: "01:26 pm",
+    sharedFor: "38 Days",
+    expiresInDays: "29 days",
+    expiresOnDate: "08 Oct 26",
+    status: "Success",
+    patientName: "PRIYANSHU REDDY",
+    uhidNo: "3995904",
+    hiTypes: "Lab Reports, Scan Images",
+    purpose: "Follow-up Treatment"
+  },
+  {
+    consentId: "a75c3398-0081-4d2f-b5c8-5bd9855c55fb",
+    requestedOnDate: "08 Sept 26",
+    requestedOnTime: "01:21 pm",
+    lastUpdatedDate: "08 Sept 26",
+    lastUpdatedTime: "01:21 pm",
+    sharedFor: "38 Days",
+    expiresInDays: "29 days",
+    expiresOnDate: "08 Oct 26",
+    status: "Success",
+    patientName: "MURUGESAN RAMAN",
+    uhidNo: "3995905",
+    hiTypes: "Discharge Summary",
+    purpose: "Post-Operative Care"
+  },
+  {
+    consentId: "86cf0ee9-1294-4c13-87d2-01403c3ea837",
+    requestedOnDate: "08 Sept 26",
+    requestedOnTime: "01:20 pm",
+    lastUpdatedDate: "08 Sept 26",
+    lastUpdatedTime: "01:20 pm",
+    sharedFor: "38 Days",
+    expiresInDays: "29 days",
+    expiresOnDate: "08 Oct 26",
+    status: "INIT_ERROR",
+    patientName: "KAVITHA SELVAM",
+    uhidNo: "3995906",
+    hiTypes: "Diagnostic Report",
+    purpose: "Insurance Verification"
+  },
+  {
+    consentId: "0d6e0883-97e4-44b9-ae31-8b38a469354c",
+    requestedOnDate: "08 Sept 26",
+    requestedOnTime: "12:16 pm",
+    lastUpdatedDate: "08 Sept 26",
+    lastUpdatedTime: "12:16 pm",
+    sharedFor: "184 Days",
+    expiresInDays: "180 days",
+    expiresOnDate: "08 Mar 27",
+    status: "Pending",
+    patientName: "DEEPAK NATARAJAN",
+    uhidNo: "3995907",
+    hiTypes: "Prescriptions, OPD Record",
+    purpose: "Routine Checkup"
+  },
+  {
+    consentId: "2d9274a1-0aa6-4295-bdc6-2f52a2631f02",
+    requestedOnDate: "08 Sept 26",
+    requestedOnTime: "11:04 am",
+    lastUpdatedDate: "08 Sept 26",
+    lastUpdatedTime: "11:04 am",
+    sharedFor: "184 Days",
+    expiresInDays: "180 days",
+    expiresOnDate: "08 Mar 27",
+    status: "Pending",
+    patientName: "SANGEETHA SHARMA",
+    uhidNo: "3995908",
+    hiTypes: "Diagnostic Report",
+    purpose: "Second Opinion"
+  }
+];
+
+// Additional 92 generated HIU Records for pagination, search, and filtering testing
+export const GENERATED_HIU_RECORDS: HiuConsentRow[] = [
+  ...INITIAL_HIU_RECORDS,
+  ...Array.from({ length: 92 }, (_, i) => {
+    const idx = i + 9;
+    const hex = (idx * 0x1a2b3c4d).toString(16).padStart(32, '0');
+    const consentId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-9${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+    const status: "Pending" | "Success" | "INIT_ERROR" = i % 5 === 0 ? "INIT_ERROR" : i % 2 === 0 ? "Success" : "Pending";
+    const days = (15 + (i * 3) % 150);
+    const firstName = FIRST_NAMES[i % FIRST_NAMES.length];
+    const lastName = LAST_NAMES[(i * 3) % LAST_NAMES.length];
+    const hour = String((i % 12) + 1).padStart(2, '0');
+    const min = String((i * 7) % 60).padStart(2, '0');
+    const ampm = i % 2 === 0 ? "am" : "pm";
+
+    return {
+      consentId,
+      requestedOnDate: `07 Sept 26`,
+      requestedOnTime: `${hour}:${min} ${ampm}`,
+      lastUpdatedDate: `07 Sept 26`,
+      lastUpdatedTime: `${hour}:${min} ${ampm}`,
+      sharedFor: `${days} Days`,
+      expiresInDays: `${days - 5} days`,
+      expiresOnDate: `${(i % 28) + 1} Oct 26`,
+      status,
+      patientName: `${firstName} ${lastName}`,
+      uhidNo: String(3995900 + idx),
+      hiTypes: i % 3 === 0 ? "Diagnostic Report, OPD Record" : i % 2 === 0 ? "Prescription" : "Discharge Summary",
+      purpose: i % 2 === 0 ? "General Consultation" : "Specialist Evaluation"
+    };
+  })
+];
+

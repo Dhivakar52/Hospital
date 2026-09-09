@@ -24,6 +24,7 @@ import {
   FileText,
   LayoutDashboard,
   Settings as SettingsIcon,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,8 @@ const HEADER_CONFIG: Record<string, { icon: any; subtitle: string }> = {
   "Hospital Master Records": { icon: Building2, subtitle: "Manage hospital information" },
   "Referral Master": { icon: Network, subtitle: "Manage referral information" },
   "Referral Master Records": { icon: Network, subtitle: "Manage referral information" },
+  "HIU": { icon: ShieldCheck, subtitle: "Manage Health Information User (HIU) consent requests and patient data access" },
+  "HIU Consent Records": { icon: ShieldCheck, subtitle: "Manage Health Information User (HIU) consent requests and patient data access" },
   "Notifications": { icon: Bell, subtitle: "View and manage notifications" },
   "Documents": { icon: FileText, subtitle: "Manage hospital documents" },
   "Dashboard": { icon: LayoutDashboard, subtitle: "Hospital Management Dashboard" },

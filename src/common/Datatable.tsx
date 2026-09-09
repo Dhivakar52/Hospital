@@ -74,9 +74,8 @@ export function DataTable<TData, TValue>({
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : (
                       <div
-                        className={`flex items-center text-white gap-1 ${
-                          isSortable ? 'cursor-pointer select-none ' : ''
-                        }`}
+                        className={`flex items-center text-white gap-1 ${isSortable ? 'cursor-pointer select-none ' : ''
+                          }`}
                         onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
