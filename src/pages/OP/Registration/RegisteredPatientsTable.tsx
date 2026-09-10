@@ -29,18 +29,18 @@ import {
   Filter,
   Plus,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/toast"
 import { notify } from "@/lib/notify"
 import { Field, TextField, SelectField, DateField } from "@/components/FormPrimitives"
 import type { RegistrationDraft } from "./Registration"
 
 // ✅ Import types and mock data
-import type { Patient, PatientFormData } from "@/types/op_register"
+import { type Patient, type PatientFormData, resolvePatientDetails } from "@/types/op_register"
 import { mockPatients } from "@/data/mockPatients"
 
 import { BarcodePreviewModal } from "@/components/BarcodePreviewModal"
 import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal"
+import { RequestConsentDrawer } from "@/components/RequestConsentDrawer"
 
 interface RegisteredPatientsTableProps {
   newPatient?: RegistrationDraft | null
@@ -59,6 +59,10 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
   const [selectedPrintPatient, setSelectedPrintPatient] = useState<Patient | null>(null)
   const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState(false)
   const [selectedBarcodePatient, setSelectedBarcodePatient] = useState<Patient | null>(null)
+
+  // Request Consent drawer states
+  const [isConsentDrawerOpen, setIsConsentDrawerOpen] = useState(false)
+  const [selectedConsentPatient, setSelectedConsentPatient] = useState<Patient | null>(null)
 
   // Dialog states
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -245,6 +249,11 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
     setIsDeleteOpen(true)
   }
 
+  const handleRequestConsent = (patient: Patient) => {
+    setSelectedConsentPatient(patient)
+    setIsConsentDrawerOpen(true)
+  }
+
   const handlePanelClose = () => {
     setIsPanelOpen(false)
     setPanelMode(null)
@@ -340,8 +349,8 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
           <div className="relative flex items-center">
             <ActionMenu
               item={patient}
-              onView={handleView}
               onEdit={handleEdit}
+              onView={handleView}
               onPrint={(p) => {
                 setSelectedPrintPatient(p)
                 setIsPrintModalOpen(true)
@@ -350,6 +359,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                 setSelectedBarcodePatient(p)
                 setIsBarcodeModalOpen(true)
               }}
+              onRequestConsent={handleRequestConsent}
               onDelete={handleDelete}
             />
           </div>
@@ -664,13 +674,21 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
           panelMode === "add" ? confirmAdd :
             panelMode === "edit" ? confirmEdit :
               panelMode === "filter" ? applyFilters :
+                panelMode === "view" && selectedPatient ? () => {
+                  const target = selectedPatient;
+                  handlePanelClose();
+                  navigate(`/registered-patients/view/${target.id}`, {
+                    state: { patient: target },
+                  });
+                } :
                 handlePanelClose
         }
         saveLabel={
           panelMode === "add" ? "Add Patient" :
             panelMode === "edit" ? "Save Changes" :
               panelMode === "filter" ? "Apply Filters" :
-                "Close"
+                panelMode === "view" ? "View More" :
+                  "Close"
         }
       >
         {/* Add Mode */}
@@ -807,72 +825,74 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
           </div>
         )}
 
-        {/* View Mode */}
-        {panelMode === "view" && selectedPatient && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-muted-foreground text-sm">UHID No</Label>
-                <p className="font-medium text-lg text-foreground">{selectedPatient.id}</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground text-sm">OP No</Label>
-                <p className="font-medium text-lg text-foreground">{selectedPatient.opNo}</p>
-              </div>
-            </div>
+        {/* View Mode - First 6 Important Patient Details with View More trigger */}
+        {panelMode === "view" && selectedPatient && (() => {
+          const details = resolvePatientDetails(selectedPatient);
+          return (
+            <div className="space-y-6">
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 space-y-4">
+                {/* 1. UHID & 2. Patient Name */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground text-xs block mb-1">UHID</Label>
+                    <p className="font-bold text-base text-slate-900 tracking-tight">{details.id}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs block mb-1">Patient Name</Label>
+                    <p className="font-semibold text-sm text-slate-900">{details.title ? `${details.title} ` : ""}{details.patientName}</p>
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-muted-foreground text-sm">Title</Label>
-                <p className="font-medium text-foreground">{selectedPatient.title}</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground text-sm">Patient Name</Label>
-                <p className="font-medium text-foreground">{selectedPatient.patientName}</p>
-              </div>
-            </div>
+                {/* 3. Gender & 4. Date of Birth */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground text-xs block mb-1">Gender</Label>
+                    <p className="font-medium text-xs text-slate-800">{details.gender}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs block mb-1">Date of Birth</Label>
+                    <p className="font-medium text-xs text-slate-800">{details.dob}</p>
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-muted-foreground text-sm">F/H/W/O</Label>
-                <p className="font-medium text-foreground">{selectedPatient.fhwo}</p>
+                {/* 5. Mobile Number & 6. Registration Date */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground text-xs block mb-1">Mobile Number</Label>
+                    <p className="font-medium text-xs text-slate-800">{details.phone || "N/A"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs block mb-1">Registration Date</Label>
+                    <p className="font-medium text-xs text-slate-800">{details.registrationDate}</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label className="text-muted-foreground text-sm">Department</Label>
-                <Badge className="bg-blue-500/15 text-blue-600 dark:text-blue-400">
-                  {selectedPatient.department}
-                </Badge>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-muted-foreground text-sm">Area</Label>
-                <p className="font-medium text-foreground">{selectedPatient.area}</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground text-sm">City</Label>
-                <p className="font-medium text-foreground">{selectedPatient.city}</p>
+              {/* View More Functionality Link / Button */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 bg-blue-50/60 border border-blue-100 rounded-xl p-3.5">
+                <div className="text-xs text-slate-600">
+                  <span className="font-semibold text-blue-900 block">Complete Patient Record Available</span>
+                  <span className="text-[11.5px] text-slate-500">View address, clinical department, facility, emergency contacts & more</span>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    handlePanelClose();
+                    navigate(`/registered-patients/view/${selectedPatient.id}`, {
+                      state: { patient: selectedPatient },
+                    });
+                  }}
+                  size="sm"
+                  className="gap-1.5 text-xs text-white cursor-pointer font-semibold shrink-0 shadow-xs"
+                  style={{ background: "var(--blue-btn)" }}
+                >
+                  <span>View More</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-muted-foreground text-sm">Registration Date</Label>
-                <p className="font-medium text-foreground">{selectedPatient.registrationDate}</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground text-sm">Email</Label>
-                <p className="font-medium text-foreground">{selectedPatient.email || "N/A"}</p>
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-muted-foreground text-sm">Phone</Label>
-              <p className="font-medium text-foreground">{selectedPatient.phone || "N/A"}</p>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Edit Mode */}
         {panelMode === "edit" && (
@@ -1167,6 +1187,16 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
           setIsBarcodeModalOpen(false)
           setSelectedBarcodePatient(null)
         }}
+      />
+
+      {/* Request Consent Drawer */}
+      <RequestConsentDrawer
+        isOpen={isConsentDrawerOpen}
+        onClose={() => {
+          setIsConsentDrawerOpen(false)
+          setSelectedConsentPatient(null)
+        }}
+        patient={selectedConsentPatient}
       />
     </div>
   )

@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { SquareChartGantt, Pencil, Trash2, Menu, Printer, Barcode, XCircle, PowerOff } from "lucide-react"
+import { SquareChartGantt, Pencil, Trash2, Menu, Printer, Barcode, XCircle, PowerOff, FileKey } from "lucide-react"
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog"
 import { notify } from "@/lib/notify"
 
@@ -17,6 +17,7 @@ type ActionMenuProps<T> = {
   onDelete?: (item: T) => void;
   onPrint?: (item: T) => void;
   onBarcode?: (item: T) => void;
+  onRequestConsent?: (item: T) => void;
   onAuditLog?: (item: T) => void;
   onCollect?: (item: T) => void;
   onAck?: (item: T) => void;
@@ -32,6 +33,7 @@ export function ActionMenu<T>({
   onEdit,
   onPrint,
   onBarcode,
+  onRequestConsent,
   onDelete,
   onAuditLog,
   onCollect,
@@ -60,16 +62,16 @@ export function ActionMenu<T>({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          {onView && (
-            <DropdownMenuItem onClick={() => onView(item)} className="cursor-pointer">
-              <SquareChartGantt className="mr-2 h-4 w-4 text-blue-600" />
-              View
-            </DropdownMenuItem>
-          )}
           {onEdit && (
             <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer">
               <Pencil className="mr-2 h-4 w-4 text-slate-600" />
               Edit
+            </DropdownMenuItem>
+          )}
+          {onView && (
+            <DropdownMenuItem onClick={() => onView(item)} className="cursor-pointer">
+              <SquareChartGantt className="mr-2 h-4 w-4 text-blue-600" />
+              View
             </DropdownMenuItem>
           )}
           {onPrint && (
@@ -124,6 +126,12 @@ export function ActionMenu<T>({
             <DropdownMenuItem onClick={() => onReject(item)} className="cursor-pointer">
               <span className="mr-2">✕</span>
               Reject
+            </DropdownMenuItem>
+          )}
+          {onRequestConsent && (
+            <DropdownMenuItem onClick={() => onRequestConsent(item)} className="cursor-pointer">
+              <FileKey className="mr-2 h-4 w-4 text-blue-600" />
+              Request Consent
             </DropdownMenuItem>
           )}
           {onDelete && (

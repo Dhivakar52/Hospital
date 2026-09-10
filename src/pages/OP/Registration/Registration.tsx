@@ -8,6 +8,7 @@ import { toast } from "@/components/ui/toast";
 import { notify } from "@/lib/notify";
 import { OpStatisticsModal } from "@/components/OpStatisticsModal";
 import type { Patient } from "@/types/op_register";
+import { resolvePatientDetails } from "@/types/op_register";
 
 type StepKey = 1 | 2 | 3 | 4;
 
@@ -18,11 +19,39 @@ export type RegistrationDraft = {
   mobile: string;
   patientName: string;
   title: string;
+  gender?: string;
+  dob?: string;
   fhwo: string;
+  maritalStatus?: string;
+  bloodGroup?: string;
+  religion?: string;
+  nationality?: string;
+  contactNo1?: string;
+  contactNo2?: string;
   email: string;
+  doorNo?: string;
+  buildingName?: string;
+  street?: string;
   area: string;
   city: string;
+  state?: string;
+  country?: string;
+  pincode?: string;
   department: string;
+  doctor?: string;
+  unit?: string;
+  vip?: string;
+  modeOfVisit?: string;
+  reasonForFee?: string;
+  nriRelationship?: string;
+  patientCategory?: string;
+  subCategory?: string;
+  corporateCompany?: string;
+  insuranceCompany?: string;
+  billType?: string;
+  payType?: string;
+  modeOfPay?: string;
+  bankName?: string;
 };
 
 const emptyDraft: RegistrationDraft = {
@@ -31,31 +60,83 @@ const emptyDraft: RegistrationDraft = {
   registrationDate: "",
   mobile: "",
   patientName: "",
-  title: "",
+  title: "Mr",
+  gender: "Male",
+  dob: "",
   fhwo: "",
+  maritalStatus: "Single",
+  bloodGroup: "O+",
+  religion: "Hindu",
+  nationality: "Indian",
+  contactNo1: "",
+  contactNo2: "",
   email: "",
+  doorNo: "",
+  buildingName: "",
+  street: "",
   area: "",
-  city: "",
-  department: "",
+  city: "Chennai",
+  state: "Tamil Nadu",
+  country: "India",
+  pincode: "",
+  department: "General Medicine",
+  doctor: "Dr. Ramesh Kumar",
+  unit: "Unit 1",
+  vip: "No",
+  modeOfVisit: "Walk-in",
+  reasonForFee: "Consultation",
+  patientCategory: "General",
+  subCategory: "Employee",
+  corporateCompany: "TCS",
+  insuranceCompany: "Star Health",
+  billType: "Cash",
+  payType: "Full Payment",
+  modeOfPay: "Cash",
+  bankName: "State Bank of India",
 };
 
 type RegistrationLocationState = {
   patient?: Patient;
 };
 
-const patientToDraft = (patient: Patient): RegistrationDraft => ({
-  uhidNo: patient.id,
-  opNo: patient.opNo,
-  registrationDate: patient.registrationDate,
-  mobile: patient.phone ?? "",
-  patientName: patient.patientName,
-  title: patient.title,
-  fhwo: patient.fhwo,
-  email: patient.email ?? "",
-  area: patient.area,
-  city: patient.city,
-  department: patient.department,
-});
+const patientToDraft = (patient: Patient): RegistrationDraft => {
+  const resolved = resolvePatientDetails(patient);
+  return {
+    uhidNo: patient.id,
+    opNo: patient.opNo,
+    registrationDate: patient.registrationDate,
+    mobile: patient.phone ?? "",
+    patientName: patient.patientName,
+    title: patient.title || "Mr",
+    gender: resolved.gender,
+    dob: resolved.dob,
+    fhwo: patient.fhwo || "",
+    maritalStatus: resolved.maritalStatus,
+    bloodGroup: resolved.bloodGroup,
+    religion: "Hindu",
+    nationality: "Indian",
+    email: patient.email ?? "",
+    area: patient.area || "",
+    city: patient.city || "Chennai",
+    state: resolved.state || "Tamil Nadu",
+    country: resolved.country || "India",
+    pincode: resolved.pincode || "",
+    department: patient.department || "General Medicine",
+    doctor: "Dr. Ramesh Kumar",
+    unit: "Unit 1",
+    vip: "No",
+    modeOfVisit: "Walk-in",
+    reasonForFee: "Consultation",
+    patientCategory: "General",
+    subCategory: "Employee",
+    corporateCompany: "TCS",
+    insuranceCompany: "Star Health",
+    billType: "Cash",
+    payType: "Full Payment",
+    modeOfPay: "Cash",
+    bankName: "State Bank of India",
+  };
+};
 
 export default function Registration() {
   const navigate = useNavigate();
@@ -105,7 +186,7 @@ export default function Registration() {
   const panels: Record<StepKey, React.ReactNode> = {
     1: <StepPatientDetails data={draft} onChange={updateDraft} />,
     2: <StepAddressContact data={draft} onChange={updateDraft} />,
-    3: <StepInsuranceDetails />,
+    3: <StepInsuranceDetails data={draft} onChange={updateDraft} />,
     4: <StepAdditionalInformation data={draft} onChange={updateDraft} />,
   };
 

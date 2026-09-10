@@ -16,7 +16,7 @@ const OPTIONS = {
   bloodGroup: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"],
   religion: ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"],
   nationality: ["Indian", "Other"],
-  cityTown: ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Kanchipuram"],
+  cityTown: ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Kanchipuram", "Maraimalainagar", "Chengalpattu", "Tambaram"],
   state: ["Tamil Nadu", "Kerala", "Karnataka", "Andhra Pradesh", "Telangana"],
   country: ["India", "Sri Lanka", "United Arab Emirates", "Other"],
   patientCategory: ["General", "Corporate", "Insurance", "Staff", "Senior Citizen"],
@@ -60,10 +60,13 @@ export function StepPatientDetails({ data, onChange }: DraftPanelProps) {
         <SelectField options={OPTIONS.title} value={data.title} onChange={(value) => onChange("title", value)} />
       </Field>
       <Field label="Gender">
-        <SelectField options={OPTIONS.gender} />
+        <SelectField options={OPTIONS.gender} value={data.gender} onChange={(value) => onChange("gender", value)} />
       </Field>
       <Field label="DOB">
-        <DateField />
+        <DateField
+          value={data.dob ? new Date(`${data.dob}T00:00:00`) : undefined}
+          onChange={(date) => onChange("dob", date ? format(date, "yyyy-MM-dd") : "")}
+        />
       </Field>
 
       <Field label="Age / Month / Day">
@@ -77,23 +80,23 @@ export function StepPatientDetails({ data, onChange }: DraftPanelProps) {
         <TextField placeholder="Enter Father / Wife name" value={data.fhwo} onChange={(value) => onChange("fhwo", value)} />
       </Field>
       <Field label="Marital Status">
-        <SelectField options={OPTIONS.maritalStatus} />
+        <SelectField options={OPTIONS.maritalStatus} value={data.maritalStatus} onChange={(value) => onChange("maritalStatus", value)} />
       </Field>
       <Field label="Blood Group">
-        <SelectField options={OPTIONS.bloodGroup} />
+        <SelectField options={OPTIONS.bloodGroup} value={data.bloodGroup} onChange={(value) => onChange("bloodGroup", value)} />
       </Field>
 
       <Field label="Religion">
-        <SelectField options={OPTIONS.religion} />
+        <SelectField options={OPTIONS.religion} value={data.religion} onChange={(value) => onChange("religion", value)} />
       </Field>
       <Field label="Nationality">
-        <SelectField options={OPTIONS.nationality} />
+        <SelectField options={OPTIONS.nationality} value={data.nationality} onChange={(value) => onChange("nationality", value)} />
       </Field>
       <Field label="Contact No 1">
-        <TextField placeholder="Enter contact number" />
+        <TextField placeholder="Enter contact number" value={data.contactNo1} onChange={(value) => onChange("contactNo1", value)} />
       </Field>
       <Field label="Contact No 2">
-        <TextField placeholder="Enter alternative number" />
+        <TextField placeholder="Enter alternative number" value={data.contactNo2} onChange={(value) => onChange("contactNo2", value)} />
       </Field>
 
       
@@ -148,13 +151,13 @@ export function StepAddressContact({ data, onChange }: DraftPanelProps) {
     <>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-5 md:gap-y-5">
       <Field label="Door No">
-        <TextField placeholder="Enter door no" />
+        <TextField placeholder="Enter door no" value={data.doorNo} onChange={(value) => onChange("doorNo", value)} />
       </Field>
       <Field label="Building Name">
-        <TextField placeholder="Enter building name" />
+        <TextField placeholder="Enter building name" value={data.buildingName} onChange={(value) => onChange("buildingName", value)} />
       </Field>
       <Field label="Street">
-        <TextField placeholder="Enter street" />
+        <TextField placeholder="Enter street" value={data.street} onChange={(value) => onChange("street", value)} />
       </Field>
       <Field label="Area">
         <TextField placeholder="Enter area" value={data.area} onChange={(value) => onChange("area", value)} />
@@ -164,33 +167,33 @@ export function StepAddressContact({ data, onChange }: DraftPanelProps) {
         <SelectField options={OPTIONS.cityTown} value={data.city} onChange={(value) => onChange("city", value)} />
       </Field>
       <Field label="State">
-        <SelectField options={OPTIONS.state} />
+        <SelectField options={OPTIONS.state} value={data.state} onChange={(value) => onChange("state", value)} />
       </Field>
       <Field label="Country">
-        <SelectField options={OPTIONS.country} />
+        <SelectField options={OPTIONS.country} value={data.country} onChange={(value) => onChange("country", value)} />
       </Field>
       <Field label="PIN Code">
-        <TextField placeholder="Enter pin code" />
+        <TextField placeholder="Enter pin code" value={data.pincode} onChange={(value) => onChange("pincode", value)} />
       </Field>
     </div>
     </>
   );
 }
 
-export function StepInsuranceDetails() {
+export function StepInsuranceDetails({ data, onChange }: DraftPanelProps) {
   return (
     <div className="grid grid-cols-4 gap-x-5 gap-y-5">
       <Field label="Patient Category">
-        <SelectField options={OPTIONS.patientCategory} />
+        <SelectField options={OPTIONS.patientCategory} value={data.patientCategory} onChange={(value) => onChange("patientCategory", value)} />
       </Field>
       <Field label="Sub Category">
-        <SelectField options={OPTIONS.subCategory} />
+        <SelectField options={OPTIONS.subCategory} value={data.subCategory} onChange={(value) => onChange("subCategory", value)} />
       </Field>
       <Field label="Corporate Company">
-        <SelectField options={OPTIONS.corporateCompany} />
+        <SelectField options={OPTIONS.corporateCompany} value={data.corporateCompany} onChange={(value) => onChange("corporateCompany", value)} />
       </Field>
       <Field label="Insurance Company">
-        <SelectField options={OPTIONS.insuranceCompany} />
+        <SelectField options={OPTIONS.insuranceCompany} value={data.insuranceCompany} onChange={(value) => onChange("insuranceCompany", value)} />
       </Field>
 
       <Field label="Insurance">
@@ -207,16 +210,16 @@ export function StepInsuranceDetails() {
       </Field>
 
       <Field label="Bill Type">
-        <SelectField options={OPTIONS.billType} />
+        <SelectField options={OPTIONS.billType} value={data.billType} onChange={(value) => onChange("billType", value)} />
       </Field>
       <Field label="Pay Type">
-        <SelectField options={OPTIONS.payType} />
+        <SelectField options={OPTIONS.payType} value={data.payType} onChange={(value) => onChange("payType", value)} />
       </Field>
       <Field label="Mode of Pay">
-        <SelectField options={OPTIONS.modeOfPay} />
+        <SelectField options={OPTIONS.modeOfPay} value={data.modeOfPay} onChange={(value) => onChange("modeOfPay", value)} />
       </Field>
       <Field label="Bank Name">
-        <SelectField options={OPTIONS.bankName} />
+        <SelectField options={OPTIONS.bankName} value={data.bankName} onChange={(value) => onChange("bankName", value)} />
       </Field>
 
       <Field label="Net Reg Fee">
@@ -236,26 +239,26 @@ export function StepAdditionalInformation({ data, onChange }: DraftPanelProps) {
         <SelectField options={OPTIONS.department} value={data.department} onChange={(value) => onChange("department", value)} />
       </Field>
       <Field label="Doctor">
-        <SelectField options={OPTIONS.doctor} />
+        <SelectField options={OPTIONS.doctor} value={data.doctor} onChange={(value) => onChange("doctor", value)} />
       </Field>
       <Field label="Unit">
-        <SelectField options={OPTIONS.unit} />
+        <SelectField options={OPTIONS.unit} value={data.unit} onChange={(value) => onChange("unit", value)} />
       </Field>
       <Field label="COVID Vaccination">
         <TextField />
       </Field>
 
       <Field label="VIP">
-        <SelectField options={OPTIONS.vip} />
+        <SelectField options={OPTIONS.vip} value={data.vip} onChange={(value) => onChange("vip", value)} />
       </Field>
       <Field label="Mode of Visit">
-        <SelectField options={OPTIONS.modeOfVisit} />
+        <SelectField options={OPTIONS.modeOfVisit} value={data.modeOfVisit} onChange={(value) => onChange("modeOfVisit", value)} />
       </Field>
       <Field label="Referred By">
         <TextField />
       </Field>
       <Field label="Reason for Fee">
-        <SelectField options={OPTIONS.reasonForFee} />
+        <SelectField options={OPTIONS.reasonForFee} value={data.reasonForFee} onChange={(value) => onChange("reasonForFee", value)} />
       </Field>
 
       <Field label="Disc %">
@@ -272,7 +275,7 @@ export function StepAdditionalInformation({ data, onChange }: DraftPanelProps) {
       </Field>
 
       <Field label="NRI Relationship">
-        <SelectField options={OPTIONS.nriRelationship} />
+        <SelectField options={OPTIONS.nriRelationship} value={data.nriRelationship} onChange={(value) => onChange("nriRelationship", value)} />
       </Field>
       <Field label="NRI Contact No">
         <TextField />

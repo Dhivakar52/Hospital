@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { DateField } from "@/components/FormPrimitives";
 import { GENERATED_HIU_RECORDS, type HiuConsentRow } from "@/data/sampleData";
 import { notify } from "@/lib/notify";
+import { FhirParsedViewer } from "./FhirParsedViewer";
 import {
     FileKey,
-    FileCode2,
     Calendar,
     AlertTriangle,
     ChevronDown,
@@ -33,15 +33,31 @@ const ALL_RECORD_TYPES = [
 ];
 
 export default function HiuModule() {
-    const navigate = useNavigate();
+    const location = useLocation();
+    const locationState = location.state as { openRequestModal?: boolean; patient?: any } | null;
     const [records, setRecords] = useState<HiuConsentRow[]>(GENERATED_HIU_RECORDS);
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+    const [viewingConsent, setViewingConsent] = useState<HiuConsentRow | null>(null);
 
     // Request Consent Form States matching screenshot
     const [requestTo, setRequestTo] = useState("testinguser12@sbx");
     const [recordRangeQuick, setRecordRangeQuick] = useState("Last 6 months");
     const [startDate, setStartDate] = useState<Date | undefined>(new Date(2026, 2, 9));
     const [endDate, setEndDate] = useState<Date | undefined>(new Date(2026, 8, 9));
+
+    useEffect(() => {
+        if (locationState?.openRequestModal) {
+            setIsRequestModalOpen(true);
+            if (locationState.patient) {
+                const p = locationState.patient;
+                if (p.email) {
+                    setRequestTo(p.email);
+                } else if (p.patientName) {
+                    setRequestTo(`${p.patientName.toLowerCase().replace(/\s+/g, "")}@sbx`);
+                }
+            }
+        }
+    }, [location.state]);
 
     const [expireInQuick, setExpireInQuick] = useState("6 months");
     const [purpose, setPurpose] = useState("Care management");
@@ -96,8 +112,8 @@ export default function HiuModule() {
             expiresInDays: `${expireInQuick}`,
             expiresOnDate: "09 Mar 27",
             status: "Pending",
-            patientName: requestTo.split("@")[0].toUpperCase(),
-            uhidNo: "3995999",
+            patientName: locationState?.patient?.patientName || requestTo.split("@")[0].toUpperCase(),
+            uhidNo: locationState?.patient?.id || "3995999",
             hiTypes: selectedRecordTypes.join(", "),
             purpose: purpose,
         };
@@ -203,7 +219,7 @@ export default function HiuModule() {
                     return (
                         <ActionMenu
                             item={row.original}
-                            onView={() => navigate("/abdm-viewer")}
+                            onView={() => setViewingConsent(row.original)}
                         />
                     );
                 }
@@ -211,6 +227,31 @@ export default function HiuModule() {
             },
         },
     ];
+
+    if (viewingConsent) {
+        return (
+            <div className="space-y-4">
+                <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                    <span className="text-slate-400">HIU</span>
+                    <span className="text-slate-400">/</span>
+                    <button
+                        type="button"
+                        onClick={() => setViewingConsent(null)}
+                        className="text-blue-600 hover:underline cursor-pointer font-medium"
+                    >
+                        Consent Management
+                    </button>
+                    <span className="text-slate-400">/</span>
+                    <span className="text-slate-900 font-semibold">FHIR Clinical Record View</span>
+                </nav>
+
+                <FhirParsedViewer
+                    consentDetails={viewingConsent}
+                    onBack={() => setViewingConsent(null)}
+                />
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -238,15 +279,6 @@ export default function HiuModule() {
                 }
                 headerExtra={
                     <div className="flex items-center gap-2">
-                        <Button
-                            size="sm"
-                            onClick={() => navigate("/abdm-viewer")}
-                            className="h-9 px-3 gap-1.5 shrink-0 text-blue-700 border border-blue-600/80 bg-blue-50/60 hover:bg-blue-100 cursor-pointer shadow-xs rounded-md font-semibold text-xs transition"
-                            title="FHIR Viewer"
-                        >
-                            <FileCode2 className="h-4 w-4 text-blue-600" />
-                            <span>FHIR Viewer</span>
-                        </Button>
                         <Button
                             size="sm"
                             onClick={() => setIsRequestModalOpen(true)}

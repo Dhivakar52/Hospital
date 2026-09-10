@@ -8,6 +8,7 @@ import {
   Building2,
   UserCheck,
   ShieldCheck,
+  FileCode2,
   type LucideIcon,
 } from "lucide-react"
 import { lazy } from "react"
@@ -80,8 +81,12 @@ export const menuConfig: MenuItem[] = [
   },
   {
     title: "HIU",
-    url: "/consent-management",
-    icon: ShieldCheck
+    url: "/hiu",
+    icon: ShieldCheck,
+    items: [
+      { title: "Consent", url: "/consent", icon: ShieldCheck },
+      { title: "FHIR Viewer", url: "/fhir", icon: FileCode2 },
+    ],
   },
 
 
@@ -167,6 +172,13 @@ export const getRoutes = () => {
       path: "/registered-patients",
       name: "Registered Patients",
       component: lazy(() => import("@/pages/OP/Registration/RegisteredPatientsPage")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/registered-patients/view/:id",
+      name: "Registered Patient Details",
+      component: lazy(() => import("@/pages/OP/Registration/PatientDetailsPage")),
       exact: true,
       protected: true,
     },
@@ -264,9 +276,30 @@ export const getRoutes = () => {
       protected: true,
     },
     {
+      path: "/hiu",
+      name: "HIU Main Menu",
+      component: lazy(() => import("@/pages/HIU/HiuMainMenu")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/consent",
+      name: "Consent",
+      component: lazy(() => import("@/pages/HIU/HiuModule")),
+      exact: true,
+      protected: true,
+    },
+    {
       path: "/consent-management",
       name: "HIU",
       component: lazy(() => import("@/pages/HIU/HiuModule")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/fhir",
+      name: "FHIR Viewer",
+      component: lazy(() => import("@/pages/HIU/FhirViewerPage")),
       exact: true,
       protected: true,
     },

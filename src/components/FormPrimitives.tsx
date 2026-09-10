@@ -63,26 +63,47 @@ export function TextField({
   );
 }
 
-// ✅ Controlled SelectField - accepts value/onChange so it can be wired into filter state
+// ✅ Controlled / Uncontrolled SelectField with safe fallback
 export function SelectField({
   options,
   placeholder = "Select",
   value,
+  defaultValue,
   onChange,
 }: {
   options: readonly string[];
   placeholder?: string;
   value?: string;
+  defaultValue?: string;
   onChange?: (value: string) => void;
 }) {
+  const [internalVal, setInternalVal] = React.useState<string>(defaultValue ?? "");
+  const isControlled = value !== undefined;
+  const currentVal = isControlled ? (value ?? "") : internalVal;
+
+  const handleChange = (newVal: string) => {
+    if (!isControlled) {
+      setInternalVal(newVal);
+    }
+    onChange?.(newVal);
+  };
+
+  // Ensure current value is included in options so it displays properly even if custom
+  const allOptions = React.useMemo(() => {
+    if (currentVal && !options.includes(currentVal)) {
+      return [currentVal, ...options];
+    }
+    return options;
+  }, [options, currentVal]);
+
   return (
     <NativeSelect
-      value={value ?? ""}
-      onChange={(e) => onChange?.(e.target.value)}
-      className="h-9 text-[13px] w-full "
+      value={currentVal}
+      onChange={(e) => handleChange(e.target.value)}
+      className="h-9 text-[13px] w-full"
     >
       <option value="">{placeholder}</option>
-      {options.map((opt) => (
+      {allOptions.map((opt) => (
         <option key={opt} value={opt}>
           {opt}
         </option>

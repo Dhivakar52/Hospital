@@ -48,12 +48,15 @@ export function AppSidebar() {
   // Checks if a url matches the current route or sub-route
   const isUrlActive = (url: string) => {
     if (location.pathname === url) return true;
-    if (url === "/registered-patients" && location.pathname.startsWith("/op/registration")) return true;
+    if (url === "/registered-patients" && (location.pathname.startsWith("/op/registration") || location.pathname.startsWith("/registered-patients"))) return true;
     if (url === "/revisit-records" && (location.pathname === "/op/revisit" || location.pathname.startsWith("/op/revisit/"))) return true;
     if (url === "/op/revisit-cancellation" && location.pathname.startsWith("/op/revisit-cancellation")) return true;
     if (url === "/registered-anc-records" && location.pathname.startsWith("/antenatal-registration")) return true;
     if (url === "/hospital-master-records" && location.pathname.startsWith("/hospital-master")) return true;
     if (url === "/referral-master-records" && location.pathname.startsWith("/referral-master")) return true;
+    if (url === "/consent" && (location.pathname === "/consent" || location.pathname.startsWith("/consent") || location.pathname === "/consent-management")) return true;
+    if (url === "/fhir" && (location.pathname === "/fhir" || location.pathname.startsWith("/fhir") || location.pathname === "/abdm-viewer" || location.pathname === "/fhir-viewer")) return true;
+    if (url === "/hiu" && (location.pathname === "/hiu" || location.pathname.startsWith("/hiu"))) return true;
     return false;
   }
 
