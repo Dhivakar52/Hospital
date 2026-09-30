@@ -47,9 +47,8 @@ export default function HiuMainMenu() {
           </Badge>
         </div>
       </div>
-
       {/* Main Menu Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Module 1: Consent Management */}
         <div 
           onClick={() => navigate("/consent")}
@@ -107,10 +106,66 @@ export default function HiuMainMenu() {
           </div>
         </div>
 
-        {/* Module 2: FHIR Viewer */}
+        {/* Module 2: Patient Approvals */}
+        <div 
+          onClick={() => navigate("/patient-approvals")}
+          className="group relative bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs hover:shadow-md hover:border-teal-400 transition-all duration-200 flex flex-col justify-between cursor-pointer"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-12 w-12 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700 group-hover:bg-[#0b6b6f] group-hover:text-white transition-colors duration-200">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <Badge className="bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-medium group-hover:border-teal-200 transition-colors">
+                Module 02
+              </Badge>
+            </div>
+
+            <h2 className="text-lg font-bold text-slate-900 group-hover:text-teal-700 transition-colors flex items-center gap-2">
+              Patient Approvals
+            </h2>
+            <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+              Review and manage patient records access requests. Dynamic approvals workflow across Pending, Approved, and Denied statuses.
+            </p>
+
+            <div className="mt-5 space-y-2.5 border-t border-slate-100 pt-4">
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <CheckCircle2 className="h-3.5 w-3.5 text-teal-600 shrink-0" />
+                <span>Interactive approve, deny & revoke workflow</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <CheckCircle2 className="h-3.5 w-3.5 text-teal-600 shrink-0" />
+                <span>Dynamically calculated status tab counters</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <CheckCircle2 className="h-3.5 w-3.5 text-teal-600 shrink-0" />
+                <span>Fully driven by patientApprovals JSON data</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-500 group-hover:text-teal-700 transition-colors">
+              Route: /patient-approvals
+            </span>
+            <Button
+              size="sm"
+              className="gap-1.5 text-xs text-white font-medium cursor-pointer group-hover:translate-x-0.5 transition-transform bg-[#0b6b6f] hover:bg-[#085457]"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate("/patient-approvals");
+              }}
+            >
+              <span>Open Approvals</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Module 3: FHIR Viewer */}
         <div 
           onClick={() => navigate("/fhir")}
-          className="group relative bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs hover:shadow-md hover:border-blue-300 transition-all duration-200 flex flex-col justify-between cursor-pointer"
+          className="group relative bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all duration-200 flex flex-col justify-between cursor-pointer"
         >
           <div>
             <div className="flex items-center justify-between mb-4">
@@ -118,7 +173,7 @@ export default function HiuMainMenu() {
                 <FileCode2 className="h-6 w-6" />
               </div>
               <Badge className="bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-medium group-hover:border-indigo-200 transition-colors">
-                Module 02
+                Module 03
               </Badge>
             </div>
 

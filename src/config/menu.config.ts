@@ -1,11 +1,4 @@
 import {
-  LayoutDashboard,
-  Users,
-  UsersRound,
-  Stethoscope,
-  CalendarClock,
-  Baby,
-  Building2,
   UserCheck,
   ShieldCheck,
   FileCode2,
@@ -29,26 +22,26 @@ export interface MenuItem {
 
 // ✅ Menu data for sidebar
 export const menuConfig: MenuItem[] = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: LayoutDashboard
-  },
-  {
-    title: "OP",
-    url: "/op",
-    icon: Users,
-    items: [
-      { title: "Registration", url: "/registered-patients", icon: UsersRound },
-      { title: "Diagnosis Entry", url: "/op/diagnosisentry", icon: Stethoscope },
-      { title: "Revisit", url: "/revisit-records", icon: CalendarClock },
-    ],
-  },
-  {
-    title: "AntenatalRegistration",
-    url: "/registered-anc-records",
-    icon: Baby
-  },
+  // {
+  //   title: "Dashboard",
+  //   url: "/dashboard",
+  //   icon: LayoutDashboard
+  // },
+  // {
+  //   title: "OP",
+  //   url: "/op",
+  //   icon: Users,
+  //   items: [
+  //     { title: "Registration", url: "/registered-patients", icon: UsersRound },
+  //     { title: "Diagnosis Entry", url: "/op/diagnosisentry", icon: Stethoscope },
+  //     { title: "Revisit", url: "/revisit-records", icon: CalendarClock },
+  //   ],
+  // },
+  // {
+  //   title: "AntenatalRegistration",
+  //   url: "/registered-anc-records",
+  //   icon: Baby
+  // },
 
   //  {
   //   title: "Appointment",
@@ -69,22 +62,23 @@ export const menuConfig: MenuItem[] = [
   //   icon: UserCheck 
   // },
 
-  {
-    title: "Admin",
-    url: "/admin",
-    icon: Users,
-    items: [
-      { title: "Hospital Master", url: "/hospital-master-records", icon: Building2 },
-      { title: "Referral Master", url: "/referral-master-records", icon: UserCheck },
-      { title: "Appointment", url: "/appointment", icon: CalendarClock },
-    ],
-  },
+  // {
+  //   title: "Admin",
+  //   url: "/admin",
+  //   icon: Users,
+  //   items: [
+  //     { title: "Hospital Master", url: "/hospital-master-records", icon: Building2 },
+  //     { title: "Referral Master", url: "/referral-master-records", icon: UserCheck },
+  //     { title: "Appointment", url: "/appointment", icon: CalendarClock },
+  //   ],
+  // },
   {
     title: "HIU",
     url: "/hiu",
     icon: ShieldCheck,
     items: [
       { title: "Consent", url: "/consent", icon: ShieldCheck },
+      { title: "Patient Approvals", url: "/patient-approvals", icon: UserCheck },
       { title: "FHIR Viewer", url: "/fhir", icon: FileCode2 },
     ],
   },
@@ -293,6 +287,13 @@ export const getRoutes = () => {
       path: "/consent-management",
       name: "HIU",
       component: lazy(() => import("@/pages/HIU/HiuModule")),
+      exact: true,
+      protected: true,
+    },
+    {
+      path: "/patient-approvals",
+      name: "Patient Approvals",
+      component: lazy(() => import("@/pages/PatientApprovals/PatientApprovalsPage")),
       exact: true,
       protected: true,
     },

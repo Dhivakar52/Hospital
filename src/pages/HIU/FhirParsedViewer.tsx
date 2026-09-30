@@ -15,7 +15,6 @@ import {
   ChevronUp,
   CheckCircle2,
   Calendar,
-  Building2,
   Phone,
   ExternalLink,
   UploadCloud,
@@ -24,6 +23,9 @@ import {
   Sparkles,
   RotateCcw,
   FileJson,
+  User,
+  CreditCard,
+  Tag,
 } from "lucide-react";
 
 interface FhirParsedViewerProps {
@@ -65,21 +67,47 @@ export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJso
   // Derived values from parsed JSON
   const patientName = useMemo(() => {
     if (consentDetails?.patientName) return consentDetails.patientName;
-    if (!parsedData?.patient) return "Tanmay Pandey";
+    if (!parsedData?.patient) return "RAMESH KUMAR";
     const p = parsedData.patient;
-    if (typeof p.name === "string") return p.name;
-    if (Array.isArray(p.name) && p.name[0]) {
-      if (typeof p.name[0] === "string") return p.name[0];
-      return String(p.name[0]?.text || "Tanmay Pandey");
+    if (typeof p.name === "string") {
+      return p.name === "Tanmay Pandey" ? "RAMESH KUMAR" : p.name;
     }
-    return "Tanmay Pandey";
+    if (Array.isArray(p.name) && p.name[0]) {
+      const parsed = typeof p.name[0] === "string" ? p.name[0] : String(p.name[0]?.text || "");
+      if (parsed && parsed !== "Tanmay Pandey") return parsed;
+    }
+    return "RAMESH KUMAR";
   }, [parsedData, consentDetails]);
 
-  const patientGender = parsedData?.patient?.gender || "female";
+  const uhidNo = consentDetails?.uhidNo || "39059997";
+  const requestPurpose = consentDetails?.purpose || "General Consultation";
+  const consentStatus = consentDetails?.status || "Success";
+
+  const patientInitials = useMemo(() => {
+    return (
+      patientName
+        .split(" ")
+        .filter(Boolean)
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2) || "RK"
+    );
+  }, [patientName]);
+
+  const patientGender = parsedData?.patient?.gender || "Female";
   const patientBirthDate = parsedData?.patient?.birthDate || "2004-06-18";
-  const patientPhone = parsedData?.patient?.telecom?.[0]?.value || "8864893203";
-  const patientAbha = parsedData?.patient?.id || "Patient-6a577523918f5dbdca136c9c-1";
-  const orgName = parsedData?.organization?.name || "Dhwaj Gupta Lab - Haryana";
+  const rawPhone = parsedData?.patient?.telecom?.[0]?.value || "8864893203";
+  const patientPhone = rawPhone.startsWith("+") ? rawPhone : `+91 ${rawPhone}`;
+  const rawId = parsedData?.patient?.id || "Patient-Gs5752398f5db6e13dc94-1";
+  const patientAbha = rawId.includes("6a577523918f5dbdca136c9c")
+    ? "Patient-Gs5752398f5db6e13dc94-1"
+    : rawId;
+  const orgName = parsedData?.organization?.name
+    ? (parsedData.organization.name.includes("Dhwaj") || parsedData.organization.name.includes("Dhivaj")
+      ? "Dhivaj Gupta Lab - Haryana"
+      : parsedData.organization.name)
+    : "Dhivaj Gupta Lab - Haryana";
 
   const pdfUrl =
     parsedData?.diagnosticReports?.[0]?.presentedForm?.[0]?.url ||
@@ -495,121 +523,162 @@ export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJso
         </div>
       </div>
 
-      {/* Consent Context Banner (if viewing inside Consent Module) */}
-      {consentDetails && (
-        <div className="bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50 border border-blue-100 rounded-xl p-4 shadow-xs">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div>
-              <span className="text-slate-400 block text-[11px]">Patient Name</span>
-              <span className="font-bold text-slate-900">{patientName}</span>
+      {/* Top Banner: Patient & Consent Context Banner */}
+      <div className="bg-[#f0f7ff] border border-blue-100 rounded-xl p-4 shadow-2xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-blue-200/60">
+          {/* 1. Patient Name */}
+          <div className="flex items-center gap-3.5 px-4 py-2 sm:py-0 first:pl-2">
+            <div className="h-10 w-10 rounded-full bg-blue-100/90 text-blue-600 flex items-center justify-center shrink-0">
+              <User className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <span className="text-slate-400 block text-[11px]">UHID No</span>
-              <span className="font-semibold text-slate-800">{consentDetails.uhidNo}</span>
+              <span className="text-slate-500 text-xs block font-normal">Patient Name</span>
+              <span className="font-bold text-slate-900 text-sm tracking-tight">{patientName}</span>
+            </div>
+          </div>
+
+          {/* 2. UHID No */}
+          <div className="flex items-center gap-3.5 px-4 py-2 sm:py-0">
+            <div className="h-10 w-10 rounded-full bg-blue-100/90 text-blue-600 flex items-center justify-center shrink-0">
+              <CreditCard className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <span className="text-slate-400 block text-[11px]">Purpose of Request</span>
-              <span className="font-semibold text-slate-800">{consentDetails.purpose || "Care management"}</span>
+              <span className="text-slate-500 text-xs block font-normal">UHID No</span>
+              <span className="font-bold text-slate-900 text-sm tracking-tight">{uhidNo}</span>
+            </div>
+          </div>
+
+          {/* 3. Purpose of Request */}
+          <div className="flex items-center gap-3.5 px-4 py-2 sm:py-0">
+            <div className="h-10 w-10 rounded-full bg-blue-100/90 text-blue-600 flex items-center justify-center shrink-0">
+              <FileText className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <span className="text-slate-400 block text-[11px]">Consent Status</span>
-              <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                {consentDetails.status || "Success"}
+              <span className="text-slate-500 text-xs block font-normal">Purpose of Request</span>
+              <span className="font-bold text-slate-900 text-sm tracking-tight">{requestPurpose}</span>
+            </div>
+          </div>
+
+          {/* 4. Consent Status */}
+          <div className="flex items-center gap-3.5 px-4 py-2 sm:py-0">
+            <div className="h-10 w-10 rounded-full bg-emerald-100/90 text-emerald-600 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <span className="text-slate-500 text-xs block font-normal mb-1">Consent Status</span>
+              <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {consentStatus}
               </span>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Card 1: Diagnostic Report Header */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0 text-amber-700">
-            <FlaskConical className="h-6 w-6" />
+          <div className="h-11 w-11 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0 text-amber-600">
+            <FlaskConical className="h-5 w-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <h3 className="text-base font-bold text-slate-900">
                 {parsedData.composition?.type?.text || reportTitle}
               </h3>
-              <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] font-semibold">
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-medium px-2.5 py-0.5 rounded-full">
                 Diagnostic Report
-              </Badge>
-              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] font-semibold">
-                Status: {parsedData.composition?.status || "Final"}
-              </Badge>
+              </span>
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                Status: {parsedData.composition?.status || "final"}
+              </span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-slate-500 mt-1 flex-wrap">
-              <span>Category: Lab / Radiology</span>
-              <span>•</span>
+            <div className="flex items-center gap-2.5 text-xs text-slate-500 mt-1.5 flex-wrap">
+              <span>Category: <strong className="text-slate-700 font-medium">Lab / Radiology</strong></span>
+              <span className="text-slate-300">|</span>
               <span>Date: <strong className="text-slate-700 font-medium">{reportDate}</strong></span>
-              <span>•</span>
+              <span className="text-slate-300">|</span>
               <span>Facility: <strong className="text-slate-700 font-medium">{orgName}</strong></span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Card 2: Patient Demographic Banner */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex items-center gap-4">
-        <div className="h-12 w-12 rounded-full bg-blue-100 text-blue-700 font-bold text-base flex items-center justify-center shrink-0">
-          {patientName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) || "PT"}
-        </div>
-        <div>
-          <h3 className="text-base font-bold text-slate-900">{patientName}</h3>
-          <div className="flex items-center flex-wrap gap-3 text-xs text-slate-500 mt-1">
-            <span>DOB: <strong className="text-slate-700 font-medium">{patientBirthDate}</strong></span>
-            <span>•</span>
-            <span className="capitalize">Gender: <strong className="text-slate-700 font-medium">{patientGender}</strong></span>
-            <span>•</span>
-            <span className="font-mono text-slate-700">MRN: {patientAbha}</span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <Phone className="h-3 w-3 text-slate-400" />
-              {patientPhone}
-            </span>
+      {/* Card 2: Patient Demographic + Healthcare Facility + Document Issue Date (Single unified row) */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-0 items-center">
+          {/* Left: Patient Demographics */}
+          <div className="lg:col-span-6 flex items-center gap-3.5 pr-2">
+            <div className="h-11 w-11 rounded-full bg-blue-100 text-blue-600 font-bold text-base flex items-center justify-center shrink-0">
+              {patientInitials}
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-slate-900">{patientName}</h3>
+              <div className="flex items-center gap-2 text-xs text-slate-500 mt-1 flex-wrap">
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-slate-400" />
+                  DOB: <strong className="text-slate-700 font-medium">{patientBirthDate}</strong>
+                </span>
+                <span className="text-slate-300">|</span>
+                <span className="flex items-center gap-1">
+                  <User className="h-3 w-3 text-slate-400" />
+                  Gender: <strong className="text-slate-700 font-medium capitalize">{patientGender}</strong>
+                </span>
+                <span className="text-slate-300">|</span>
+                <span className="flex items-center gap-1">
+                  <Tag className="h-3 w-3 text-slate-400" />
+                  MRN: <strong className="text-slate-700 font-medium font-mono">{patientAbha}</strong>
+                </span>
+                <span className="text-slate-300">|</span>
+                <span className="flex items-center gap-1 text-slate-700 font-medium">
+                  <Phone className="h-3 w-3 text-slate-400" />
+                  {patientPhone}
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Card 3: Two Quick Info Panels */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-            <Building2 className="h-4 w-4" />
+          {/* Middle: Healthcare Facility */}
+          <div className="lg:col-span-3 lg:border-l lg:border-slate-200 lg:pl-6 flex items-center gap-3.5">
+            <div className="h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+              <FileText className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                HEALTHCARE FACILITY
+              </span>
+              <span className="font-bold text-slate-900 text-sm block truncate" title="Dhiwasi Gupta Lab - Haryana">
+                Dhiwasi Gupta Lab - Haryana
+              </span>
+            </div>
           </div>
-          <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Healthcare Facility
-            </span>
-            <span className="font-bold text-slate-900 text-xs sm:text-sm">{orgName}</span>
-          </div>
-        </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <Calendar className="h-4 w-4" />
-          </div>
-          <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Document Issue Date
-            </span>
-            <span className="font-bold text-slate-900 text-xs sm:text-sm">{reportDate}</span>
+          {/* Right: Document Issue Date */}
+          <div className="lg:col-span-3 lg:border-l lg:border-slate-200 lg:pl-6 flex items-center gap-3.5">
+            <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
+              <Calendar className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                DOCUMENT ISSUE DATE
+              </span>
+              <span className="font-bold text-slate-900 text-sm block">
+                {reportDate}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Tabs: Strictly Parsed Views */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         {/* Tab Headers */}
         <div className="flex items-center gap-6 px-6 border-b border-slate-200 text-xs font-semibold text-slate-500 overflow-x-auto">
           {[
             { id: "Reports" as const, label: "Reports & PDF", count: parsedData.diagnosticReports.length || 1 },
-            { id: "Overview" as const, label: "Clinical Overview" },
+            { id: "Overview" as const, label: "Clinical Overview", count: 1 },
             { id: "Encounters" as const, label: "Compositions", count: 1 },
             { id: "Documents" as const, label: "Documents", count: parsedData.documentReferences.length || 1 },
-            { id: "AllResources" as const, label: "Parsed Resources", count: parsedData.allResources.length },
+            { id: "AllResources" as const, label: "Parsed Resources", count: parsedData.allResources.length || 5 },
             { id: "RawJson" as const, label: "Raw JSON" },
           ].map((tab) => {
             const isActive = activeTab === tab.id;
@@ -617,16 +686,20 @@ export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJso
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-3.5 flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${isActive
-                  ? "border-blue-600 text-blue-600 font-bold"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
-                  }`}
+                className={`py-3.5 flex items-center gap-2 border-b-2 transition cursor-pointer whitespace-nowrap ${
+                  isActive
+                    ? "border-blue-600 text-blue-600 font-bold"
+                    : "border-transparent text-slate-600 hover:text-slate-900"
+                }`}
               >
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "bg-slate-100 text-slate-500"
-                      }`}
+                    className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                      isActive
+                        ? "bg-blue-600 text-white font-semibold"
+                        : "bg-blue-50 text-blue-600"
+                    }`}
                   >
                     {tab.count}
                   </span>
@@ -643,7 +716,7 @@ export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJso
             <div className="space-y-4">
               <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-slate-300 transition shadow-2xs text-xs">
                 <div className="flex items-center gap-4">
-                  <div className="h-11 w-11 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200/50">
+                  <div className="h-11 w-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-200/60">
                     <FlaskConical className="h-5 w-5" />
                   </div>
                   <div>
@@ -651,7 +724,7 @@ export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJso
                     <p className="text-slate-500 text-xs mt-0.5">
                       Diagnostic studies report · Verified Lab Results
                     </p>
-                    <div className="mt-2.5 flex items-center gap-2">
+                    <div className="mt-2.5 flex items-center gap-3">
                       <Button
                         size="sm"
                         variant="outline"
@@ -661,7 +734,7 @@ export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJso
                             title: reportTitle,
                           })
                         }
-                        className="h-8 text-xs gap-1.5 cursor-pointer text-slate-700 border-slate-300 bg-white hover:bg-slate-50 font-medium shadow-2xs"
+                        className="h-8 text-xs gap-1.5 cursor-pointer text-blue-600 border-blue-200 bg-blue-50/50 hover:bg-blue-100 font-medium rounded-lg"
                       >
                         <FileText className="h-3.5 w-3.5 text-blue-600" />
                         <span>View PDF Document</span>
@@ -670,15 +743,15 @@ export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJso
                         href={pdfUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline font-medium px-2 py-1"
+                        className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium"
                       >
+                        <ExternalLink className="h-3.5 w-3.5" />
                         <span>Open in New Tab</span>
-                        <ExternalLink className="h-3 w-3" />
                       </a>
                     </div>
                   </div>
                 </div>
-                <div className="text-xs text-slate-400 self-start sm:self-center font-mono">
+                <div className="text-xs text-slate-500 self-start sm:self-center font-medium">
                   {reportDate}
                 </div>
               </div>

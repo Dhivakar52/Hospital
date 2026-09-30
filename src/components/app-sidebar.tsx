@@ -55,6 +55,7 @@ export function AppSidebar() {
     if (url === "/hospital-master-records" && location.pathname.startsWith("/hospital-master")) return true;
     if (url === "/referral-master-records" && location.pathname.startsWith("/referral-master")) return true;
     if (url === "/consent" && (location.pathname === "/consent" || location.pathname.startsWith("/consent") || location.pathname === "/consent-management")) return true;
+    if (url === "/patient-approvals" && (location.pathname === "/patient-approvals" || location.pathname.startsWith("/patient-approvals"))) return true;
     if (url === "/fhir" && (location.pathname === "/fhir" || location.pathname.startsWith("/fhir") || location.pathname === "/abdm-viewer" || location.pathname === "/fhir-viewer")) return true;
     if (url === "/hiu" && (location.pathname === "/hiu" || location.pathname.startsWith("/hiu"))) return true;
     return false;

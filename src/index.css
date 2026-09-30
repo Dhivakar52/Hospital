@@ -146,7 +146,15 @@ button[role="combobox"] {
 .theme-color{
   background-color: var(--side-menu);
   color:   var(--blue-text-color);
-  
+}
+
+.blue-btn {
+  background: var(--blue-btn) !important;
+  color: #ffffff !important;
+}
+
+.blue-btn:hover {
+  opacity: 0.95;
 }
 
 

@@ -1,0 +1,482 @@
+[
+  {
+    "id": "APR-1001",
+    "patientName": "Arun Kumar",
+    "patientId": "PAT-1001",
+    "hospitalName": "City Heart Clinic",
+    "doctorName": "Dr. Priya Nair",
+    "reason": "Second opinion",
+    "requestedRecords": [
+      "OP consultation",
+      "Diagnostic report"
+    ],
+    "recordFrom": "2026-01-01",
+    "recordTo": "2026-09-30",
+    "accessEnds": "2026-10-15",
+    "requestedDate": "2026-09-30",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1002",
+    "patientName": "Meera Krishnan",
+    "patientId": "PAT-1002",
+    "hospitalName": "Apollo Specialty Hospital",
+    "doctorName": "Dr. Rajesh Sharma",
+    "reason": "Cardiology consultation and review",
+    "requestedRecords": [
+      "Diagnostic report",
+      "Prescription",
+      "Discharge summary"
+    ],
+    "recordFrom": "2025-08-01",
+    "recordTo": "2026-09-20",
+    "accessEnds": "2026-11-30",
+    "requestedDate": "2026-09-28",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1003",
+    "patientName": "Kavita Singhania",
+    "patientId": "PAT-1007",
+    "hospitalName": "Fortis Memorial Research Institute",
+    "doctorName": "Dr. Anirudh Sen",
+    "reason": "Oncology follow-up assessment",
+    "requestedRecords": [
+      "Diagnostic report",
+      "OP consultation"
+    ],
+    "recordFrom": "2025-05-15",
+    "recordTo": "2026-09-15",
+    "accessEnds": "2026-12-01",
+    "requestedDate": "2026-09-25",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1004",
+    "patientName": "Vikram Sethi",
+    "patientId": "PAT-1008",
+    "hospitalName": "Manipal Hospital",
+    "doctorName": "Dr. Harish Bhatt",
+    "reason": "Orthopedic surgery pre-evaluation",
+    "requestedRecords": [
+      "OP consultation",
+      "Diagnostic report",
+      "Discharge summary"
+    ],
+    "recordFrom": "2026-02-01",
+    "recordTo": "2026-09-10",
+    "accessEnds": "2026-10-31",
+    "requestedDate": "2026-09-24",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1005",
+    "patientName": "Rohan Gupta",
+    "patientId": "PAT-1009",
+    "hospitalName": "Care Diagnostics & Clinic",
+    "doctorName": "Dr. Meenakshi Sundaram",
+    "reason": "Endocrine hormone test review",
+    "requestedRecords": [
+      "Diagnostic report"
+    ],
+    "recordFrom": "2026-04-01",
+    "recordTo": "2026-09-18",
+    "accessEnds": "2026-10-25",
+    "requestedDate": "2026-09-22",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1006",
+    "patientName": "Pooja Hegde",
+    "patientId": "PAT-1010",
+    "hospitalName": "Lilavati Hospital",
+    "doctorName": "Dr. Sanjeev Kapoor",
+    "reason": "Neurology review for migraine",
+    "requestedRecords": [
+      "OP consultation",
+      "Prescription"
+    ],
+    "recordFrom": "2025-10-01",
+    "recordTo": "2026-09-12",
+    "accessEnds": "2026-11-15",
+    "requestedDate": "2026-09-20",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1007",
+    "patientName": "Karan Malhotra",
+    "patientId": "PAT-1011",
+    "hospitalName": "Max Super Speciality",
+    "doctorName": "Dr. Vandana Rao",
+    "reason": "Gastroenterology consultation",
+    "requestedRecords": [
+      "Diagnostic report",
+      "OP consultation"
+    ],
+    "recordFrom": "2026-01-10",
+    "recordTo": "2026-09-05",
+    "accessEnds": "2026-10-20",
+    "requestedDate": "2026-09-18",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1008",
+    "patientName": "Deepika Joshi",
+    "patientId": "PAT-1012",
+    "hospitalName": "Narayana Health",
+    "doctorName": "Dr. Ramesh Iyer",
+    "reason": "Pulmonary function follow-up",
+    "requestedRecords": [
+      "Diagnostic report",
+      "Prescription"
+    ],
+    "recordFrom": "2025-11-01",
+    "recordTo": "2026-09-02",
+    "accessEnds": "2026-10-31",
+    "requestedDate": "2026-09-16",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1009",
+    "patientName": "Suresh Raina",
+    "patientId": "PAT-1013",
+    "hospitalName": "Medanta The Medicity",
+    "doctorName": "Dr. Alok Verma",
+    "reason": "Sports injury rehab review",
+    "requestedRecords": [
+      "OP consultation",
+      "Discharge summary"
+    ],
+    "recordFrom": "2026-03-15",
+    "recordTo": "2026-09-01",
+    "accessEnds": "2026-11-10",
+    "requestedDate": "2026-09-14",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1010",
+    "patientName": "Anand Mahindra",
+    "patientId": "PAT-1014",
+    "hospitalName": "Hinduja Healthcare",
+    "doctorName": "Dr. Farhan Merchant",
+    "reason": "Executive wellness health audit",
+    "requestedRecords": [
+      "Diagnostic report",
+      "Health document"
+    ],
+    "recordFrom": "2025-09-01",
+    "recordTo": "2026-08-30",
+    "accessEnds": "2026-12-31",
+    "requestedDate": "2026-09-12",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1011",
+    "patientName": "Divya Nambiar",
+    "patientId": "PAT-1015",
+    "hospitalName": "Aster Medcity",
+    "doctorName": "Dr. Shobha George",
+    "reason": "Dermatology treatment review",
+    "requestedRecords": [
+      "OP consultation",
+      "Prescription"
+    ],
+    "recordFrom": "2026-05-01",
+    "recordTo": "2026-09-08",
+    "accessEnds": "2026-10-15",
+    "requestedDate": "2026-09-10",
+    "status": "pending",
+    "denialReason": null,
+    "approvedDate": null,
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1012",
+    "patientName": "Arjun Menon",
+    "patientId": "PAT-1003",
+    "hospitalName": "Sunrise Hospital",
+    "doctorName": "Dr. Arjun Menon",
+    "reason": "Care management and diabetes monitoring",
+    "requestedRecords": [
+      "Prescription",
+      "Immunization record"
+    ],
+    "recordFrom": "2025-06-01",
+    "recordTo": "2026-09-30",
+    "accessEnds": "2026-12-31",
+    "requestedDate": "2026-09-15",
+    "status": "approved",
+    "denialReason": null,
+    "approvedDate": "2026-09-16",
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1013",
+    "patientName": "Sneha Patel",
+    "patientId": "PAT-1004",
+    "hospitalName": "Metro Care Center",
+    "doctorName": "Dr. Sunita Kulkarni",
+    "reason": "Post-operative recovery follow-up",
+    "requestedRecords": [
+      "Discharge summary",
+      "OP consultation"
+    ],
+    "recordFrom": "2026-03-01",
+    "recordTo": "2026-08-15",
+    "accessEnds": "2026-10-30",
+    "requestedDate": "2026-09-10",
+    "status": "approved",
+    "denialReason": null,
+    "approvedDate": "2026-09-12",
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1014",
+    "patientName": "Gautam Gambhir",
+    "patientId": "PAT-1016",
+    "hospitalName": "Sir Ganga Ram Hospital",
+    "doctorName": "Dr. Neeraj Bansal",
+    "reason": "Chronic allergy management",
+    "requestedRecords": [
+      "OP consultation",
+      "Prescription",
+      "Diagnostic report"
+    ],
+    "recordFrom": "2025-01-01",
+    "recordTo": "2026-07-30",
+    "accessEnds": "2026-11-20",
+    "requestedDate": "2026-08-25",
+    "status": "approved",
+    "denialReason": null,
+    "approvedDate": "2026-08-26",
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1015",
+    "patientName": "Ritika Sajdeh",
+    "patientId": "PAT-1017",
+    "hospitalName": "Breach Candy Hospital",
+    "doctorName": "Dr. Rashmi Chaddha",
+    "reason": "Pediatric consultation records sharing",
+    "requestedRecords": [
+      "Immunization record",
+      "OP consultation"
+    ],
+    "recordFrom": "2024-06-01",
+    "recordTo": "2026-06-01",
+    "accessEnds": "2026-12-15",
+    "requestedDate": "2026-08-15",
+    "status": "approved",
+    "denialReason": null,
+    "approvedDate": "2026-08-18",
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1016",
+    "patientName": "Naveen Jindal",
+    "patientId": "PAT-1018",
+    "hospitalName": "AIIMS New Delhi",
+    "doctorName": "Dr. Balram Bhargava",
+    "reason": "Cardiovascular registry participation",
+    "requestedRecords": [
+      "Diagnostic report",
+      "Discharge summary"
+    ],
+    "recordFrom": "2025-02-15",
+    "recordTo": "2026-08-10",
+    "accessEnds": "2027-02-15",
+    "requestedDate": "2026-08-12",
+    "status": "approved",
+    "denialReason": null,
+    "approvedDate": "2026-08-14",
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1017",
+    "patientName": "Shalini Nair",
+    "patientId": "PAT-1019",
+    "hospitalName": "Amrita Hospital",
+    "doctorName": "Dr. Suresh Kumar",
+    "reason": "Rheumatology follow-up evaluation",
+    "requestedRecords": [
+      "OP consultation",
+      "Prescription"
+    ],
+    "recordFrom": "2026-01-01",
+    "recordTo": "2026-08-01",
+    "accessEnds": "2026-10-31",
+    "requestedDate": "2026-08-05",
+    "status": "approved",
+    "denialReason": null,
+    "approvedDate": "2026-08-06",
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1018",
+    "patientName": "Pradeep Rawat",
+    "patientId": "PAT-1020",
+    "hospitalName": "Ruby Hall Clinic",
+    "doctorName": "Dr. Suhas Dixit",
+    "reason": "Nephrology assessment review",
+    "requestedRecords": [
+      "Diagnostic report",
+      "OP consultation"
+    ],
+    "recordFrom": "2025-10-01",
+    "recordTo": "2026-07-20",
+    "accessEnds": "2026-11-30",
+    "requestedDate": "2026-07-25",
+    "status": "approved",
+    "denialReason": null,
+    "approvedDate": "2026-07-28",
+    "deniedDate": null
+  },
+  {
+    "id": "APR-1019",
+    "patientName": "Rajesh Varma",
+    "patientId": "PAT-1005",
+    "hospitalName": "Wellness Labs",
+    "doctorName": "Dr. Vivek Rao",
+    "reason": "Research study enrollment",
+    "requestedRecords": [
+      "Health document"
+    ],
+    "recordFrom": "2024-01-01",
+    "recordTo": "2026-09-30",
+    "accessEnds": "2027-01-01",
+    "requestedDate": "2026-09-01",
+    "status": "denied",
+    "denialReason": "Patient declined data sharing for non-clinical research",
+    "approvedDate": null,
+    "deniedDate": "2026-09-02"
+  },
+  {
+    "id": "APR-1020",
+    "patientName": "Ananya Sen",
+    "patientId": "PAT-1006",
+    "hospitalName": "Global Medical Institute",
+    "doctorName": "Dr. Anita Deshmukh",
+    "reason": "Longitudinal health inquiry",
+    "requestedRecords": [
+      "OP consultation",
+      "Diagnostic report"
+    ],
+    "recordFrom": "2025-01-01",
+    "recordTo": "2026-05-30",
+    "accessEnds": "2026-09-15",
+    "requestedDate": "2026-08-20",
+    "status": "denied",
+    "denialReason": "Requested access period exceeds patient privacy preference",
+    "approvedDate": null,
+    "deniedDate": "2026-08-22"
+  },
+  {
+    "id": "APR-1021",
+    "patientName": "Manoj Bajpayee",
+    "patientId": "PAT-1021",
+    "hospitalName": "Apex Specialty Hospital",
+    "doctorName": "Dr. Sanjay Gupta",
+    "reason": "Commercial pharmaceutical trial",
+    "requestedRecords": [
+      "Diagnostic report",
+      "Discharge summary"
+    ],
+    "recordFrom": "2023-01-01",
+    "recordTo": "2026-01-01",
+    "accessEnds": "2027-06-30",
+    "requestedDate": "2026-08-10",
+    "status": "denied",
+    "denialReason": "Patient opted out of clinical trial records access",
+    "approvedDate": null,
+    "deniedDate": "2026-08-11"
+  },
+  {
+    "id": "APR-1022",
+    "patientName": "Sunita Williams",
+    "patientId": "PAT-1022",
+    "hospitalName": "Columbia Asia Hospital",
+    "doctorName": "Dr. Prem Narang",
+    "reason": "Second opinion for spine surgery",
+    "requestedRecords": [
+      "Diagnostic report",
+      "OP consultation"
+    ],
+    "recordFrom": "2025-06-01",
+    "recordTo": "2026-06-01",
+    "accessEnds": "2026-09-30",
+    "requestedDate": "2026-07-15",
+    "status": "denied",
+    "denialReason": "Patient already consulted alternative specialist",
+    "approvedDate": null,
+    "deniedDate": "2026-07-16"
+  },
+  {
+    "id": "APR-1023",
+    "patientName": "Harish Salve",
+    "patientId": "PAT-1023",
+    "hospitalName": "Care Hospital Banjara Hills",
+    "doctorName": "Dr. Jayesh Mehta",
+    "reason": "Insurance reimbursement verification",
+    "requestedRecords": [
+      "Discharge summary"
+    ],
+    "recordFrom": "2026-01-01",
+    "recordTo": "2026-04-30",
+    "accessEnds": "2026-08-15",
+    "requestedDate": "2026-06-20",
+    "status": "denied",
+    "denialReason": "Direct billing claim settled separately",
+    "approvedDate": null,
+    "deniedDate": "2026-06-22"
+  },
+  {
+    "id": "APR-1024",
+    "patientName": "Geeta Phogat",
+    "patientId": "PAT-1024",
+    "hospitalName": "Sports Authority Health Center",
+    "doctorName": "Dr. Vikas Yadav",
+    "reason": "Pre-tournament fitness evaluation",
+    "requestedRecords": [
+      "Diagnostic report",
+      "OP consultation"
+    ],
+    "recordFrom": "2025-08-01",
+    "recordTo": "2026-05-15",
+    "accessEnds": "2026-08-01",
+    "requestedDate": "2026-05-28",
+    "status": "denied",
+    "denialReason": "Records already submitted offline via certified medical officer",
+    "approvedDate": null,
+    "deniedDate": "2026-05-30"
+  }
+]

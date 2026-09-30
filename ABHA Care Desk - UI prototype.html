@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ABHA Care Desk - prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f7;--surf:#fff;--ink:#14212b;--mute:#5b6b78;--line:#dbe3e9;--brand:#0b6b6f;--brand-ink:#fff;--soft:#e2f1f1;--pend:#7a4f00;--pend-bg:#fdf0d2;--sent:#1d4f9c;--sent-bg:#e1ebfa;--ok:#17603a;--ok-bg:#dcf2e4;--bad:#a3271f;--bad-bg:#fbe3e0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f171d;--surf:#17222a;--ink:#e6edf2;--mute:#96a6b3;--line:#2a3945;--brand:#4fc3c7;--brand-ink:#06282a;--soft:#143236;--pend:#f0c46a;--pend-bg:#3a2c0d;--sent:#8fb7f2;--sent-bg:#15263f;--ok:#7fd6a1;--ok-bg:#12301f;--bad:#f19a92;--bad-bg:#3b1a17}}
+:root[data-theme="dark"]{--bg:#0f171d;--surf:#17222a;--ink:#e6edf2;--mute:#96a6b3;--line:#2a3945;--brand:#4fc3c7;--brand-ink:#06282a;--soft:#143236;--pend:#f0c46a;--pend-bg:#3a2c0d;--sent:#8fb7f2;--sent-bg:#15263f;--ok:#7fd6a1;--ok-bg:#12301f;--bad:#f19a92;--bad-bg:#3b1a17}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+header{background:var(--surf);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.bar{max-width:1080px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.logo{font-weight:700;font-size:17px;letter-spacing:-.01em}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;color:var(--mute);font-weight:500}
+nav button[aria-selected="true"]{background:var(--soft);color:var(--brand);font-weight:600}
+main{max-width:1080px;margin:0 auto;padding:24px 20px 60px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:0 0 20px;max-width:64ch}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.seg button{border:1px solid var(--line);background:var(--surf);padding:6px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.tw{overflow-x:auto;background:var(--surf);border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{text-align:left;font-weight:600;color:var(--mute);font-size:13px;padding:10px 14px;border-bottom:1px solid var(--line)}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--soft)}
+.muted{color:var(--mute);font-size:13px}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600}
+.pending{background:var(--pend-bg);color:var(--pend)}.sent{background:var(--sent-bg);color:var(--sent)}.linked,.granted{background:var(--ok-bg);color:var(--ok)}.failed,.denied{background:var(--bad-bg);color:var(--bad)}
+.btn{border:1px solid var(--line);background:var(--surf);padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+.btn.p{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.btn.d{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--surf);border-left:1px solid var(--line);padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(100%);transition:transform .2s;z-index:10;overflow:auto}
+.drawer.open{transform:none}
+.tl{list-style:none;margin:16px 0;padding:0 0 0 18px;border-left:2px solid var(--line)}
+.tl li{position:relative;margin-bottom:16px;padding-left:12px}
+.tl li::before{content:"";position:absolute;left:-25px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--line);border:2px solid var(--surf)}
+.tl li.done::before{background:var(--ok)}.tl li.cur::before{background:var(--brand);box-shadow:0 0 0 4px var(--soft)}.tl li.bad::before{background:var(--bad)}
+.grid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:20px}
+label{display:block;font-weight:600;margin:0 0 6px}
+.f{margin-bottom:18px}
+input[type=text],input[type=date],select{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.checks label{font-weight:400;display:flex;gap:8px;align-items:center;margin:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.hint{font-size:13px;color:var(--mute);margin-top:6px}
+.ok-txt{color:var(--ok);font-weight:600}
+.item{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:12px}
+.item h3{margin:0;font-size:17px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.chip{background:var(--bg);border:1px solid var(--line);padding:2px 10px;border-radius:6px;font-size:13px}
+.acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.empty{padding:40px 20px;text-align:center;color:var(--mute);background:var(--surf);border:1px dashed var(--line);border-radius:10px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,80px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:8px;transition:transform .2s;z-index:20}
+.toast.show{transform:translate(-50%,0)}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="bar">
+<span class="logo">ABHA Care Desk</span>
+<nav role="tablist" aria-label="Screens">
+<button role="tab" aria-selected="true" data-tab="link">Care context linking</button>
+<button role="tab" aria-selected="false" data-tab="req">Request consent</button>
+<button role="tab" aria-selected="false" data-tab="appr">Patient approvals</button>
+</nav></div></header>
+<main>
+
+<section id="link">
+<h1>Care context linking</h1>
+<p class="sub">Visits from today's OPD that need to be linked to the patient's ABHA address. Select a row to see every attempt sent to Eka.</p>
+<div class="seg" id="linkFilter"></div>
+<div class="tw"><table><thead><tr><th>Patient</th><th>Visit</th><th>Care context</th><th>Status</th><th>Attempts</th><th></th></tr></thead><tbody id="linkRows"></tbody></table></div>
+</section>
+
+<section id="req" hidden>
+<h1>Request patient records</h1>
+<p class="sub">Ask a patient for permission to view their health records. Nothing is shared until the patient approves in their ABHA app.</p>
+<div class="grid">
+<div class="panel">
+<div class="f"><label for="abha">Patient ABHA address</label>
+<div class="row"><input type="text" id="abha" placeholder="name@abdm"><button class="btn" id="chk" style="flex:0 0 auto">Check</button></div>
+<div class="hint" id="abhaHint">Enter the address the patient uses in their ABHA app.</div></div>
+<div class="f"><label for="purpose">Why do you need the records?</label>
+<select id="purpose"><option>Care management</option><option>Second opinion</option><option>Public health</option><option>Research</option></select></div>
+<div class="f"><label>Record types</label><div class="checks" id="types"></div></div>
+<div class="f"><label>Records dated between</label><div class="row"><input type="date" id="from" value="2026-01-01" aria-label="From"><input type="date" id="to" value="2026-09-30" aria-label="To"></div></div>
+<div class="f"><label for="exp">Keep access until</label><input type="date" id="exp" value="2026-10-31"><div class="hint">Access ends on this date even if the patient approves.</div></div>
+<button class="btn p" id="send">Send consent request</button>
+</div>
+<aside class="panel"><strong>Request status</strong>
+<ul class="tl" id="steps">
+<li class="cur" id="s1">Not sent yet<div class="muted">Fill in the form and send.</div></li>
+<li id="s2">Patient decision<div class="muted">Waiting for the patient to approve or deny.</div></li>
+<li id="s3">Records received<div class="muted">Decrypted and saved to the patient file.</div></li></ul>
+<button class="btn" id="sim" hidden>Simulate patient approval</button></aside>
+</div>
+</section>
+
+<section id="appr" hidden>
+<h1>Consent requests</h1>
+<p class="sub">Doctors and hospitals asking to view your records. You decide what is shared and for how long.</p>
+<div class="seg" id="apprFilter"></div>
+<div id="apprList"></div>
+</section>
+</main>
+
+<aside class="drawer" id="drawer" aria-label="Attempt history"></aside>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const label={pending:'Not sent',sent:'Waiting for Eka',linked:'Linked',failed:'Failed'};
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b));
+ ['link','req','appr'].forEach(id=>$('#'+id).hidden=id!==b.dataset.tab);
+ closeDrawer();
+});
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ---------- 1. Care context linking ---------- */
+const visits=[
+{id:6,name:'Anita Rao',uhid:'10000005',visit:5,cc:'e31a8c42-7b25-4d61-92f8-6153b7c94022',status:'sent',att:[{t:'18:51',s:'sent',http:202,m:'Accepted by Eka. Waiting for confirmation.'}]},
+{id:7,name:'Karthik S',uhid:'10000011',visit:2,cc:'7d90a1b3-44c2-4e0a-9b1d-2f5a6c8e1d70',status:'pending',att:[]},
+{id:8,name:'Meena Iyer',uhid:'10000019',visit:1,cc:'b41f77e0-9a3c-42d6-8e55-1c0d3b7a9f12',status:'failed',att:[{t:'17:30',s:'failed',http:400,m:'ABHA address not found.'},{t:'17:45',s:'failed',http:400,m:'ABHA address not found.'}]},
+{id:9,name:'Rahul Verma',uhid:'10000023',visit:3,cc:'c05e12aa-71d8-4b39-a6f4-83e2d1b09c47',status:'linked',att:[{t:'16:10',s:'sent',http:202,m:'Accepted by Eka.'},{t:'16:11',s:'linked',http:200,m:'Eka confirmed the link.'}]}
+];
+let lf='all',open=null;
+function renderLink(){
+ const cnt=k=>k==='all'?visits.length:visits.filter(v=>v.status===k).length;
+ $('#linkFilter').innerHTML=['all','pending','sent','failed','linked'].map(k=>`<button aria-pressed="${lf===k}" data-k="${k}">${k==='all'?'All':label[k]} (${cnt(k)})</button>`).join('');
+ $('#linkFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>{lf=b.dataset.k;renderLink()});
+ const rows=visits.filter(v=>lf==='all'||v.status===lf);
+ $('#linkRows').innerHTML=rows.length?rows.map(v=>`<tr data-id="${v.id}"><td><strong>${esc(v.name)}</strong><div class="muted">UHID ${v.uhid}</div></td><td>Visit ${v.visit}</td><td class="muted">${v.cc.slice(0,8)}...${v.cc.slice(-4)}</td><td><span class="pill ${v.status}">${label[v.status]}</span></td><td>${v.att.length}</td><td>${v.status==='linked'?'':`<button class="btn" data-l="${v.id}">${v.status==='pending'?'Link now':'Retry'}</button>`}</td></tr>`).join(''):'<tr><td colspan="6"><div class="empty">No visits in this group.</div></td></tr>';
+ $('#linkRows').querySelectorAll('tr[data-id]').forEach(r=>r.onclick=e=>{if(e.target.dataset.l)return;showDrawer(+r.dataset.id)});
+ $('#linkRows').querySelectorAll('button[data-l]').forEach(b=>b.onclick=()=>doLink(+b.dataset.l));
+}
+function doLink(id){const v=visits.find(x=>x.id===id);
+ v.att.push({t:new Date().toTimeString().slice(0,5),s:'sent',http:202,m:'Accepted by Eka. Waiting for confirmation.'});
+ v.status='sent';renderLink();if(open===id)showDrawer(id);toast('Link request sent for '+v.name);}
+function showDrawer(id){open=id;const v=visits.find(x=>x.id===id);
+ $('#drawer').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:start"><div><h2 style="margin:0;font-size:20px">${esc(v.name)}</h2><div class="muted">UHID ${v.uhid}, visit ${v.visit}</div></div><button class="btn" id="x" aria-label="Close">Close</button></div>
+ <p><span class="pill ${v.status}">${label[v.status]}</span></p><div class="muted" style="word-break:break-all">Care context ${v.cc}</div>
+ <h3 style="font-size:15px;margin:20px 0 0">Attempts</h3>
+ ${v.att.length?`<ul class="tl">${v.att.slice().reverse().map((a,i)=>`<li class="${a.s==='failed'?'bad':a.s==='linked'?'done':i===0?'cur':'done'}"><strong>${label[a.s]}</strong> at ${a.t} <span class="muted">HTTP ${a.http}</span><div class="muted">${esc(a.m)}</div></li>`).join('')}</ul>`:'<div class="empty" style="margin-top:12px">Not sent yet. The scheduler picks this up every 15 minutes, or send it now.</div>'}
+ ${v.status==='linked'?'':`<button class="btn p" id="dl">${v.status==='pending'?'Link now':'Retry link'}</button>`}`;
+ $('#drawer').classList.add('open');$('#x').onclick=closeDrawer;const b=$('#dl');if(b)b.onclick=()=>doLink(id);}
+function closeDrawer(){open=null;$('#drawer').classList.remove('open')}
+
+/* ---------- 2. Doctor consent request ---------- */
+const types=['OP consultation','Prescription','Immunization','Diagnostic report','Discharge summary','Health document'];
+$('#types').innerHTML=types.map((t,i)=>`<label><input type="checkbox" value="${t}" ${i<3?'checked':''}> ${t}</label>`).join('');
+$('#chk').onclick=()=>{const v=$('#abha').value.trim();$('#abhaHint').innerHTML=/^[\w.]+@\w+$/.test(v)?'<span class="ok-txt">ABHA address found.</span>':'Enter it like name@abdm.';};
+let mine=null;
+$('#send').onclick=()=>{
+ const a=$('#abha').value.trim(),t=[...document.querySelectorAll('#types input:checked')].map(x=>x.value);
+ if(!/^[\w.]+@\w+$/.test(a)){$('#abhaHint').textContent='Enter the patient ABHA address like name@abdm.';$('#abha').focus();return}
+ if(!t.length){toast('Choose at least one record type');return}
+ mine={id:Date.now(),doc:'Dr. Suresh Babu',org:'SRM Chennai',purpose:$('#purpose').value,types:t,from:$('#from').value,to:$('#to').value,exp:$('#exp').value,status:'pending',me:a};
+ consents.unshift(mine);
+ $('#s1').className='done';$('#s1').firstChild.textContent='Request sent to '+a;$('#s1').lastElementChild.textContent='Sent just now.';
+ $('#s2').className='cur';$('#sim').hidden=false;$('#send').disabled=true;renderAppr();toast('Consent request sent');};
+$('#sim').onclick=()=>{mine.status='granted';$('#s2').className='done';$('#s2').firstChild.textContent='Patient approved';$('#s3').className='cur';$('#s3').firstChild.textContent='Records arriving';$('#sim').hidden=true;renderAppr();toast('Patient approved the request');};
+
+/* ---------- 3. Patient approvals ---------- */
+const consents=[
+{id:1,doc:'Dr. Priya Nair',org:'City Heart Clinic',purpose:'Second opinion',types:['OP consultation','Diagnostic report'],from:'2026-01-01',to:'2026-09-30',exp:'2026-10-15',status:'pending'},
+{id:2,doc:'Dr. Arjun Menon',org:'Sunrise Hospital',purpose:'Care management',types:['Prescription','Immunization'],from:'2025-06-01',to:'2026-09-30',exp:'2026-12-31',status:'granted'},
+{id:3,doc:'Wellness Labs',org:'Wellness Labs',purpose:'Research',types:['Health document'],from:'2024-01-01',to:'2026-09-30',exp:'2027-01-01',status:'denied'}];
+let af='pending';
+function renderAppr(){
+ const c=k=>consents.filter(x=>x.status===k).length;
+ $('#apprFilter').innerHTML=['pending','granted','denied'].map(k=>`<button aria-pressed="${af===k}" data-k="${k}">${k[0].toUpperCase()+k.slice(1)} (${c(k)})</button>`).join('');
+ $('#apprFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>{af=b.dataset.k;renderAppr()});
+ const l=consents.filter(x=>x.status===af);
+ $('#apprList').innerHTML=l.length?l.map(x=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><h3>${esc(x.doc)}</h3><div class="muted">${esc(x.org)} wants to view your records for: ${esc(x.purpose.toLowerCase())}</div></div><span class="pill ${x.status}">${x.status==='pending'?'Needs your decision':x.status==='granted'?'You approved':'You denied'}</span></div>
+ <div class="chips">${x.types.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>
+ <div class="muted">Records from ${x.from} to ${x.to}. Access ends ${x.exp}.</div>
+ <div class="acts">${x.status==='pending'?`<button class="btn p" data-a="granted" data-i="${x.id}">Approve</button><button class="btn d" data-a="denied" data-i="${x.id}">Deny</button>`:x.status==='granted'?`<button class="btn d" data-a="denied" data-i="${x.id}">Revoke access</button>`:`<button class="btn" data-a="granted" data-i="${x.id}">Approve instead</button>`}</div></div>`).join(''):`<div class="empty">No ${af} requests. New requests from doctors show up here.</div>`;
+ $('#apprList').querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>{const x=consents.find(y=>y.id===+b.dataset.i);x.status=b.dataset.a;
+  if(x===mine&&x.status==='granted'){$('#s2').className='done';$('#s3').className='cur'}
+  renderAppr();toast(x.status==='granted'?'Access approved':'Access denied')});
+}
+renderLink();renderAppr();
+</script>
+</body>
+</html>
