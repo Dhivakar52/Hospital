@@ -2,6 +2,12 @@ import {
   UserCheck,
   ShieldCheck,
   FileCode2,
+  LayoutDashboard,
+  Users,
+  UsersRound,
+  Stethoscope,
+  CalendarClock,
+  Baby,
   type LucideIcon,
 } from "lucide-react"
 import { lazy } from "react"
@@ -22,26 +28,26 @@ export interface MenuItem {
 
 // ✅ Menu data for sidebar
 export const menuConfig: MenuItem[] = [
-  // {
-  //   title: "Dashboard",
-  //   url: "/dashboard",
-  //   icon: LayoutDashboard
-  // },
-  // {
-  //   title: "OP",
-  //   url: "/op",
-  //   icon: Users,
-  //   items: [
-  //     { title: "Registration", url: "/registered-patients", icon: UsersRound },
-  //     { title: "Diagnosis Entry", url: "/op/diagnosisentry", icon: Stethoscope },
-  //     { title: "Revisit", url: "/revisit-records", icon: CalendarClock },
-  //   ],
-  // },
-  // {
-  //   title: "AntenatalRegistration",
-  //   url: "/registered-anc-records",
-  //   icon: Baby
-  // },
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: LayoutDashboard
+  },
+  {
+    title: "OP",
+    url: "/op",
+    icon: Users,
+    items: [
+      { title: "Registration", url: "/registered-patients", icon: UsersRound },
+      { title: "Diagnosis Entry", url: "/op/diagnosisentry", icon: Stethoscope },
+      { title: "Revisit", url: "/revisit-records", icon: CalendarClock },
+    ],
+  },
+  {
+    title: "AntenatalRegistration",
+    url: "/registered-anc-records",
+    icon: Baby
+  },
 
   //  {
   //   title: "Appointment",
