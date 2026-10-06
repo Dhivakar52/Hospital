@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { SquareChartGantt, Pencil, Trash2, Menu, Printer, Barcode, XCircle, PowerOff, FileKey } from "lucide-react"
+import { SquareChartGantt, Pencil, Trash2, Menu, Printer, Barcode, XCircle, PowerOff, FileKey, FileCode2, Link2 } from "lucide-react"
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog"
 import { notify } from "@/lib/notify"
 
@@ -18,6 +18,8 @@ type ActionMenuProps<T> = {
   onPrint?: (item: T) => void;
   onBarcode?: (item: T) => void;
   onRequestConsent?: (item: T) => void;
+  onFhirViewer?: (item: T) => void;
+  onCareContext?: (item: T) => void;
   onAuditLog?: (item: T) => void;
   onCollect?: (item: T) => void;
   onAck?: (item: T) => void;
@@ -34,6 +36,8 @@ export function ActionMenu<T>({
   onPrint,
   onBarcode,
   onRequestConsent,
+  onFhirViewer,
+  onCareContext,
   onDelete,
   onAuditLog,
   onCollect,
@@ -74,6 +78,7 @@ export function ActionMenu<T>({
               View
             </DropdownMenuItem>
           )}
+
           {onPrint && (
             <DropdownMenuItem onClick={() => onPrint(item)} className="cursor-pointer">
               <Printer className="mr-2 h-4 w-4 text-blue-600" />
@@ -89,7 +94,7 @@ export function ActionMenu<T>({
           {onRevisitCancellation && (
             <DropdownMenuItem onClick={() => onRevisitCancellation(item)} className="text-amber-700 focus:text-amber-800 cursor-pointer">
               <XCircle className="mr-2 h-4 w-4 text-amber-600" />
-             Cancellation
+              Cancellation
             </DropdownMenuItem>
           )}
           {onDeactivate && (
@@ -134,9 +139,21 @@ export function ActionMenu<T>({
               Request Consent
             </DropdownMenuItem>
           )}
+          {onFhirViewer && (
+            <DropdownMenuItem onClick={() => onFhirViewer(item)} className="cursor-pointer">
+              <FileCode2 className="mr-2 h-4 w-4 text-blue-600" />
+              FHIR Viewer
+            </DropdownMenuItem>
+          )}
+          {onCareContext && (
+            <DropdownMenuItem onClick={() => onCareContext(item)} className="cursor-pointer">
+              <Link2 className="mr-2 h-4 w-4 text-emerald-600" />
+              Care Context
+            </DropdownMenuItem>
+          )}
           {onDelete && (
-            <DropdownMenuItem 
-              onClick={() => setIsDeleteDialogOpen(true)} 
+            <DropdownMenuItem
+              onClick={() => setIsDeleteDialogOpen(true)}
               className="text-red-600 focus:text-red-600 cursor-pointer"
             >
               <Trash2 className="mr-2 h-4 w-4" />

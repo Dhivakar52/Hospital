@@ -37,12 +37,16 @@ interface FhirParsedViewerProps {
     status?: string;
     expiresOnDate?: string;
     sharedFor?: string;
+    gender?: string;
+    dob?: string;
+    phone?: string;
   };
   onBack?: () => void;
   initialData?: any;
+  backLabel?: string;
 }
 
-export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJsonData }: FhirParsedViewerProps) {
+export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJsonData, backLabel = "Back to Consent" }: FhirParsedViewerProps) {
   const { data: parsedData, isLoading, parseJson, exportJson, copyJson } = useFhirParser(initialData);
 
   // Control whether upload screen or parsed view is shown
@@ -95,9 +99,9 @@ export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJso
     );
   }, [patientName]);
 
-  const patientGender = parsedData?.patient?.gender || "Female";
-  const patientBirthDate = parsedData?.patient?.birthDate || "2004-06-18";
-  const rawPhone = parsedData?.patient?.telecom?.[0]?.value || "8864893203";
+  const patientGender = consentDetails?.gender || parsedData?.patient?.gender || "Female";
+  const patientBirthDate = consentDetails?.dob || parsedData?.patient?.birthDate || "2004-06-18";
+  const rawPhone = consentDetails?.phone || parsedData?.patient?.telecom?.[0]?.value || "8864893203";
   const patientPhone = rawPhone.startsWith("+") ? rawPhone : `+91 ${rawPhone}`;
   const rawId = parsedData?.patient?.id || "Patient-Gs5752398f5db6e13dc94-1";
   const patientAbha = rawId.includes("6a577523918f5dbdca136c9c")
@@ -464,7 +468,7 @@ export function FhirParsedViewer({ consentDetails, onBack, initialData = viewJso
               className="h-9 px-3 gap-1.5 text-xs text-slate-700 hover:text-slate-900 border-slate-300 hover:bg-slate-50 cursor-pointer font-medium"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back to Consent</span>
+              <span>{backLabel}</span>
             </Button>
           )}
 

@@ -1,3 +1,23 @@
+export interface CareContextData {
+  abha_address: string
+  care_context_id: string
+  hip_id: string
+  oid: string
+  partner_patient_id: string
+  status: string
+}
+
+export interface CareContextResponse {
+  service: string
+  event: string
+  event_time: number | string
+  transaction_id: string
+  timestamp: number | string
+  business_id: string
+  client_id: string
+  data: CareContextData
+}
+
 export type Patient = {
   id: string
   opNo: string
@@ -24,6 +44,7 @@ export type Patient = {
   contactNo1?: string
   contactNo2?: string
   abhaId?: string
+  careContext?: CareContextResponse
 
   // Step 2: Address & Contact
   doorNo?: string

@@ -40,7 +40,7 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed"
   const location = useLocation()
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
 
   const [search, setSearch] = React.useState("")
   const isSearching = search.trim().length > 0
@@ -48,7 +48,7 @@ export function AppSidebar() {
   // Checks if a url matches the current route or sub-route
   const isUrlActive = (url: string) => {
     if (location.pathname === url) return true;
-    if (url === "/registered-patients" && (location.pathname.startsWith("/op/registration") || location.pathname.startsWith("/registered-patients"))) return true;
+    if (url === "/registered-patients" && (location.pathname.startsWith("/op/registration") || location.pathname.startsWith("/registered-patients") || location.pathname === "/care-context")) return true;
     if (url === "/revisit-records" && (location.pathname === "/op/revisit" || location.pathname.startsWith("/op/revisit/"))) return true;
     if (url === "/op/revisit-cancellation" && location.pathname.startsWith("/op/revisit-cancellation")) return true;
     if (url === "/registered-anc-records" && location.pathname.startsWith("/antenatal-registration")) return true;
@@ -65,6 +65,17 @@ export function AppSidebar() {
   const isParentActive = (item: any) =>
     item.items?.some((sub: any) => isUrlActive(sub.url))
 
+  // Role-based menu:
+  // HIS_ADMIN -> all existing menu items
+  // ABHA_ADMIN -> only existing HIU menu items
+  const baseMenu = React.useMemo(() => {
+    const role = user?.role || (user?.roles && user.roles[0]) || (user?.email === "abhaadmin@gmail.com" ? "ABHA_ADMIN" : "HIS_ADMIN")
+    if (role === "ABHA_ADMIN") {
+      return menuConfig.filter((item) => item.title === "HIU" || item.url === "/hiu")
+    }
+    return menuConfig
+  }, [user?.role, user?.roles, user?.email])
+
   // Explicit open-state map, keyed by item title
   const [openItems, setOpenItems] = React.useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
@@ -78,23 +89,23 @@ export function AppSidebar() {
 
   // Auto-expand parent menu when route changes
   React.useEffect(() => {
-    menuConfig.forEach((item) => {
+    baseMenu.forEach((item) => {
       if (item.items && isParentActive(item)) {
         setOpenItems((prev) => ({ ...prev, [item.title]: true }))
       }
     })
-  }, [location.pathname])
+  }, [location.pathname, baseMenu])
 
   const toggleItem = (title: string, next: boolean) => {
     setOpenItems((prev) => ({ ...prev, [title]: next }))
   }
 
-  // Search filtering
+  // Search filtering on top of role-filtered menu
   const filteredMenu = React.useMemo(() => {
     const q = search.trim().toLowerCase()
-    if (!q) return menuConfig
+    if (!q) return baseMenu
 
-    return menuConfig
+    return baseMenu
       .map((item) => {
         const titleMatches = item.title.toLowerCase().includes(q)
 
@@ -115,7 +126,7 @@ export function AppSidebar() {
         return null
       })
       .filter(Boolean) as typeof menuConfig
-  }, [search])
+  }, [search, baseMenu])
 
   const hasResults = filteredMenu.length > 0
 

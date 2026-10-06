@@ -41,6 +41,8 @@ import { mockPatients } from "@/data/mockPatients"
 import { BarcodePreviewModal } from "@/components/BarcodePreviewModal"
 import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal"
 import { RequestConsentDrawer } from "@/components/RequestConsentDrawer"
+import { FhirParsedViewer } from "@/pages/HIU/FhirParsedViewer"
+import { GENERATED_HIU_RECORDS } from "@/data/sampleData"
 
 interface RegisteredPatientsTableProps {
   newPatient?: RegistrationDraft | null
@@ -63,6 +65,9 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
   // Request Consent drawer states
   const [isConsentDrawerOpen, setIsConsentDrawerOpen] = useState(false)
   const [selectedConsentPatient, setSelectedConsentPatient] = useState<Patient | null>(null)
+
+  // FHIR Clinical Record View state
+  const [viewingFhirPatient, setViewingFhirPatient] = useState<Patient | null>(null)
 
   // Dialog states
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -345,12 +350,15 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
       size: 120,
       cell: ({ row }) => {
         const patient = row.original
+        const hasCareContext = Boolean(patient.careContext && patient.careContext.data)
+
         return (
           <div className="relative flex items-center">
             <ActionMenu
               item={patient}
               onEdit={handleEdit}
               onView={handleView}
+
               onPrint={(p) => {
                 setSelectedPrintPatient(p)
                 setIsPrintModalOpen(true)
@@ -360,6 +368,28 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                 setIsBarcodeModalOpen(true)
               }}
               onRequestConsent={handleRequestConsent}
+              onFhirViewer={(p) => setViewingFhirPatient(p)}
+              onCareContext={
+                hasCareContext
+                  ? (p) => {
+                    navigate("/care-context", {
+                      state: {
+                        careContext: p.careContext,
+                        patient: {
+                          id: p.id,
+                          opNo: p.opNo,
+                          title: p.title,
+                          patientName: p.patientName,
+                          department: p.department,
+                          gender: p.gender,
+                          phone: p.phone || p.contactNo1,
+                        },
+                        returnUrl: "/registered-patients",
+                      },
+                    })
+                  }
+                  : undefined
+              }
               onDelete={handleDelete}
             />
           </div>
@@ -427,7 +457,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
         }
         exportColumns.forEach((col) => {
           const value = row[col.key]
-          rowData[col.header] = value !== undefined && value !== null ? value : "-"
+          rowData[col.header] = value !== undefined && value !== null ? (typeof value === "object" ? "" : value) : "-"
         })
         return rowData
       })
@@ -473,6 +503,52 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
     setTimeout(() => {
       document.title = originalTitle
     }, 1000)
+  }
+
+  // FHIR Clinical Record View (matching Consent screen implementation)
+  if (viewingFhirPatient) {
+    const matchingConsent = GENERATED_HIU_RECORDS.find(
+      (r) =>
+        r.uhidNo === viewingFhirPatient.id ||
+        (r.patientName && r.patientName.toLowerCase() === viewingFhirPatient.patientName.toLowerCase())
+    );
+
+    const consentDetails = matchingConsent || {
+      consentId: `c28c16f3-${viewingFhirPatient.id.slice(0, 4)}-4db8-9a2b-${viewingFhirPatient.id}`,
+      patientName: viewingFhirPatient.patientName,
+      uhidNo: viewingFhirPatient.id,
+      purpose: viewingFhirPatient.department ? `${viewingFhirPatient.department} Consultation` : "General Consultation",
+      status: "Success" as const,
+      expiresOnDate: "Active",
+      sharedFor: "Direct Consultation",
+      gender: viewingFhirPatient.gender || (viewingFhirPatient.title === "Mrs" || viewingFhirPatient.title === "Ms" ? "Female" : "Male"),
+      dob: viewingFhirPatient.dob || "1990-01-01",
+      phone: viewingFhirPatient.phone || viewingFhirPatient.contactNo1,
+    };
+
+    return (
+      <div className="space-y-4">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+          <span className="text-slate-400">OP</span>
+          <span className="text-slate-400">/</span>
+          <button
+            type="button"
+            onClick={() => setViewingFhirPatient(null)}
+            className="text-blue-600 hover:underline cursor-pointer font-medium"
+          >
+            Registration
+          </button>
+          {/* <span className="text-slate-400">/</span>
+          <span className="text-slate-900 font-semibold">FHIR Clinical Record View</span> */}
+        </nav>
+
+        <FhirParsedViewer
+          consentDetails={consentDetails}
+          onBack={() => setViewingFhirPatient(null)}
+          backLabel="Back to Registration"
+        />
+      </div>
+    );
   }
 
   return (
@@ -681,7 +757,7 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
                     state: { patient: target },
                   });
                 } :
-                handlePanelClose
+                  handlePanelClose
         }
         saveLabel={
           panelMode === "add" ? "Add Patient" :
