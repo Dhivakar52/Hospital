@@ -1,4 +1,5 @@
 import type { Patient } from "@/types/op_register"
+import { KNOWN_CARE_CONTEXTS } from "@/data/careContextData"
 
 export const mockPatients: Patient[] = [
   { 
@@ -12,7 +13,8 @@ export const mockPatients: Patient[] = [
     department: "Neurology", 
     registrationDate: "2024-01-15", 
     email: "seethalakshmi@example.com", 
-    phone: "+91 98765-43210" 
+    phone: "+91 98765-43210",
+    careContext: KNOWN_CARE_CONTEXTS["26588922"],
   },
   { 
     id: "26588923", 
@@ -38,7 +40,8 @@ export const mockPatients: Patient[] = [
     department: "Orthopedics", 
     registrationDate: "2024-01-20", 
     email: "priya@example.com", 
-    phone: "+91 98765-43212" 
+    phone: "+91 98765-43212",
+    careContext: KNOWN_CARE_CONTEXTS["26588924"],
   },
   { 
     id: "26588925", 
@@ -77,7 +80,8 @@ export const mockPatients: Patient[] = [
     department: "Cardiology", 
     registrationDate: "2024-01-22", 
     email: "anitha@example.com", 
-    phone: "+91 98765-43215" 
+    phone: "+91 98765-43215",
+    careContext: KNOWN_CARE_CONTEXTS["26588927"],
   },
   { 
     id: "26588928", 

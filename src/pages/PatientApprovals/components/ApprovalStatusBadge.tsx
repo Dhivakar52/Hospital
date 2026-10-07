@@ -1,14 +1,15 @@
 import React from "react";
-import { type ApprovalStatus } from "@/types/patientApproval";
 import { cn } from "@/lib/utils";
 
 interface ApprovalStatusBadgeProps {
-  status: ApprovalStatus;
+  status: string;
   className?: string;
 }
 
 export const ApprovalStatusBadge: React.FC<ApprovalStatusBadgeProps> = ({ status, className }) => {
-  if (status === "pending") {
+  const normalized = (status || "").toUpperCase();
+
+  if (normalized === "REQUESTED" || normalized === "PENDING") {
     return (
       <span
         className={cn(
@@ -17,12 +18,12 @@ export const ApprovalStatusBadge: React.FC<ApprovalStatusBadgeProps> = ({ status
           className
         )}
       >
-        Needs your decision
+        REQUESTED
       </span>
     );
   }
 
-  if (status === "approved") {
+  if (normalized === "GRANTED" || normalized === "APPROVED") {
     return (
       <span
         className={cn(
@@ -31,7 +32,21 @@ export const ApprovalStatusBadge: React.FC<ApprovalStatusBadgeProps> = ({ status
           className
         )}
       >
-        Approved
+        GRANTED
+      </span>
+    );
+  }
+
+  if (normalized === "INIT_ERROR") {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-tight transition-colors shadow-2xs",
+          "bg-[#fee2e2] text-[#ef4444] border border-[#fca5a5] dark:bg-[#3b1a17] dark:text-[#ef4444]",
+          className
+        )}
+      >
+        INIT_ERROR
       </span>
     );
   }
@@ -44,7 +59,7 @@ export const ApprovalStatusBadge: React.FC<ApprovalStatusBadgeProps> = ({ status
         className
       )}
     >
-      Denied
+      {status || "UNKNOWN"}
     </span>
   );
 };

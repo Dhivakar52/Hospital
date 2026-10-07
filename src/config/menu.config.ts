@@ -8,6 +8,7 @@ import {
   Stethoscope,
   CalendarClock,
   Baby,
+  Building2,
   type LucideIcon,
 } from "lucide-react"
 import { lazy } from "react"
@@ -79,7 +80,7 @@ export const menuConfig: MenuItem[] = [
   //   ],
   // },
   {
-    title: "HIU",
+    title: "Abha HIU",
     url: "/hiu",
     icon: ShieldCheck,
     items: [
@@ -87,6 +88,11 @@ export const menuConfig: MenuItem[] = [
       { title: "Patient Approvals", url: "/patient-approvals", icon: UserCheck },
       { title: "FHIR Viewer", url: "/fhir", icon: FileCode2 },
     ],
+  },
+  {
+    title: "HIP",
+    url: "/hip",
+    icon: Building2,
   },
 
 
@@ -159,6 +165,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/Dashboard")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     // OP Screen
     {
@@ -167,6 +174,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/OP/Registration/Registration")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/registered-patients",
@@ -174,6 +182,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/OP/Registration/RegisteredPatientsPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/registered-patients/view/:id",
@@ -181,6 +190,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/OP/Registration/PatientDetailsPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/op/diagnosisentry",
@@ -188,6 +198,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/OP/Diagnosisentry/DiagnoModule")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/op/revisit",
@@ -195,6 +206,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/OP/Revisit/RevisitModule")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/revisit-records",
@@ -202,6 +214,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/OP/Revisit/RevisitRecordsPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/op/revisit-cancellation",
@@ -209,6 +222,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/OP/RevisitCancellation/RevisitCancelModule")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/op/revisit-cancellation/new",
@@ -216,6 +230,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/OP/RevisitCancellation/RevisitCancelFormPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
 
 
@@ -225,6 +240,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/AntenatalRegistration/AthenaModule")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/registered-anc-records",
@@ -232,6 +248,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/AntenatalRegistration/AncRecordsPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/hospital-master",
@@ -239,6 +256,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/HospitalMaster/HospitalModule")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/hospital-master-records",
@@ -246,6 +264,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/HospitalMaster/HospitalMasterPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/referral-master",
@@ -253,6 +272,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/Referralmaster/ReferralModule")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/referral-master-records",
@@ -260,6 +280,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/Referralmaster/ReferralMasterPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/notifications",
@@ -267,6 +288,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/Notifications/NotificationsPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/appointment",
@@ -274,6 +296,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/Appointment/AppointmentModule")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     {
       path: "/hiu",
@@ -281,6 +304,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/HIU/HiuMainMenu")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
     },
     {
       path: "/consent",
@@ -288,6 +312,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/HIU/HiuModule")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
     },
     {
       path: "/consent-management",
@@ -295,6 +320,15 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/HIU/HiuModule")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
+    },
+    {
+      path: "/approved",
+      name: "Approved Health Records",
+      component: lazy(() => import("@/pages/HIU/ApprovedRecordsPage")),
+      exact: true,
+      protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
     },
     {
       path: "/patient-approvals",
@@ -302,6 +336,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/PatientApprovals/PatientApprovalsPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
     },
     {
       path: "/fhir",
@@ -309,6 +344,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/HIU/FhirViewerPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
     },
     {
       path: "/abdm-viewer",
@@ -316,6 +352,7 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/HIU/FhirViewerPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
     },
     {
       path: "/fhir-viewer",
@@ -323,6 +360,23 @@ export const getRoutes = () => {
       component: lazy(() => import("@/pages/HIU/FhirViewerPage")),
       exact: true,
       protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
+    },
+    {
+      path: "/care-context",
+      name: "Care Context",
+      component: lazy(() => import("@/pages/CareContext/CareContextPage")),
+      exact: true,
+      protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
+    },
+    {
+      path: "/hip",
+      name: "HIP",
+      component: lazy(() => import("@/pages/HIP/HipPage")),
+      exact: true,
+      protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
     },
 
     // {
@@ -357,12 +411,14 @@ export const getRoutes = () => {
       name: "Profile",
       component: lazy(() => import("@/pages/Profile")),
       protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
     },
     {
       path: "/settings",
       name: "Settings",
       component: lazy(() => import("@/pages/Setting")),
       protected: true,
+      roles: ["HIS_ADMIN"],
     },
     // {
     //   path: "/settings/notifications",

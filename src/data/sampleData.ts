@@ -123,6 +123,7 @@ export const GENERATED_REFERRAL_RECORDS: ReferralRow[] = Array.from({ length: 10
 
 export interface HiuConsentRow {
   consentId: string;
+  consentInitId?: string;
   requestedOnDate: string;
   requestedOnTime: string;
   lastUpdatedDate: string;
@@ -130,11 +131,17 @@ export interface HiuConsentRow {
   sharedFor: string;
   expiresInDays: string;
   expiresOnDate: string;
-  status: "Pending" | "Success" | "INIT_ERROR";
+  status: string;
   patientName?: string;
   uhidNo?: string;
   hiTypes?: string;
   purpose?: string;
+  abhaAddress?: string;
+  careContextId?: string;
+  ekaOid?: string;
+  periodFrom?: string;
+  periodTo?: string;
+  recordTypes?: string[];
 }
 
 export const INITIAL_HIU_RECORDS: HiuConsentRow[] = [

@@ -37,9 +37,6 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{ userId?: string; password?: string }>({})
 
-  const VALID_USER_ID = 'admin@gmail.com'
-  const VALID_PASSWORD = '123'
-
   const validateForm = () => {
     const newErrors: { userId?: string; password?: string } = {}
 
@@ -64,15 +61,33 @@ const Login = () => {
 
     setIsLoading(true)
 
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 800))
 
-    if (userId === VALID_USER_ID && password === VALID_PASSWORD) {
-      toast.success('Welcome back! Redirecting...')
-      // ✅ Goes through AuthContext instead of only writing to localStorage,
-      // so isAuthenticated updates immediately for every component that
-      // reads it via useAuth() — no reliance on a route change to notice.
-      login({ userId, name: 'HIS Admin' })
+    const trimmedUser = userId.trim().toLowerCase()
+
+    if (
+      (trimmedUser === 'hisadmin@gmail.com' && password === 'his@123') ||
+      (trimmedUser === 'admin@gmail.com' && password === '123')
+    ) {
+      toast.success('Welcome back, HIS Admin! Redirecting...')
+      login({
+        userId: trimmedUser,
+        name: 'HIS Admin',
+        email: trimmedUser,
+        role: 'HIS_ADMIN',
+        roles: ['HIS_ADMIN'],
+      })
       navigate('/dashboard')
+    } else if (trimmedUser === 'abhaadmin@gmail.com' && password === 'abha@123') {
+      toast.success('Welcome back, ABHA Admin! Redirecting...')
+      login({
+        userId: trimmedUser,
+        name: 'ABHA Admin',
+        email: trimmedUser,
+        role: 'ABHA_ADMIN',
+        roles: ['ABHA_ADMIN'],
+      })
+      navigate('/consent')
     } else {
       toast.error('Invalid user ID or password. Please try again.')
       setPassword('')

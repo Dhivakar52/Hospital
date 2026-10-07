@@ -29,7 +29,8 @@ const withRouteErrorBoundary = (children: React.ReactNode, key: string) => (
 
 export const AppRoutes = () => {
   const location = useLocation()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
+  const defaultRedirect = (user?.role === "ABHA_ADMIN" || user?.email === "abhaadmin@gmail.com") ? "/consent" : "/dashboard"
 
   const publicRoutes = routes.filter(route => !route.protected)
   const protectedRoutes = routes.filter(route => route.protected)
@@ -75,7 +76,7 @@ export const AppRoutes = () => {
           path="*"
           element={
             isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
+              <Navigate to={defaultRedirect} replace />
             ) : (
               <Navigate to="/" replace />
             )
