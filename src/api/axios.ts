@@ -5,13 +5,36 @@ const RAW_BASE_URL =
 
 /**
  * Centralized API Base URL.
- * In development, using a relative base URL leverages Vite's dev server proxy (/api)
- * to prevent browser CORS preflight OPTIONS (401) blocking from the ngrok tunnel.
- * In production, the configured VITE_API_BASE_URL is utilized.
+ * When accessed from a browser on localhost, 127.0.0.1, or local development network (or in Vite DEV mode),
+ * we use relative base URL ("") so requests go through the Vite dev/preview server proxy (/api).
+ * This completely avoids browser CORS preflight (OPTIONS 401) blocking from the ngrok tunnel.
  */
-export const API_BASE_URL = import.meta.env.DEV
-  ? ""
-  : RAW_BASE_URL.replace(/\/+$/, "");
+
+
+console.log(RAW_BASE_URL, "RR")
+export const getApiBaseUrl = (): string => {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (
+      !host ||
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host.startsWith("192.168.") ||
+      host.startsWith("10.") ||
+      host.startsWith("172.")
+    ) {
+      return "";
+    }
+  }
+
+  if (import.meta.env.DEV) {
+    return "";
+  }
+
+  return RAW_BASE_URL.replace(/\/+$/, "");
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -22,6 +45,24 @@ export const api = axios.create({
     "ngrok-skip-browser-warning": "true",
   },
   timeout: 30000,
+});
+
+// Ensure runtime requests in browser on local development hosts always route via proxy
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (
+      !host ||
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host.startsWith("192.168.") ||
+      host.startsWith("10.") ||
+      host.startsWith("172.")
+    ) {
+      config.baseURL = "";
+    }
+  }
+  return config;
 });
 
 /**

@@ -5,6 +5,8 @@ import { API_ENDPOINTS } from "@/api/endpoints";
 /**
  * Safely parse FHIRBundleJSON which can be null, empty, already parsed, or a JSON string.
  */
+
+
 export function parseFhirBundleData(fhirBundleJson: unknown): any {
   if (!fhirBundleJson) return null;
   if (typeof fhirBundleJson === "object") return fhirBundleJson;
@@ -53,9 +55,9 @@ export function hasValidFhirData(fhirBundleJson: unknown): boolean {
       parsed.some((item) =>
         Boolean(
           item &&
-            (item.bundle ||
-              item.resourceType ||
-              (typeof item === "object" && Object.keys(item).length > 0))
+          (item.bundle ||
+            item.resourceType ||
+            (typeof item === "object" && Object.keys(item).length > 0))
         )
       )
     );
