@@ -11,14 +11,16 @@ interface ProtectedRoutesProps {
   loadingComponent?: ReactNode
 }
 
-// Existing HIU routes accessible to ABHA_ADMIN
-const isHiuRoute = (pathname: string) => {
+// Existing HIU and HIP routes accessible to ABHA_ADMIN
+const isAbhaAdminRoute = (pathname: string) => {
   return (
     pathname === "/hiu" ||
     pathname.startsWith("/hiu/") ||
     pathname === "/consent" ||
     pathname.startsWith("/consent") ||
     pathname === "/consent-management" ||
+    pathname === "/approved" ||
+    pathname.startsWith("/approved") ||
     pathname === "/patient-approvals" ||
     pathname.startsWith("/patient-approvals") ||
     pathname === "/fhir" ||
@@ -27,6 +29,8 @@ const isHiuRoute = (pathname: string) => {
     pathname === "/fhir-viewer" ||
     pathname === "/care-context" ||
     pathname.startsWith("/care-context") ||
+    pathname === "/hip" ||
+    pathname.startsWith("/hip") ||
     pathname === "/profile"
   )
 }
@@ -47,11 +51,11 @@ const ProtectedRoutes = ({
 
   // Access rules:
   // HIS_ADMIN: access to ALL existing screens
-  // ABHA_ADMIN: access to ONLY existing HIU screens
+  // ABHA_ADMIN: access to HIU, HIP, Care Context, and Approved screens
   const isAllowed = (() => {
     if (userRole === "HIS_ADMIN") return true
     if (userRole === "ABHA_ADMIN") {
-      if (!isHiuRoute(location.pathname)) return false
+      if (!isAbhaAdminRoute(location.pathname)) return false
       if (requiredRoles.length > 0 && !requiredRoles.includes("ABHA_ADMIN")) return false
       return true
     }

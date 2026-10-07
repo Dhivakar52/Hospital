@@ -8,6 +8,7 @@ import {
   Stethoscope,
   CalendarClock,
   Baby,
+  Building2,
   type LucideIcon,
 } from "lucide-react"
 import { lazy } from "react"
@@ -79,7 +80,7 @@ export const menuConfig: MenuItem[] = [
   //   ],
   // },
   {
-    title: "HIU",
+    title: "Abha HIU",
     url: "/hiu",
     icon: ShieldCheck,
     items: [
@@ -87,6 +88,11 @@ export const menuConfig: MenuItem[] = [
       { title: "Patient Approvals", url: "/patient-approvals", icon: UserCheck },
       { title: "FHIR Viewer", url: "/fhir", icon: FileCode2 },
     ],
+  },
+  {
+    title: "HIP",
+    url: "/hip",
+    icon: Building2,
   },
 
 
@@ -317,6 +323,14 @@ export const getRoutes = () => {
       roles: ["HIS_ADMIN", "ABHA_ADMIN"],
     },
     {
+      path: "/approved",
+      name: "Approved Health Records",
+      component: lazy(() => import("@/pages/HIU/ApprovedRecordsPage")),
+      exact: true,
+      protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
+    },
+    {
       path: "/patient-approvals",
       name: "Patient Approvals",
       component: lazy(() => import("@/pages/PatientApprovals/PatientApprovalsPage")),
@@ -352,6 +366,14 @@ export const getRoutes = () => {
       path: "/care-context",
       name: "Care Context",
       component: lazy(() => import("@/pages/CareContext/CareContextPage")),
+      exact: true,
+      protected: true,
+      roles: ["HIS_ADMIN", "ABHA_ADMIN"],
+    },
+    {
+      path: "/hip",
+      name: "HIP",
+      component: lazy(() => import("@/pages/HIP/HipPage")),
       exact: true,
       protected: true,
       roles: ["HIS_ADMIN", "ABHA_ADMIN"],

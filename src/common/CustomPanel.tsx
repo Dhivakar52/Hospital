@@ -1,5 +1,5 @@
 import React from "react";
-import { X } from "lucide-react"
+import { X, Loader2 } from "lucide-react";
 
 interface CustomPanelProps {
   isOpen: boolean;
@@ -9,6 +9,7 @@ interface CustomPanelProps {
   children: React.ReactNode;
   saveLabel?: string;
   width?: string;
+  isLoading?: boolean;
 }
 
 const CustomPanel: React.FC<CustomPanelProps> = ({
@@ -19,6 +20,7 @@ const CustomPanel: React.FC<CustomPanelProps> = ({
   children,
   saveLabel = "Save",
   width = "560px",
+  isLoading = false,
 }) => {
   if (!isOpen) return null;
 
@@ -59,8 +61,10 @@ const CustomPanel: React.FC<CustomPanelProps> = ({
           </button>
           <button
             onClick={onSave}
-            className="px-4 py-2 text-sm text-primary-foreground rounded-lg bg-primary hover:bg-primary/90 transition-colors"
+            disabled={isLoading}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-primary-foreground rounded-lg bg-primary hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             {saveLabel}
           </button>
         </div>

@@ -1,23 +1,22 @@
 import React from "react";
-import { type ApprovalStatus } from "@/types/patientApproval";
 import { cn } from "@/lib/utils";
 
 export interface TabConfig {
-  key: ApprovalStatus;
+  key: string;
   label: string;
 }
 
 interface ApprovalTabsProps {
-  activeTab: ApprovalStatus;
-  onTabChange: (tab: ApprovalStatus) => void;
-  counts: Record<ApprovalStatus, number>;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  counts: Record<string, number>;
   className?: string;
 }
 
 const TABS: TabConfig[] = [
-  { key: "pending", label: "Pending" },
-  { key: "approved", label: "Approved" },
-  { key: "denied", label: "Denied" },
+  { key: "REQUESTED", label: "Requested" },
+  { key: "GRANTED", label: "Granted" },
+  { key: "ALL", label: "All Consents" },
 ];
 
 export const ApprovalTabs: React.FC<ApprovalTabsProps> = ({
@@ -30,7 +29,7 @@ export const ApprovalTabs: React.FC<ApprovalTabsProps> = ({
     <div
       role="tablist"
       aria-label="Filter patient approvals by status"
-      className={cn("flex flex-wrap items-center gap-2 mb-4", className)}
+      className={cn("flex flex-wrap items-center gap-2 mb-2 md:mb-0", className)}
     >
       {TABS.map((tab) => {
         const isActive = activeTab === tab.key;
@@ -45,7 +44,7 @@ export const ApprovalTabs: React.FC<ApprovalTabsProps> = ({
             aria-pressed={isActive}
             onClick={() => onTabChange(tab.key)}
             className={cn(
-              "px-3.5 py-1.5 rounded-full text-[13.5px] font-medium transition-all duration-150 cursor-pointer shadow-2xs select-none",
+              "px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 cursor-pointer shadow-2xs select-none",
               isActive
                 ? "blue-btn text-white font-semibold shadow-xs"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800"

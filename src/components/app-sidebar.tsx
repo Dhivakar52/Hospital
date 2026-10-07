@@ -54,10 +54,11 @@ export function AppSidebar() {
     if (url === "/registered-anc-records" && location.pathname.startsWith("/antenatal-registration")) return true;
     if (url === "/hospital-master-records" && location.pathname.startsWith("/hospital-master")) return true;
     if (url === "/referral-master-records" && location.pathname.startsWith("/referral-master")) return true;
-    if (url === "/consent" && (location.pathname === "/consent" || location.pathname.startsWith("/consent") || location.pathname === "/consent-management")) return true;
+    if (url === "/consent" && (location.pathname === "/consent" || location.pathname.startsWith("/consent") || location.pathname === "/consent-management" || location.pathname === "/approved" || location.pathname.startsWith("/approved"))) return true;
     if (url === "/patient-approvals" && (location.pathname === "/patient-approvals" || location.pathname.startsWith("/patient-approvals"))) return true;
     if (url === "/fhir" && (location.pathname === "/fhir" || location.pathname.startsWith("/fhir") || location.pathname === "/abdm-viewer" || location.pathname === "/fhir-viewer")) return true;
     if (url === "/hiu" && (location.pathname === "/hiu" || location.pathname.startsWith("/hiu"))) return true;
+    if (url === "/hip" && (location.pathname === "/hip" || location.pathname.startsWith("/hip"))) return true;
     return false;
   }
 
@@ -67,11 +68,11 @@ export function AppSidebar() {
 
   // Role-based menu:
   // HIS_ADMIN -> all existing menu items
-  // ABHA_ADMIN -> only existing HIU menu items
+  // ABHA_ADMIN -> only existing HIU and HIP menu items
   const baseMenu = React.useMemo(() => {
     const role = user?.role || (user?.roles && user.roles[0]) || (user?.email === "abhaadmin@gmail.com" ? "ABHA_ADMIN" : "HIS_ADMIN")
     if (role === "ABHA_ADMIN") {
-      return menuConfig.filter((item) => item.title === "HIU" || item.url === "/hiu")
+      return menuConfig.filter((item) => item.title === "HIU" || item.url === "/hiu" || item.title === "HIP" || item.url === "/hip")
     }
     return menuConfig
   }, [user?.role, user?.roles, user?.email])

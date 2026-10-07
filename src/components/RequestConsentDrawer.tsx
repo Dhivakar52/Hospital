@@ -4,6 +4,8 @@ import CustomPanel from "@/common/CustomPanel";
 import { DateField } from "@/components/FormPrimitives";
 import { GENERATED_HIU_RECORDS, type HiuConsentRow } from "@/data/sampleData";
 import { notify } from "@/lib/notify";
+import { startHiuConsent } from "@/api/hiu";
+import type { StartConsentPayload } from "@/types/hiu";
 import {
   CreditCard,
   Calendar,
@@ -40,6 +42,7 @@ export function RequestConsentDrawer({
   onSuccess,
 }: RequestConsentDrawerProps) {
   const [requestTo, setRequestTo] = useState("testinguser12@sbx");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [recordRangeQuick, setRecordRangeQuick] = useState("Last 6 months");
   const [startDate, setStartDate] = useState<Date | undefined>(new Date(2026, 2, 9));
   const [endDate, setEndDate] = useState<Date | undefined>(new Date(2026, 8, 9));
@@ -90,47 +93,97 @@ export function RequestConsentDrawer({
     }
   };
 
-  const handleSubmit = () => {
-    if (!requestTo.trim()) {
-      notify.validationError("Please enter ABHA ID / Request To user.");
+  const computeExpiryDate = (expireStr: string): string => {
+    const d = new Date();
+    if (expireStr.includes("1 week")) d.setDate(d.getDate() + 7);
+    else if (expireStr.includes("1 month")) d.setMonth(d.getMonth() + 1);
+    else if (expireStr.includes("3 month")) d.setMonth(d.getMonth() + 3);
+    else if (expireStr.includes("6 month")) d.setMonth(d.getMonth() + 6);
+    else if (expireStr.includes("12 month") || expireStr.includes("1 year")) d.setFullYear(d.getFullYear() + 1);
+    else d.setMonth(d.getMonth() + 6);
+    return format(d, "yyyy-MM-dd");
+  };
+
+  const handleSubmit = async () => {
+    const trimmedAddress = requestTo.trim();
+    if (!trimmedAddress) {
+      notify.validationError("Please enter ABHA address / Request To user.");
       return;
     }
 
-    const randomHex = Math.random().toString(36).substring(2, 10);
-    const randomHex2 = Math.random().toString(36).substring(2, 10);
-    const newId = `${randomHex}-${randomHex2.slice(0, 4)}-4${randomHex2.slice(4, 7)}-9a2b-${Math.random().toString(36).substring(2, 14)}`;
+    if (selectedRecordTypes.length === 0) {
+      notify.validationError("Please select at least one medical record type.");
+      return;
+    }
 
-    const newRecord: HiuConsentRow = {
-      consentId: newId,
-      requestedOnDate: "09 Sept 26",
-      requestedOnTime: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase(),
-      lastUpdatedDate: "09 Sept 26",
-      lastUpdatedTime: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase(),
-      sharedFor: `${expireInQuick}`,
-      expiresInDays: `${expireInQuick}`,
-      expiresOnDate: "09 Mar 27",
-      status: "Pending",
-      patientName: patient?.patientName || requestTo.split("@")[0].toUpperCase(),
-      uhidNo: patient?.id || "3995999",
-      hiTypes: selectedRecordTypes.join(", "),
-      purpose: purpose,
+    const periodFrom = startDate ? format(startDate, "yyyy-MM-dd") : "2026-09-03";
+    const periodTo = endDate ? format(endDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
+    const expiryDate = computeExpiryDate(expireInQuick);
+
+    const payload: StartConsentPayload = {
+      abha_address: trimmedAddress,
+      dry_run: false,
+      expiry: expiryDate,
+      period_from: periodFrom,
+      period_to: periodTo,
+      purpose: purpose || "Care management",
+      record_types: selectedRecordTypes,
     };
 
-    GENERATED_HIU_RECORDS.unshift(newRecord);
-    if (onSuccess) {
-      onSuccess(newRecord);
+    setIsSubmitting(true);
+    try {
+      const response = await startHiuConsent(payload);
+
+      const now = new Date();
+      const newRecord: HiuConsentRow = {
+        consentId: response.consent_id || response.consent_init_id || `REQ-${response.hiu_request_id}`,
+        requestedOnDate: format(now, "dd MMM yy"),
+        requestedOnTime: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase(),
+        lastUpdatedDate: format(now, "dd MMM yy"),
+        lastUpdatedTime: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase(),
+        sharedFor: `${expireInQuick}`,
+        expiresInDays: `${expireInQuick}`,
+        expiresOnDate: response.consent_metadata?.expiry
+          ? format(new Date(response.consent_metadata.expiry), "dd MMM yy")
+          : "09 Mar 27",
+        status: response.status === "created" ? "Pending" : (response.status as any),
+        patientName: patient?.patientName || trimmedAddress.split("@")[0].toUpperCase(),
+        uhidNo: patient?.id || String(response.hiu_request_id || "3995999"),
+        hiTypes: (response.consent_metadata?.record_types || selectedRecordTypes).join(", "),
+        purpose: response.consent_metadata?.purpose || purpose,
+        abhaAddress: response.abha_address || trimmedAddress,
+        careContextId: response.care_context_id,
+        ekaOid: response.eka_oid,
+        consentInitId: response.consent_init_id,
+        periodFrom: response.consent_metadata?.period_from || periodFrom,
+        periodTo: response.consent_metadata?.period_to || periodTo,
+        recordTypes: response.consent_metadata?.record_types || selectedRecordTypes,
+      };
+
+      GENERATED_HIU_RECORDS.unshift(newRecord);
+      if (onSuccess) {
+        onSuccess(newRecord);
+      }
+      notify.saveSuccess(response.message || "Medical records consent request sent successfully.");
+      onClose();
+    } catch (error: any) {
+      const errorMessage = error?.message || "Unable to create consent request. Please try again.";
+      notify.serverError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-    notify.saveSuccess("Medical records consent request sent successfully.");
-    onClose();
   };
 
   return (
     <CustomPanel
       isOpen={isOpen}
       title="Request Medical Records"
-      onClose={onClose}
+      onClose={() => {
+        if (!isSubmitting) onClose();
+      }}
       onSave={handleSubmit}
-      saveLabel="Request Medical Records"
+      saveLabel={isSubmitting ? "Requesting..." : "Request Medical Records"}
+      isLoading={isSubmitting}
       width="580px"
     >
       <div className="space-y-5 text-sm text-slate-700 font-sans">

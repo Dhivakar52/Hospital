@@ -18,6 +18,7 @@ type ActionMenuProps<T> = {
   onPrint?: (item: T) => void;
   onBarcode?: (item: T) => void;
   onRequestConsent?: (item: T) => void;
+  requestConsentLabel?: string;
   onFhirViewer?: (item: T) => void;
   onCareContext?: (item: T) => void;
   onAuditLog?: (item: T) => void;
@@ -36,6 +37,7 @@ export function ActionMenu<T>({
   onPrint,
   onBarcode,
   onRequestConsent,
+  requestConsentLabel,
   onFhirViewer,
   onCareContext,
   onDelete,
@@ -136,7 +138,7 @@ export function ActionMenu<T>({
           {onRequestConsent && (
             <DropdownMenuItem onClick={() => onRequestConsent(item)} className="cursor-pointer">
               <FileKey className="mr-2 h-4 w-4 text-blue-600" />
-              Request Consent
+              {requestConsentLabel || "Request Consent"}
             </DropdownMenuItem>
           )}
           {onFhirViewer && (

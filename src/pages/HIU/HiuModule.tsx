@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
@@ -7,9 +7,18 @@ import { ActionMenu } from "@/common/ActionMenu";
 import CustomPanel from "@/common/CustomPanel";
 import { Button } from "@/components/ui/button";
 import { DateField } from "@/components/FormPrimitives";
-import { GENERATED_HIU_RECORDS, type HiuConsentRow } from "@/data/sampleData";
+import { type HiuConsentRow } from "@/data/sampleData";
 import { notify } from "@/lib/notify";
 import { FhirParsedViewer } from "./FhirParsedViewer";
+import {
+    startHiuConsent,
+    getHiuConsentList,
+    getStoredCreatedConsents,
+    findStoredConsent,
+} from "@/api/hiu";
+import { fetchHipPatients } from "@/services/hipService";
+import type { HipPatient } from "@/types/hip";
+import type { StartConsentPayload, StartConsentResponse } from "@/types/hiu";
 import {
     FileKey,
     Calendar,
@@ -33,10 +42,14 @@ const ALL_RECORD_TYPES = [
 ];
 
 export default function HiuModule() {
+    const navigate = useNavigate();
     const location = useLocation();
     const locationState = location.state as { openRequestModal?: boolean; patient?: any } | null;
-    const [records, setRecords] = useState<HiuConsentRow[]>(GENERATED_HIU_RECORDS);
+    const [records, setRecords] = useState<HiuConsentRow[]>([]);
+    const [isLoadingConsents, setIsLoadingConsents] = useState<boolean>(true);
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [createdConsentResponse, setCreatedConsentResponse] = useState<StartConsentResponse | null>(null);
     const [viewingConsent, setViewingConsent] = useState<HiuConsentRow | null>(null);
 
     // Request Consent Form States matching screenshot
@@ -91,36 +104,188 @@ export default function HiuModule() {
         }
     };
 
-    // Handle New Consent Request
-    const handleRequestSubmit = () => {
-        if (!requestTo.trim()) {
-            notify.validationError("Please enter ABHA ID / Request To user.");
+    const formatDateSafe = (dateStr?: string, fmt = "dd MMM yy") => {
+        if (!dateStr) return "-";
+        try {
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) return format(d, fmt);
+        } catch {}
+        return dateStr;
+    };
+
+    // Load live consents from centralized backend API
+    const loadConsents = useCallback(async () => {
+        setIsLoadingConsents(true);
+        try {
+            let patientList: HipPatient[] = [];
+            try {
+                patientList = await fetchHipPatients();
+            } catch (err) {
+                console.warn("Could not load patients list for mapping:", err);
+            }
+
+            const storedConsents = getStoredCreatedConsents();
+            const response = await getHiuConsentList();
+            const rawConsents = response.consents || [];
+
+            // Map backend consents and enrich with stored created details
+            const mapped: HiuConsentRow[] = rawConsents.map((c) => {
+                const stored = findStoredConsent({
+                    consentId: c.consent_id,
+                    consentInitId: c.consent_init_id,
+                    abhaAddress: c.abha_address,
+                });
+
+                const abha = stored?.abha_address || c.abha_address || "testinguser12@sbx";
+
+                const matched = patientList.find(
+                    (p) =>
+                        p.abhaaddress === abha ||
+                        (stored?.care_context_id && p.carecontextid === stored.care_context_id) ||
+                        (c.care_context_id && p.carecontextid === c.care_context_id)
+                );
+                const pName = matched?.patientname || c.patient_name || abha.split("@")[0].toUpperCase();
+                const uhid = String(matched?.uhid || stored?.hiu_request_id || "3995999");
+                const careCtx = stored?.care_context_id || c.care_context_id || matched?.carecontextid;
+                const ekaOid = stored?.eka_oid || matched?.ekaoid;
+
+                return {
+                    consentId: c.consent_id,
+                    consentInitId: c.consent_init_id || stored?.consent_init_id,
+                    requestedOnDate: formatDateSafe(c.c_at, "dd MMM yy"),
+                    requestedOnTime: formatDateSafe(c.c_at, "hh:mm a").toLowerCase(),
+                    lastUpdatedDate: formatDateSafe(c.u_at || c.c_at, "dd MMM yy"),
+                    lastUpdatedTime: formatDateSafe(c.u_at || c.c_at, "hh:mm a").toLowerCase(),
+                    sharedFor: "6 months",
+                    expiresInDays: formatDateSafe(c.period?.expiry || stored?.consent_metadata?.expiry, "dd MMM yy"),
+                    expiresOnDate: formatDateSafe(c.period?.expiry || stored?.consent_metadata?.expiry, "dd MMM yy"),
+                    status: (c.status || stored?.status || "REQUESTED").toUpperCase(),
+                    patientName: pName,
+                    uhidNo: uhid,
+                    hiTypes: (c.hi_types && c.hi_types.length > 0 ? c.hi_types : stored?.consent_metadata?.record_types || []).join(", "),
+                    purpose: stored?.consent_metadata?.purpose || "Care management",
+                    abhaAddress: abha,
+                    careContextId: careCtx,
+                    ekaOid: ekaOid,
+                    periodFrom: c.period?.from || stored?.consent_metadata?.period_from,
+                    periodTo: c.period?.to || stored?.consent_metadata?.period_to,
+                    recordTypes: c.hi_types && c.hi_types.length > 0 ? c.hi_types : stored?.consent_metadata?.record_types,
+                };
+            });
+
+            // Include any stored created consent that has not yet appeared in backend list
+            storedConsents.forEach((sc) => {
+                const alreadyExists = mapped.some(
+                    (m) =>
+                        (sc.consent_id && m.consentId === sc.consent_id) ||
+                        (sc.consent_init_id && m.consentInitId === sc.consent_init_id)
+                );
+                if (!alreadyExists) {
+                    const matched = patientList.find(
+                        (p) =>
+                            p.abhaaddress === sc.abha_address ||
+                            (sc.care_context_id && p.carecontextid === sc.care_context_id)
+                    );
+                    const now = new Date();
+                    mapped.unshift({
+                        consentId: sc.consent_id || `REQ-${sc.hiu_request_id || Date.now()}`,
+                        consentInitId: sc.consent_init_id,
+                        requestedOnDate: formatDateSafe(now.toISOString(), "dd MMM yy"),
+                        requestedOnTime: formatDateSafe(now.toISOString(), "hh:mm a").toLowerCase(),
+                        lastUpdatedDate: formatDateSafe(now.toISOString(), "dd MMM yy"),
+                        lastUpdatedTime: formatDateSafe(now.toISOString(), "hh:mm a").toLowerCase(),
+                        sharedFor: "6 months",
+                        expiresInDays: formatDateSafe(sc.consent_metadata?.expiry, "dd MMM yy"),
+                        expiresOnDate: formatDateSafe(sc.consent_metadata?.expiry, "dd MMM yy"),
+                        status: (sc.status || "REQUESTED").toUpperCase(),
+                        patientName: matched?.patientname || sc.abha_address?.split("@")[0].toUpperCase() || "Suresh Babu",
+                        uhidNo: String(matched?.uhid || sc.hiu_request_id || "3995999"),
+                        hiTypes: (sc.consent_metadata?.record_types || []).join(", "),
+                        purpose: sc.consent_metadata?.purpose || "Care management",
+                        abhaAddress: sc.abha_address,
+                        careContextId: sc.care_context_id,
+                        ekaOid: sc.eka_oid || matched?.ekaoid,
+                        periodFrom: sc.consent_metadata?.period_from,
+                        periodTo: sc.consent_metadata?.period_to,
+                        recordTypes: sc.consent_metadata?.record_types,
+                    });
+                }
+            });
+
+            setRecords(mapped);
+        } catch (error) {
+            console.error("Error loading backend consents:", error);
+        } finally {
+            setIsLoadingConsents(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadConsents();
+    }, [loadConsents]);
+
+    // Helper to calculate expiry date based on quick pills (e.g. "6 months" -> "2027-03-09")
+    const computeExpiryDate = (expireStr: string): string => {
+        const d = new Date();
+        if (expireStr.includes("1 week")) {
+            d.setDate(d.getDate() + 7);
+        } else if (expireStr.includes("1 month")) {
+            d.setMonth(d.getMonth() + 1);
+        } else if (expireStr.includes("3 month")) {
+            d.setMonth(d.getMonth() + 3);
+        } else if (expireStr.includes("6 month")) {
+            d.setMonth(d.getMonth() + 6);
+        } else if (expireStr.includes("12 month") || expireStr.includes("1 year")) {
+            d.setFullYear(d.getFullYear() + 1);
+        } else {
+            d.setMonth(d.getMonth() + 6);
+        }
+        return format(d, "yyyy-MM-dd");
+    };
+
+    // Handle New Consent Request via centralized Axios API
+    const handleRequestSubmit = async () => {
+        const trimmedAddress = requestTo.trim();
+        if (!trimmedAddress) {
+            notify.validationError("Please enter ABHA address / Request To user.");
             return;
         }
 
-        const randomHex = Math.random().toString(36).substring(2, 10);
-        const randomHex2 = Math.random().toString(36).substring(2, 10);
-        const newId = `${randomHex}-${randomHex2.slice(0, 4)}-4${randomHex2.slice(4, 7)}-9a2b-${Math.random().toString(36).substring(2, 14)}`;
+        if (selectedRecordTypes.length === 0) {
+            notify.validationError("Please select at least one medical record type.");
+            return;
+        }
 
-        const newRecord: HiuConsentRow = {
-            consentId: newId,
-            requestedOnDate: "09 Sept 26",
-            requestedOnTime: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase(),
-            lastUpdatedDate: "09 Sept 26",
-            lastUpdatedTime: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase(),
-            sharedFor: `${expireInQuick}`,
-            expiresInDays: `${expireInQuick}`,
-            expiresOnDate: "09 Mar 27",
-            status: "Pending",
-            patientName: locationState?.patient?.patientName || requestTo.split("@")[0].toUpperCase(),
-            uhidNo: locationState?.patient?.id || "3995999",
-            hiTypes: selectedRecordTypes.join(", "),
-            purpose: purpose,
+        const periodFrom = startDate ? format(startDate, "yyyy-MM-dd") : "2026-09-03";
+        const periodTo = endDate ? format(endDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
+        const expiryDate = computeExpiryDate(expireInQuick);
+
+        const payload: StartConsentPayload = {
+            abha_address: trimmedAddress,
+            dry_run: false,
+            expiry: expiryDate,
+            period_from: periodFrom,
+            period_to: periodTo,
+            purpose: purpose || "Care management",
+            record_types: selectedRecordTypes,
         };
 
-        setRecords((prev) => [newRecord, ...prev]);
-        notify.saveSuccess("Medical records consent request sent successfully.");
-        setIsRequestModalOpen(false);
+        setIsSubmitting(true);
+        try {
+            const response = await startHiuConsent(payload);
+
+            setIsRequestModalOpen(false);
+            setCreatedConsentResponse(response);
+            notify.saveSuccess(response.message || "Consent request created successfully.");
+
+            // Refresh backend consent list immediately so created consent appears in Consent Management
+            await loadConsents();
+        } catch (error: any) {
+            const errorMessage = error?.message || "Unable to create consent request. Please try again.";
+            notify.serverError(errorMessage);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const columns: ColumnDef<HiuConsentRow>[] = [
@@ -128,9 +293,16 @@ export default function HiuModule() {
             accessorKey: "consentId",
             header: "CONSENT ID",
             cell: ({ row }) => (
-                <span className="text-[12.5px] text-slate-700 select-all font-normal">
-                    {row.original.consentId}
-                </span>
+                <div className="space-y-0.5 max-w-[260px]">
+                    <span className="text-[12.5px] text-slate-800 select-all font-mono font-medium block truncate" title={row.original.consentId}>
+                        {row.original.consentId}
+                    </span>
+                    {row.original.abhaAddress && (
+                        <span className="text-[11px] text-blue-600 font-mono block truncate" title={row.original.abhaAddress}>
+                            {row.original.abhaAddress}
+                        </span>
+                    )}
+                </div>
             ),
         },
         {
@@ -188,24 +360,24 @@ export default function HiuModule() {
             accessorKey: "status",
             header: "STATUS",
             cell: ({ row }) => {
-                const status = row.original.status;
-                if (status === "Pending") {
+                const status = (row.original.status || "").toUpperCase();
+                if (status === "REQUESTED" || status === "PENDING") {
                     return (
                         <span className="inline-flex items-center px-3 py-1 rounded text-[11px] font-medium bg-[#feefeb] text-[#f97316]">
-                            Pending
+                            REQUESTED
                         </span>
                     );
                 }
-                if (status === "Success") {
+                if (status === "GRANTED" || status === "SUCCESS") {
                     return (
                         <span className="inline-flex items-center px-3 py-1 rounded text-[11px] font-medium bg-[#e6f4ea] text-[#16a34a]">
-                            Success
+                            GRANTED
                         </span>
                     );
                 }
                 return (
                     <span className="inline-flex items-center px-3 py-1 rounded text-[11px] font-medium bg-[#fee2e2] text-[#ef4444]">
-                        INIT_ERROR
+                        {status || "INIT_ERROR"}
                     </span>
                 );
             },
@@ -215,11 +387,17 @@ export default function HiuModule() {
             header: "ACTION",
             enableSorting: false,
             cell: ({ row }) => {
-                if (row.original.status === "Success") {
+                const status = (row.original.status || "").toUpperCase();
+                if (status === "GRANTED" || status === "SUCCESS") {
                     return (
                         <ActionMenu
                             item={row.original}
-                            onView={() => setViewingConsent(row.original)}
+                            onView={() => {
+                                const consentId = row.original.consentId || row.original.consentInitId;
+                                if (consentId) {
+                                    navigate(`/approved?consent_id=${encodeURIComponent(consentId)}`);
+                                }
+                            }}
                         />
                     );
                 }
@@ -263,19 +441,21 @@ export default function HiuModule() {
                 searchPlaceholder="Search consent ID, status, date..."
                 columns={columns}
                 data={records}
+                isLoading={isLoadingConsents}
                 hideDateFilters={true}
                 filterFields={[
                     {
                         label: "Status",
                         key: "status",
                         type: "select",
-                        options: ["Pending", "Success", "INIT_ERROR"],
+                        options: ["REQUESTED", "GRANTED", "INIT_ERROR"],
                     },
                     { label: "Consent ID", key: "consentId", type: "text" },
+                    { label: "ABHA Address", key: "abhaAddress", type: "text" },
                     { label: "Patient Name", key: "patientName", type: "text" },
                 ]}
                 searchField={(r) =>
-                    `${r.consentId} ${r.status} ${r.requestedOnDate} ${r.lastUpdatedDate} ${r.expiresOnDate} ${r.patientName || ""} ${r.uhidNo || ""}`
+                    `${r.consentId} ${r.consentInitId || ""} ${r.status} ${r.requestedOnDate} ${r.lastUpdatedDate} ${r.expiresOnDate} ${r.patientName || ""} ${r.uhidNo || ""} ${r.abhaAddress || ""} ${r.ekaOid || ""}`
                 }
                 headerExtra={
                     <div className="flex items-center gap-2">
@@ -295,9 +475,12 @@ export default function HiuModule() {
             <CustomPanel
                 isOpen={isRequestModalOpen}
                 title="Request Medical Records"
-                onClose={() => setIsRequestModalOpen(false)}
+                onClose={() => {
+                    if (!isSubmitting) setIsRequestModalOpen(false);
+                }}
                 onSave={handleRequestSubmit}
-                saveLabel="Request Medical Records"
+                saveLabel={isSubmitting ? "Requesting..." : "Request Medical Records"}
+                isLoading={isSubmitting}
                 width="580px"
             >
                 <div className="space-y-5 text-sm text-slate-700 font-sans">
@@ -605,6 +788,97 @@ export default function HiuModule() {
                     </div> */}
                 </div>
             </CustomPanel>
+
+            {/* Success Consent Response Modal */}
+            {createdConsentResponse && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+                    <div className="w-full max-w-lg rounded-xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-4 bg-emerald-50/90 border-b border-emerald-100 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                    <Check className="h-5 w-5 stroke-[2.5]" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-emerald-950">Consent Request Created</h3>
+                                    <p className="text-xs text-emerald-700">Waiting for patient to approve</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setCreatedConsentResponse(null)}
+                                className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="p-5 space-y-3 text-xs">
+                            <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                <span className="text-slate-500 font-medium">Status</span>
+                                <span className="col-span-2">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 uppercase">
+                                        {createdConsentResponse.status}
+                                    </span>
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                <span className="text-slate-500 font-medium">Consent ID</span>
+                                <span className="col-span-2 font-mono text-slate-900 break-all select-all font-semibold">
+                                    {createdConsentResponse.consent_id || "-"}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                <span className="text-slate-500 font-medium">Consent Init ID</span>
+                                <span className="col-span-2 font-mono text-slate-700 break-all select-all">
+                                    {createdConsentResponse.consent_init_id || "-"}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                <span className="text-slate-500 font-medium">HIU Request ID</span>
+                                <span className="col-span-2 font-semibold text-slate-900">
+                                    {createdConsentResponse.hiu_request_id}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                <span className="text-slate-500 font-medium">ABHA Address</span>
+                                <span className="col-span-2 font-mono text-slate-800">
+                                    {createdConsentResponse.abha_address}
+                                </span>
+                            </div>
+                            {createdConsentResponse.eka_oid && (
+                                <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                    <span className="text-slate-500 font-medium">Eka OID</span>
+                                    <span className="col-span-2 font-mono text-slate-900 font-bold select-all bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                                        {createdConsentResponse.eka_oid}
+                                    </span>
+                                </div>
+                            )}
+                            {createdConsentResponse.care_context_id && (
+                                <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                    <span className="text-slate-500 font-medium">Care Context ID</span>
+                                    <span className="col-span-2 font-mono text-slate-600 break-all">
+                                        {createdConsentResponse.care_context_id}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="pt-1.5">
+                                <span className="text-slate-500 font-medium block mb-1">Message</span>
+                                <p className="bg-slate-50 rounded-lg p-2.5 text-slate-700 border border-slate-200/80 leading-relaxed text-[11.5px]">
+                                    {createdConsentResponse.message}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
+                            <Button
+                                size="sm"
+                                onClick={() => setCreatedConsentResponse(null)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer text-xs font-semibold px-4"
+                            >
+                                Done
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

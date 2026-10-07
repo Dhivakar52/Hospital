@@ -63,6 +63,7 @@ const HEADER_CONFIG: Record<string, { icon: any; subtitle: string }> = {
   "Consent Management": { icon: ShieldCheck, subtitle: "Manage Health Information User (HIU) consent requests and patient data access" },
 
   "HIU Consent Records": { icon: ShieldCheck, subtitle: "Manage Health Information User (HIU) consent requests and patient data access" },
+  "HIP": { icon: Building2, subtitle: "View and manage Health Information Provider (HIP) patient records" },
   "FHIR Viewer": { icon: FileCode2, subtitle: "Upload, parse, and inspect ABDM/NDHM FHIR Bundle JSON documents" },
   "Notifications": { icon: Bell, subtitle: "View and manage notifications" },
   "Documents": { icon: FileText, subtitle: "Manage hospital documents" },
