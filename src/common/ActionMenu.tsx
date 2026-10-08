@@ -6,13 +6,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { SquareChartGantt, Pencil, Trash2, Menu, Printer, Barcode, XCircle, PowerOff, FileKey, FileCode2, Link2 } from "lucide-react"
+import { SquareChartGantt, Pencil, Trash2, Menu, Printer, Barcode, XCircle, PowerOff, FileKey, FileCode2, Link2, Loader2 } from "lucide-react"
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog"
 import { notify } from "@/lib/notify"
 
 type ActionMenuProps<T> = {
   item: T;
   onView?: (item: T) => void;
+  isViewLoading?: boolean;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
   onPrint?: (item: T) => void;
@@ -33,6 +34,7 @@ type ActionMenuProps<T> = {
 export function ActionMenu<T>({
   item,
   onView,
+  isViewLoading = false,
   onEdit,
   onPrint,
   onBarcode,
@@ -59,6 +61,24 @@ export function ActionMenu<T>({
     }
   };
 
+  const hasAnyAction = Boolean(
+    onEdit ||
+    onView ||
+    onPrint ||
+    onBarcode ||
+    onRevisitCancellation ||
+    onDeactivate ||
+    onAuditLog ||
+    onCollect ||
+    onAck ||
+    onValidate ||
+    onReject ||
+    onRequestConsent ||
+    onFhirViewer ||
+    onCareContext ||
+    onDelete
+  );
+
   return (
     <>
       <DropdownMenu>
@@ -68,6 +88,9 @@ export function ActionMenu<T>({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
+          {!hasAnyAction && (
+            <div className="px-3 py-2 text-xs text-slate-400 select-none">No actions available</div>
+          )}
           {onEdit && (
             <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer">
               <Pencil className="mr-2 h-4 w-4 text-slate-600" />
@@ -75,9 +98,19 @@ export function ActionMenu<T>({
             </DropdownMenuItem>
           )}
           {onView && (
-            <DropdownMenuItem onClick={() => onView(item)} className="cursor-pointer">
-              <SquareChartGantt className="mr-2 h-4 w-4 text-blue-600" />
-              View
+            <DropdownMenuItem
+              onClick={() => {
+                if (!isViewLoading) onView(item);
+              }}
+              disabled={isViewLoading}
+              className="cursor-pointer"
+            >
+              {isViewLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin text-blue-600" />
+              ) : (
+                <SquareChartGantt className="mr-2 h-4 w-4 text-blue-600" />
+              )}
+              {isViewLoading ? "Loading..." : "View"}
             </DropdownMenuItem>
           )}
 

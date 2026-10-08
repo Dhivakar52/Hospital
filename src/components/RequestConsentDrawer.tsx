@@ -49,8 +49,12 @@ export function RequestConsentDrawer({
   const [requestTo, setRequestTo] = useState("testinguser12@sbx");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recordRangeQuick, setRecordRangeQuick] = useState("Last 6 months");
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date(2026, 2, 9));
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date(2026, 8, 9));
+  const [startDate, setStartDate] = useState<Date | undefined>(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 6);
+    return d;
+  });
+  const [endDate, setEndDate] = useState<Date | undefined>(() => new Date());
 
   const [expireInQuick, setExpireInQuick] = useState("6 months");
   const [purpose, setPurpose] = useState("Care management");
@@ -140,9 +144,31 @@ export function RequestConsentDrawer({
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     const trimmedAddress = requestTo.trim();
     if (!trimmedAddress) {
       notify.validationError("Please enter ABHA address / Request To user.");
+      return;
+    }
+
+    if (!startDate) {
+      notify.validationError("Please select a start date for the record period.");
+      return;
+    }
+
+    if (!endDate) {
+      notify.validationError("Please select an end date for the record period.");
+      return;
+    }
+
+    if (startDate > endDate) {
+      notify.validationError("Start date cannot be after end date.");
+      return;
+    }
+
+    if (!expireInQuick) {
+      notify.validationError("Please select consent expiration period.");
       return;
     }
 
@@ -151,8 +177,8 @@ export function RequestConsentDrawer({
       return;
     }
 
-    const periodFrom = startDate ? format(startDate, "yyyy-MM-dd") : "2026-09-03";
-    const periodTo = endDate ? format(endDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
+    const periodFrom = format(startDate, "yyyy-MM-dd");
+    const periodTo = format(endDate, "yyyy-MM-dd");
     const expiryDate = computeExpiryDate(expireInQuick);
 
     const payload: StartConsentPayload = {
@@ -180,8 +206,8 @@ export function RequestConsentDrawer({
         expiresInDays: `${expireInQuick}`,
         expiresOnDate: response.consent_metadata?.expiry
           ? format(new Date(response.consent_metadata.expiry), "dd MMM yy")
-          : "09 Mar 27",
-        status: response.status === "created" ? "Pending" : (response.status as any),
+          : format(new Date(expiryDate), "dd MMM yy"),
+        status: response.status || "Pending",
         patientName: patient?.patientName || trimmedAddress.split("@")[0].toUpperCase(),
         uhidNo: patient?.id || String(response.hiu_request_id || "3995999"),
         hiTypes: (response.consent_metadata?.record_types || selectedRecordTypes).join(", "),

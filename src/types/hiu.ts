@@ -1,6 +1,6 @@
 export interface StartConsentPayload {
   abha_address: string;
-  dry_run: boolean;
+  dry_run?: boolean;
   expiry: string;
   period_from: string;
   period_to: string;
@@ -35,25 +35,33 @@ export interface HiuConsentPeriod {
 }
 
 export interface HiuConsent {
-  c_at: string;
-  consent_id: string;
-  consent_init_id: string;
-  hi_types: string[];
-  period: HiuConsentPeriod;
-  status: string; // "REQUESTED" | "GRANTED" | "INIT_ERROR"
-  u_at: string;
+  abha_address: string;
+  consent_id: string | null;
+  expiry: string;
+  from: string;
+  is_granted: boolean;
+  patient_name: string;
+  status: string;
+  to: string;
+  uhid: number | string;
+
   // Supplementary mapped fields for enriched display & approval
-  patient_name?: string;
+  c_at?: string;
+  consent_init_id?: string;
+  hi_types?: string[];
+  period?: HiuConsentPeriod;
+  u_at?: string;
   patient_id?: string;
   patient_oid?: string;
   eka_oid?: string;
-  abha_address?: string;
   care_context_id?: string;
   consent_metadata?: ConsentMetadata;
 }
 
 export interface HiuConsentListResponse {
-  consents: HiuConsent[];
+  count: number;
+  data: HiuConsent[];
+  consents?: HiuConsent[];
 }
 
 export interface HiuConsentListPayload {

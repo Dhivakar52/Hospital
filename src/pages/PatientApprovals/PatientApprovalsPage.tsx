@@ -98,7 +98,7 @@ export default function PatientApprovalsPage() {
       const enriched: HiuConsent[] = rawConsents.map((c) => {
         // 1. Look up any stored created consent for this consentId or initId
         const stored = findStoredConsent({
-          consentId: c.consent_id,
+          consentId: c.consent_id || undefined,
           consentInitId: c.consent_init_id,
           abhaAddress: c.abha_address,
         });
@@ -120,6 +120,11 @@ export default function PatientApprovalsPage() {
 
         return {
           ...c,
+          expiry: c.period?.expiry || "",
+          from: c.period?.from || "",
+          to: c.period?.to || "",
+          is_granted: (c.status || "").toUpperCase() === "GRANTED",
+          uhid: String(matched?.uhid || "3995999"),
           patient_name: patientName,
           patient_oid: dynamicOid ? String(dynamicOid) : undefined,
           eka_oid: dynamicOid ? String(dynamicOid) : undefined,
@@ -158,6 +163,11 @@ export default function PatientApprovalsPage() {
               to: sc.consent_metadata?.period_to || "2026-09-09",
               expiry: sc.consent_metadata?.expiry || "2027-03-09",
             },
+            from: sc.consent_metadata?.period_from || "2026-09-03",
+            to: sc.consent_metadata?.period_to || "2026-09-09",
+            expiry: sc.consent_metadata?.expiry || "2027-03-09",
+            is_granted: (sc.status || "").toUpperCase() === "GRANTED",
+            uhid: String(matched?.uhid || sc.hiu_request_id || "3995999"),
             status: (sc.status || "REQUESTED").toUpperCase(),
             u_at: now,
             patient_name:

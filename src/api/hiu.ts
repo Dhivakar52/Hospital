@@ -29,7 +29,7 @@ export function saveCreatedConsent(consent: StartConsentResponse): void {
       if (stored) {
         inMemoryCreatedConsents = JSON.parse(stored);
       }
-    } catch {}
+    } catch { }
   }
 
   // Upsert into list
@@ -110,7 +110,12 @@ export const startHiuConsent = async (
   try {
     const response = await api.post<StartConsentResponse>(
       API_ENDPOINTS.HIU.START_CONSENT,
-      payload
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
     const data = response.data;
     if (data) {
@@ -158,8 +163,11 @@ export const getHiuConsentList = async (
       finalPayload
     );
 
+    const consents = Array.isArray(response.data?.consents) ? response.data.consents : [];
     return {
-      consents: Array.isArray(response.data?.consents) ? response.data.consents : [],
+      count: response.data?.count ?? consents.length,
+      data: response.data?.data ?? consents,
+      consents,
     };
   } catch (error) {
     const message = getApiErrorMessage(
@@ -169,6 +177,28 @@ export const getHiuConsentList = async (
     throw new Error(message);
   }
 };
+
+/**
+ * Retrieves the list of HIU consents from database.
+ * GET /api/hiu/ConsentListFromDB
+ */
+export const getHiuConsentListFromDB = async (): Promise<HiuConsentListResponse> => {
+  try {
+    const response = await api.get<HiuConsentListResponse>(
+      API_ENDPOINTS.HIU.CONSENT_LIST_FROM_DB
+    );
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    const message = getApiErrorMessage(
+      error,
+      "Unable to load consent records from database."
+    );
+    throw new Error(message);
+  }
+};
+
 
 /**
  * Approves a patient consent request by OID.
