@@ -807,12 +807,12 @@ export default function HipTable() {
           {/* Search, Date Pickers, Actions */}
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             {/* Top Care-Context Batch Button & Selection Counter */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* <div className="flex items-center gap-2 shrink-0">
               <Button
                 size="sm"
                 onClick={handleLinkCareContextBatch}
                 disabled={isLinkingBatch || selectedRowIds.length === 0}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 h-9 transition-colors"
+                className="blue-btn text-white font-medium text-xs shadow-xs cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 h-9 transition-colors"
                 title={
                   selectedRowIds.length === 0
                     ? "Select eligible rows below to link Care Context"
@@ -827,7 +827,7 @@ export default function HipTable() {
                 ) : (
                   <>
                     <Link2 className="mr-1.5 h-3.5 w-3.5" />
-                    Care-Context
+                    Care Context
                   </>
                 )}
               </Button>
@@ -841,7 +841,7 @@ export default function HipTable() {
               >
                 Selected: {selectedRowIds.length} / 50
               </span>
-            </div>
+            </div> */}
 
             {/* Table Search */}
             <div className="flex-1 sm:flex-none">
@@ -1052,7 +1052,7 @@ export default function HipTable() {
           <>
             {/* Active Selection Banner */}
             {selectedRowIds.length > 0 && (
-              <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3 px-3.5 py-2 rounded-lg bg-emerald-50/90 border border-emerald-200 text-emerald-950 text-xs">
+              <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3 px-3.5 py-2 rounded-lg themeColor border  text-xs">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
                   <span className="font-semibold">
@@ -1063,7 +1063,7 @@ export default function HipTable() {
                   <button
                     type="button"
                     onClick={() => setSelectedRowIds([])}
-                    className="text-emerald-700 hover:text-emerald-900 hover:underline font-medium cursor-pointer"
+                    className="themeColor hover:underline font-medium cursor-pointer px-2 py-0.5 rounded"
                   >
                     Clear selection
                   </button>
@@ -1071,7 +1071,7 @@ export default function HipTable() {
                     size="sm"
                     onClick={handleLinkCareContextBatch}
                     disabled={isLinkingBatch}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs h-7 px-3 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                    className="blue-btn text-white font-medium text-xs shadow-xs h-7 px-3 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isLinkingBatch ? (
                       <>
@@ -1081,7 +1081,7 @@ export default function HipTable() {
                     ) : (
                       <>
                         <Link2 className="mr-1.5 h-3 w-3" />
-                        Care-Context ({selectedRowIds.length})
+                        Care Context ({selectedRowIds.length})
                       </>
                     )}
                   </Button>

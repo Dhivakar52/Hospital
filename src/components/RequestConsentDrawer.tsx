@@ -4,7 +4,8 @@ import CustomPanel from "@/common/CustomPanel";
 import { DateField } from "@/components/FormPrimitives";
 import { GENERATED_HIU_RECORDS, type HiuConsentRow } from "@/data/sampleData";
 import { notify } from "@/lib/notify";
-import { startHiuConsent } from "@/api/hiu";
+import { startHiuConsent, getPatientByUhid } from "@/api/hiu";
+import { Button } from "@/components/ui/button";
 import type { StartConsentPayload } from "@/types/hiu";
 import {
   CreditCard,
@@ -15,6 +16,8 @@ import {
   X,
   Check,
   Search,
+  Loader2,
+  User,
 } from "lucide-react";
 import type { Patient } from "@/types/op_register";
 
@@ -41,6 +44,8 @@ export function RequestConsentDrawer({
   patient,
   onSuccess,
 }: RequestConsentDrawerProps) {
+  const [uhidInput, setUhidInput] = useState(patient?.id || patient?.opNo || "");
+  const [isFetchingPatient, setIsFetchingPatient] = useState(false);
   const [requestTo, setRequestTo] = useState("testinguser12@sbx");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recordRangeQuick, setRecordRangeQuick] = useState("Last 6 months");
@@ -60,6 +65,9 @@ export function RequestConsentDrawer({
   // Sync default user when patient is selected
   useEffect(() => {
     if (patient) {
+      if (patient.id || patient.opNo) {
+        setUhidInput(patient.id || patient.opNo);
+      }
       if (patient.email) {
         setRequestTo(patient.email);
       } else if (patient.patientName) {
@@ -67,6 +75,7 @@ export function RequestConsentDrawer({
         setRequestTo(`${cleanName || "user"}@sbx`);
       }
     } else {
+      setUhidInput("");
       setRequestTo("testinguser12@sbx");
     }
   }, [patient, isOpen]);
@@ -102,6 +111,32 @@ export function RequestConsentDrawer({
     else if (expireStr.includes("12 month") || expireStr.includes("1 year")) d.setFullYear(d.getFullYear() + 1);
     else d.setMonth(d.getMonth() + 6);
     return format(d, "yyyy-MM-dd");
+  };
+
+  // Handle fetching patient ABHA Address by UHID
+  const handleGetPatientDetails = async () => {
+    const trimmedUhid = uhidInput.trim();
+    if (!trimmedUhid) {
+      notify.validationError("Please enter a valid UHID.");
+      return;
+    }
+    if (isFetchingPatient) return;
+
+    setIsFetchingPatient(true);
+    try {
+      const res = await getPatientByUhid(trimmedUhid);
+      const abhaAddress = res?.data?.abha_address?.trim();
+      if (res?.success && abhaAddress) {
+        setRequestTo(abhaAddress);
+        notify.saveSuccess("ABHA Address fetched successfully.");
+      } else {
+        notify.serverError(res?.message || "No ABHA Address found for the given UHID.");
+      }
+    } catch (err: any) {
+      notify.serverError(err?.message || "Failed to fetch patient details. Please try again.");
+    } finally {
+      setIsFetchingPatient(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -189,6 +224,45 @@ export function RequestConsentDrawer({
       <div className="space-y-5 text-sm text-slate-700 font-sans">
         {/* Inner Card Container */}
         <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs space-y-6">
+          {/* 0. UHID & Get Details */}
+          <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
+            <User className="h-4 w-4 text-slate-500 shrink-0" />
+            <span className="text-[13.5px] font-medium text-slate-700 shrink-0">UHID:</span>
+            <input
+              type="text"
+              value={uhidInput}
+              onChange={(e) => setUhidInput(e.target.value)}
+              placeholder="Enter UHID (e.g. 10000005)"
+              className="h-8 flex-1 px-2.5 text-sm font-bold text-slate-900 border-0 focus:ring-0 focus:outline-none bg-slate-50/50 rounded"
+              disabled={isFetchingPatient}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleGetPatientDetails();
+                }
+              }}
+            />
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleGetPatientDetails}
+              disabled={isFetchingPatient || !uhidInput.trim()}
+              className="blue-btn text-white font-medium text-xs shadow-xs h-8 px-3 cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isFetchingPatient ? (
+                <>
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  Fetching...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-1.5 h-3.5 w-3.5" />
+                  Get Details
+                </>
+              )}
+            </Button>
+          </div>
+
           {/* 1. Request to */}
           <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
             <CreditCard className="h-4 w-4 text-slate-500 shrink-0" />
@@ -267,7 +341,7 @@ export function RequestConsentDrawer({
                       placeholder="Start date"
                     />
                   </div>
-                  <span className="text-slate-400 font-semibold shrink-0">→</span>
+                  <span className="text-slate-400 font-semibold shrink-0">-</span>
                   <div className="flex-1">
                     <DateField
                       value={endDate}

@@ -15,6 +15,7 @@ import {
     getHiuConsentList,
     getStoredCreatedConsents,
     findStoredConsent,
+    getPatientByUhid,
 } from "@/api/hiu";
 import { fetchHipPatients } from "@/services/hipService";
 import type { HipPatient } from "@/types/hip";
@@ -29,6 +30,8 @@ import {
     X,
     Check,
     Search,
+    Loader2,
+    User,
 } from "lucide-react";
 
 const ALL_RECORD_TYPES = [
@@ -53,7 +56,9 @@ export default function HiuModule() {
     const [viewingConsent, setViewingConsent] = useState<HiuConsentRow | null>(null);
 
     // Request Consent Form States matching screenshot
-    const [requestTo, setRequestTo] = useState("testinguser12@sbx");
+    const [uhidInput, setUhidInput] = useState("");
+    const [isFetchingPatient, setIsFetchingPatient] = useState(false);
+    const [requestTo, setRequestTo] = useState("");
     const [recordRangeQuick, setRecordRangeQuick] = useState("Last 6 months");
     const [startDate, setStartDate] = useState<Date | undefined>(new Date(2026, 2, 9));
     const [endDate, setEndDate] = useState<Date | undefined>(new Date(2026, 8, 9));
@@ -63,6 +68,9 @@ export default function HiuModule() {
             setIsRequestModalOpen(true);
             if (locationState.patient) {
                 const p = locationState.patient;
+                if (p.uhid || p.id || p.opNo) {
+                    setUhidInput(String(p.uhid || p.id || p.opNo));
+                }
                 if (p.email) {
                     setRequestTo(p.email);
                 } else if (p.patientName) {
@@ -109,7 +117,7 @@ export default function HiuModule() {
         try {
             const d = new Date(dateStr);
             if (!isNaN(d.getTime())) return format(d, fmt);
-        } catch {}
+        } catch { }
         return dateStr;
     };
 
@@ -243,6 +251,32 @@ export default function HiuModule() {
         return format(d, "yyyy-MM-dd");
     };
 
+    // Handle fetching patient ABHA Address by UHID
+    const handleGetPatientDetails = async () => {
+        const trimmedUhid = uhidInput.trim();
+        if (!trimmedUhid) {
+            notify.validationError("Please enter a valid UHID.");
+            return;
+        }
+        if (isFetchingPatient) return;
+
+        setIsFetchingPatient(true);
+        try {
+            const res = await getPatientByUhid(trimmedUhid);
+            const abhaAddress = res?.data?.abha_address?.trim();
+            if (res?.success && abhaAddress) {
+                setRequestTo(abhaAddress);
+                notify.saveSuccess("ABHA Address fetched successfully.");
+            } else {
+                notify.serverError(res?.message || "No ABHA Address found for the given UHID.");
+            }
+        } catch (err: any) {
+            notify.serverError(err?.message || "Failed to fetch patient details. Please try again.");
+        } finally {
+            setIsFetchingPatient(false);
+        }
+    };
+
     // Handle New Consent Request via centralized Axios API
     const handleRequestSubmit = async () => {
         const trimmedAddress = requestTo.trim();
@@ -297,11 +331,11 @@ export default function HiuModule() {
                     <span className="text-[12.5px] text-slate-800 select-all font-mono font-medium block truncate" title={row.original.consentId}>
                         {row.original.consentId}
                     </span>
-                    {row.original.abhaAddress && (
+                    {/* {row.original.abhaAddress && (
                         <span className="text-[11px] text-blue-600 font-mono block truncate" title={row.original.abhaAddress}>
                             {row.original.abhaAddress}
                         </span>
-                    )}
+                    )} */}
                 </div>
             ),
         },
@@ -350,9 +384,9 @@ export default function HiuModule() {
                     <div className="font-semibold text-emerald-600 text-[13px]">
                         {row.original.expiresInDays}
                     </div>
-                    <div className="text-[11.5px] text-slate-400">
+                    {/* <div className="text-[11.5px] text-slate-400">
                         {row.original.expiresOnDate}
-                    </div>
+                    </div> */}
                 </div>
             ),
         },
@@ -487,6 +521,45 @@ export default function HiuModule() {
                     {/* Inner Card Container */}
                     <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs space-y-6">
 
+                        {/* 0. UHID & Get Details */}
+                        <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
+                            <User className="h-4 w-4 text-slate-500 shrink-0" />
+                            <span className="text-[13.5px] font-medium text-slate-700 shrink-0">UHID:</span>
+                            <input
+                                type="text"
+                                value={uhidInput}
+                                onChange={(e) => setUhidInput(e.target.value)}
+                                placeholder="Enter UHID (e.g. 10000005)"
+                                className="h-8 flex-1 px-2.5 text-sm font-bold text-slate-900 border-0 focus:ring-0 focus:outline-none bg-slate-50/50 rounded"
+                                disabled={isFetchingPatient}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleGetPatientDetails();
+                                    }
+                                }}
+                            />
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={handleGetPatientDetails}
+                                disabled={isFetchingPatient || !uhidInput.trim()}
+                                className="blue-btn text-white font-medium text-xs shadow-xs h-8 px-3 cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isFetchingPatient ? (
+                                    <>
+                                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                        Fetching...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Search className="mr-1.5 h-3.5 w-3.5" />
+                                        Get Details
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+
                         {/* 1. Request to */}
                         <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
                             <CreditCard className="h-4 w-4 text-slate-500 shrink-0" />
@@ -565,7 +638,7 @@ export default function HiuModule() {
                                                 placeholder="Start date"
                                             />
                                         </div>
-                                        <span className="text-slate-400 font-semibold shrink-0">→</span>
+                                        <span className="text-slate-400 font-semibold shrink-0">-</span>
                                         <div className="flex-1">
                                             <DateField
                                                 value={endDate}

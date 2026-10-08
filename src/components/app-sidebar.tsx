@@ -72,7 +72,7 @@ export function AppSidebar() {
   const baseMenu = React.useMemo(() => {
     const role = user?.role || (user?.roles && user.roles[0]) || (user?.email === "abhaadmin@gmail.com" ? "ABHA_ADMIN" : "HIS_ADMIN")
     if (role === "ABHA_ADMIN") {
-      return menuConfig.filter((item) => item.title === "HIU" || item.url === "/hiu" || item.title === "HIP" || item.url === "/hip")
+      return menuConfig.filter((item) => item.title === "HIU" || item.title === "Abha HIU" || item.url === "/hiu" || item.title === "HIP" || item.title === "Abha HIP" || item.url === "/hip")
     }
     return menuConfig
   }, [user?.role, user?.roles, user?.email])
