@@ -143,3 +143,21 @@ export interface HiuHealthRecordsResponse {
   records: HiuHealthRecordItem[];
   success: boolean;
 }
+
+export interface HiuPatientDetails {
+  abha_address?: string;
+  care_context_id?: string;
+  eka_oid?: string;
+  linked?: string;
+  linked_at?: string | null;
+  patient_name?: string;
+  uhid?: number | string;
+  visited_at?: string;
+}
+
+export interface HiuPatientDetailsResponse {
+  data?: HiuPatientDetails;
+  message?: string;
+  success: boolean;
+}
+

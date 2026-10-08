@@ -90,7 +90,7 @@ export const menuConfig: MenuItem[] = [
     ],
   },
   {
-    title: "HIP",
+    title: "Abha HIP",
     url: "/hip",
     icon: Building2,
   },
@@ -372,7 +372,7 @@ export const getRoutes = () => {
     },
     {
       path: "/hip",
-      name: "HIP",
+      name: "Abha HIP",
       component: lazy(() => import("@/pages/HIP/HipPage")),
       exact: true,
       protected: true,

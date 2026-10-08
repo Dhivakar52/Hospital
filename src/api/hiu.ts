@@ -9,6 +9,7 @@ import type {
   ApproveConsentPayload,
   ApproveConsentResponse,
   HiuHealthRecordsResponse,
+  HiuPatientDetailsResponse,
 } from "@/types/hiu";
 
 const CREATED_CONSENTS_STORAGE_KEY = "hiu_created_consents_store";
@@ -241,6 +242,27 @@ export const getHealthRecords = async (
     const message = getApiErrorMessage(
       error,
       "Failed to fetch FHIR Bundles"
+    );
+    throw new Error(message);
+  }
+};
+
+/**
+ * Fetches patient details by UHID to retrieve ABHA address.
+ * GET /api/hiu/consent/patient/{uhid}
+ */
+export const getPatientByUhid = async (
+  uhid: string | number
+): Promise<HiuPatientDetailsResponse> => {
+  try {
+    const response = await api.get<HiuPatientDetailsResponse>(
+      API_ENDPOINTS.HIU.PATIENT_BY_UHID(uhid)
+    );
+    return response.data;
+  } catch (error: any) {
+    const message = getApiErrorMessage(
+      error,
+      "Unable to fetch patient details for the provided UHID."
     );
     throw new Error(message);
   }

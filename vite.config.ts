@@ -6,17 +6,29 @@
 // export default defineConfig({
 //   plugins: [react(),tailwindcss()],
 // })
+import fs from "fs"
 import path from "path"
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  const target = (env.VITE_API_BASE_URL || 'https://6b14-103-94-173-10.ngrok-free.app').replace(/\/+$/, '');
+export default defineConfig(() => {
+  const getDynamicTarget = () => {
+    try {
+      const configPath = path.resolve(process.cwd(), 'public/config.json');
+      if (fs.existsSync(configPath)) {
+        const cfg = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+        if (cfg.API_BASE_URL) {
+          return cfg.API_BASE_URL.replace(/\/+$/, '');
+        }
+      }
+    } catch {}
+    return '';
+  };
 
   const proxyConfig = {
-    target,
+    target: getDynamicTarget(),
+    router: () => getDynamicTarget(),
     changeOrigin: true,
     secure: false,
     headers: {

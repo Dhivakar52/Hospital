@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { type HiuConsent } from "@/types/hiu";
 import { ApprovalStatusBadge } from "./ApprovalStatusBadge";
 import { format } from "date-fns";
-import { 
-  FileKey, 
-  Calendar, 
-  Clock, 
-  CheckCircle, 
+import {
+  FileKey,
+  Calendar,
+  Clock,
+  CheckCircle,
   FileText,
   Loader2,
   Copy,
@@ -171,7 +171,7 @@ export const PatientApprovalCard: React.FC<PatientApprovalCardProps> = ({
       {/* Date Range & Expiry Banner */}
       <div className="text-xs text-[#5b6b78] dark:text-slate-400 flex flex-wrap items-center gap-x-3 gap-y-1 py-1.5 border-t border-slate-100 dark:border-slate-800/80">
         <div>
-          Period: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{formatDateSafe(consent.period?.from)}</strong> →{" "}
+          Period: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{formatDateSafe(consent.period?.from)}</strong> -{" "}
           <strong className="text-slate-700 dark:text-slate-300 font-semibold">{formatDateSafe(consent.period?.to)}</strong>
         </div>
         <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">•</span>

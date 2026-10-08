@@ -570,7 +570,7 @@ export default function ApprovedRecordsPage() {
             Period
           </span>
           <span className="text-xs text-slate-700 mt-0.5 block">
-            {periodStart} {periodEnd !== "-" ? `→ ${periodEnd}` : ""}
+            {periodStart} {periodEnd !== "-" ? `- ${periodEnd}` : ""}
           </span>
         </div>
 
@@ -1079,19 +1079,17 @@ export default function ApprovedRecordsPage() {
                   setSelectedRecordIndex(idx);
                   setResourceFilter("ALL");
                 }}
-                className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer border flex items-center gap-2.5 ${
-                  isSelected
+                className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer border flex items-center gap-2.5 ${isSelected
                     ? "bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-600/30"
                     : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-2xs"
-                }`}
+                  }`}
               >
                 <span className="font-bold">{bundleName}</span>
                 <span
-                  className={`text-[10.5px] px-1.5 py-0.5 rounded-full font-medium ${
-                    isSelected
+                  className={`text-[10.5px] px-1.5 py-0.5 rounded-full font-medium ${isSelected
                       ? "bg-white/20 text-white"
                       : "bg-slate-100 text-slate-600"
-                  }`}
+                    }`}
                 >
                   {entryCount} {entryCount === 1 ? "entry" : "entries"}
                 </span>
@@ -1153,11 +1151,10 @@ export default function ApprovedRecordsPage() {
           <button
             type="button"
             onClick={() => setResourceFilter("ALL")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-colors ${
-              resourceFilter === "ALL"
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-colors ${resourceFilter === "ALL"
                 ? "bg-slate-900 text-white shadow-2xs"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
+              }`}
           >
             All ({currentEntries.length})
           </button>
@@ -1171,11 +1168,10 @@ export default function ApprovedRecordsPage() {
                 key={type}
                 type="button"
                 onClick={() => setResourceFilter(type)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
-                  isSelected
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${isSelected
                     ? "bg-blue-600 text-white shadow-2xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
+                  }`}
               >
                 {type} ({count})
               </button>
