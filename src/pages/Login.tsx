@@ -66,7 +66,7 @@ const Login = () => {
     const trimmedUser = userId.trim().toLowerCase()
 
     if (
-      (trimmedUser === 'hisadmin@gmail.com' && password === 'his@123') ||
+      (trimmedUser === 'hisadmin.srmist.edu.in' && password === 'Srm@123') ||
       (trimmedUser === 'admin@gmail.com' && password === '123')
     ) {
       toast.success('Welcome back, HIS Admin! Redirecting...')
@@ -78,7 +78,7 @@ const Login = () => {
         roles: ['HIS_ADMIN'],
       })
       navigate('/dashboard')
-    } else if (trimmedUser === 'abhaadmin@gmail.com' && password === 'abha@123') {
+    } else if (trimmedUser === 'abhaadmin.srmist.edu.in' && password === 'Srm@123') {
       toast.success('Welcome back, ABHA Admin! Redirecting...')
       login({
         userId: trimmedUser,
@@ -102,9 +102,9 @@ const Login = () => {
       {/* ================= LEFT HERO PANEL ================= */}
       <div className="relative lg:flex lg:w-[56%] flex-col items-center justify-between overflow-hidden min-h-[40vh] lg:min-h-screen">
         {/* Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${leftImage})` }} 
+          style={{ backgroundImage: `url(${leftImage})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-blue-800/50 via-blue-700/40 to-blue-900/85" />
 
@@ -129,13 +129,10 @@ const Login = () => {
               {features.map((f, i) => (
                 <div
                   key={f.label}
-                  className={`flex flex-col items-center gap-1 sm:gap-1.5 text-white text-center px-2 sm:px-4 py-3 sm:py-4 ${
-                    i > 0 && i % 2 === 0 ? "sm:border-l-0 md:border-l" : ""
-                  } ${
-                    i >= 2 ? "border-t sm:border-t-0" : ""
-                  } ${
-                    i > 0 ? "sm:border-l border-white/20" : ""
-                  }`}
+                  className={`flex flex-col items-center gap-1 sm:gap-1.5 text-white text-center px-2 sm:px-4 py-3 sm:py-4 ${i > 0 && i % 2 === 0 ? "sm:border-l-0 md:border-l" : ""
+                    } ${i >= 2 ? "border-t sm:border-t-0" : ""
+                    } ${i > 0 ? "sm:border-l border-white/20" : ""
+                    }`}
                 >
                   <f.icon className="h-5 w-5 sm:h-7 sm:w-8 mb-1 sm:mb-2" />
                   <span className="text-[11px] sm:text-[14px] leading-tight">{f.label}</span>
@@ -154,8 +151,8 @@ const Login = () => {
         <div className="w-full max-w-sm">
           {/* Header */}
           <div className="mb-6 sm:mb-7">
-            <Hospital 
-              className="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3" 
+            <Hospital
+              className="h-5 w-5 sm:h-6 sm:w-6 mb-2 sm:mb-3"
               style={{ color: "var(--blue-text-color)" }}
             />
             <h2 className="text-lg sm:text-xl font-bold text-slate-900">SRMMCH HIS Portal</h2>
@@ -242,9 +239,9 @@ const Login = () => {
               type="submit"
               className="w-full h-10 text-white text-sm"
               disabled={isLoading}
-              style={{ 
-                background: "var(--blue-btn)", 
-                padding: "18px 18px" 
+              style={{
+                background: "var(--blue-btn)",
+                padding: "18px 18px"
               }}
             >
               {isLoading ? (
