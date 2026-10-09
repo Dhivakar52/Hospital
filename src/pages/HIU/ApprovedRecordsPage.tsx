@@ -1,12 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { getHealthRecords } from "@/api/hiu";
+import { useHealthRecords } from "@/hooks/useHiuQueries";
 import type {
-  HiuHealthRecordsResponse,
   HiuHealthRecordItem,
 } from "@/types/hiu";
-import { notify } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -35,9 +33,21 @@ export default function ApprovedRecordsPage() {
   const navigate = useNavigate();
   const consentId = searchParams.get("consent_id");
 
-  const [data, setData] = useState<HiuHealthRecordsResponse | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const {
+    data,
+    isLoading: isQueryLoading,
+    isFetching,
+    isError,
+    error,
+    refetch: loadHealthRecords,
+  } = useHealthRecords(consentId);
+
+  const isLoading = isQueryLoading || isFetching;
+  const errorMessage = !consentId
+    ? "No consent ID specified in URL."
+    : isError
+    ? error?.message || "Failed to fetch FHIR Bundles"
+    : null;
 
   // Active record/bundle tab index
   const [selectedRecordIndex, setSelectedRecordIndex] = useState<number>(0);
@@ -99,33 +109,6 @@ export default function ApprovedRecordsPage() {
     a.click();
     URL.revokeObjectURL(url);
   };
-
-  // Fetch health records
-  const loadHealthRecords = useCallback(async () => {
-    if (!consentId) {
-      setIsLoading(false);
-      setErrorMessage("No consent ID specified in URL.");
-      return;
-    }
-
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      const response = await getHealthRecords(consentId);
-      setData(response);
-    } catch (err: any) {
-      console.error("Error fetching health records:", err);
-      const msg = err?.message || "Failed to fetch FHIR Bundles";
-      setErrorMessage(msg);
-      notify.serverError(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [consentId]);
-
-  useEffect(() => {
-    loadHealthRecords();
-  }, [loadHealthRecords]);
 
   // Active record bundle
   const activeRecord: HiuHealthRecordItem | undefined = useMemo(() => {
@@ -913,7 +896,9 @@ export default function ApprovedRecordsPage() {
               Back to Consents
             </Button>
             <Button
-              onClick={loadHealthRecords}
+              onClick={() => {
+                loadHealthRecords();
+              }}
               className="bg-red-600 hover:bg-red-700 text-white cursor-pointer"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
@@ -951,7 +936,9 @@ export default function ApprovedRecordsPage() {
               Back to Consent Management
             </Button>
             <Button
-              onClick={loadHealthRecords}
+              onClick={() => {
+                loadHealthRecords();
+              }}
               className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
@@ -1037,7 +1024,9 @@ export default function ApprovedRecordsPage() {
 
           <Button
             size="sm"
-            onClick={loadHealthRecords}
+            onClick={() => {
+              loadHealthRecords();
+            }}
             disabled={isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer text-xs shadow-2xs"
           >

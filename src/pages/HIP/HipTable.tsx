@@ -32,23 +32,34 @@ import { toast } from "@/components/ui/toast";
 import { notify } from "@/lib/notify";
 import type { HipPatient } from "@/types/hip";
 import {
-  fetchHipPatients,
   hasValidFhirData,
   parseFhirBundleData,
-  linkCareContextBatch,
 } from "@/services/hipService";
+import { useHipPatients, useLinkCareContextBatch } from "@/hooks/useHipQueries";
 import { FhirParsedViewer } from "@/pages/HIU/FhirParsedViewer";
 
 export default function HipTable() {
-  const [data, setData] = useState<HipPatient[]>([]);
+  const {
+    data = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch: loadPatients,
+  } = useHipPatients();
+
+  const linkBatchMutation = useLinkCareContextBatch();
+  const loading = isLoading || isFetching;
+  const isLinkingBatch = linkBatchMutation.isPending;
+  const apiError = isError
+    ? error?.message || "Unable to load patient data. Please try again."
+    : null;
+
   const [filteredData, setFilteredData] = useState<HipPatient[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   // Multi-select state for eligible patients by unique row id (Max 50)
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
-  const [isLinkingBatch, setIsLinkingBatch] = useState<boolean>(false);
 
   // Viewing FHIR Patient state
   const [viewingFhirPatient, setViewingFhirPatient] = useState<HipPatient | null>(null);
@@ -103,36 +114,6 @@ export default function HipTable() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  // Fetch Patients from API
-  const loadPatients = useCallback(async () => {
-    setLoading(true);
-    setApiError(null);
-    try {
-      const patients = await fetchHipPatients();
-      const withUniqueIds = patients.map((patient, index) => ({
-        ...patient,
-        id:
-          patient.id ||
-          (patient.carecontextid
-            ? `hip_${patient.carecontextid}_${index}`
-            : `hip_row_${patient.uhid ?? "pt"}_${index + 1}`),
-      }));
-      setData(withUniqueIds);
-      setFilteredData(withUniqueIds);
-    } catch (error) {
-      console.error("Error fetching HIP patients:", error);
-      const friendlyMessage = "Unable to load patient data. Please try again.";
-      setApiError(friendlyMessage);
-      notify.serverError(friendlyMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadPatients();
-  }, [loadPatients]);
 
   // Search and Filter logic
   useEffect(() => {
@@ -384,24 +365,12 @@ export default function HipTable() {
       return;
     }
 
-    setIsLinkingBatch(true);
-    try {
-      await linkCareContextBatch(cleanUhids);
-      // 202 Accepted: treat as request accepted/submitted (final result received later via webhook /webhooks/eka)
-      toast.success("Care Context linking request accepted and submitted successfully (202).");
-      // Clear selected checkboxes, keep table data unchanged
-      setSelectedRowIds([]);
-    } catch (err: any) {
-      console.error("Care Context linking batch error:", err);
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to submit Care Context linking request.";
-      notify.serverError(msg);
-    } finally {
-      setIsLinkingBatch(false);
-    }
-  }, [selectedRowIds, data, isPatientLinked]);
+    linkBatchMutation.mutate(cleanUhids, {
+      onSuccess: () => {
+        setSelectedRowIds([]);
+      },
+    });
+  }, [selectedRowIds, data, isPatientLinked, linkBatchMutation]);
 
   // Table Columns
   const columns: ColumnDef<HipPatient>[] = useMemo(
@@ -966,7 +935,9 @@ export default function HipTable() {
             <Button
               size="sm"
               variant="outline"
-              onClick={loadPatients}
+              onClick={() => {
+                loadPatients();
+              }}
               disabled={loading}
               className="h-9 w-9 p-0 shrink-0 cursor-pointer"
               title="Refresh Records"
@@ -991,7 +962,9 @@ export default function HipTable() {
             <Button
               size="sm"
               variant="outline"
-              onClick={loadPatients}
+              onClick={() => {
+                loadPatients();
+              }}
               className="border-red-300 text-red-700 hover:bg-red-100 self-start sm:self-auto cursor-pointer"
             >
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
@@ -1019,7 +992,9 @@ export default function HipTable() {
             <Button
               size="sm"
               variant="outline"
-              onClick={loadPatients}
+              onClick={() => {
+                loadPatients();
+              }}
               className="mt-4 cursor-pointer"
             >
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />

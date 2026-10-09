@@ -4,7 +4,7 @@ import CustomPanel from "@/common/CustomPanel";
 import { DateField } from "@/components/FormPrimitives";
 import { GENERATED_HIU_RECORDS, type HiuConsentRow } from "@/data/sampleData";
 import { notify } from "@/lib/notify";
-import { startHiuConsent, getPatientByUhid } from "@/api/hiu";
+import { useStartHiuConsent, useFetchPatientByUhidMutation } from "@/hooks/useHiuQueries";
 import { Button } from "@/components/ui/button";
 import type { StartConsentPayload } from "@/types/hiu";
 import {
@@ -44,10 +44,14 @@ export function RequestConsentDrawer({
   patient,
   onSuccess,
 }: RequestConsentDrawerProps) {
+  const startConsentMutation = useStartHiuConsent();
+  const fetchPatientMutation = useFetchPatientByUhidMutation();
+
+  const isSubmitting = startConsentMutation.isPending;
+  const isFetchingPatient = fetchPatientMutation.isPending;
+
   const [uhidInput, setUhidInput] = useState(patient?.id || patient?.opNo || "");
-  const [isFetchingPatient, setIsFetchingPatient] = useState(false);
   const [requestTo, setRequestTo] = useState("testinguser12@sbx");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [recordRangeQuick, setRecordRangeQuick] = useState("Last 6 months");
   const [startDate, setStartDate] = useState<Date | undefined>(() => {
     const d = new Date();
@@ -118,7 +122,7 @@ export function RequestConsentDrawer({
   };
 
   // Handle fetching patient ABHA Address by UHID
-  const handleGetPatientDetails = async () => {
+  const handleGetPatientDetails = () => {
     const trimmedUhid = uhidInput.trim();
     if (!trimmedUhid) {
       notify.validationError("Please enter a valid UHID.");
@@ -126,24 +130,23 @@ export function RequestConsentDrawer({
     }
     if (isFetchingPatient) return;
 
-    setIsFetchingPatient(true);
-    try {
-      const res = await getPatientByUhid(trimmedUhid);
-      const abhaAddress = res?.data?.abha_address?.trim();
-      if (res?.success && abhaAddress) {
-        setRequestTo(abhaAddress);
-        notify.saveSuccess("ABHA Address fetched successfully.");
-      } else {
-        notify.serverError(res?.message || "No ABHA Address found for the given UHID.");
-      }
-    } catch (err: any) {
-      notify.serverError(err?.message || "Failed to fetch patient details. Please try again.");
-    } finally {
-      setIsFetchingPatient(false);
-    }
+    fetchPatientMutation.mutate(trimmedUhid, {
+      onSuccess: (res) => {
+        const abhaAddress = res?.data?.abha_address?.trim();
+        if (res?.success && abhaAddress) {
+          setRequestTo(abhaAddress);
+          notify.saveSuccess("ABHA Address fetched successfully.");
+        } else {
+          notify.serverError(res?.message || "No ABHA Address found for the given UHID.");
+        }
+      },
+      onError: (err: any) => {
+        notify.serverError(err?.message || "Failed to fetch patient details. Please try again.");
+      },
+    });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (isSubmitting) return;
 
     const trimmedAddress = requestTo.trim();
@@ -191,48 +194,46 @@ export function RequestConsentDrawer({
       record_types: selectedRecordTypes,
     };
 
-    setIsSubmitting(true);
-    try {
-      const response = await startHiuConsent(payload);
+    startConsentMutation.mutate(payload, {
+      onSuccess: (response) => {
+        const now = new Date();
+        const newRecord: HiuConsentRow = {
+          consentId: response.consent_id || response.consent_init_id || `REQ-${response.hiu_request_id}`,
+          requestedOnDate: format(now, "dd MMM yy"),
+          requestedOnTime: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase(),
+          lastUpdatedDate: format(now, "dd MMM yy"),
+          lastUpdatedTime: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase(),
+          sharedFor: `${expireInQuick}`,
+          expiresInDays: `${expireInQuick}`,
+          expiresOnDate: response.consent_metadata?.expiry
+            ? format(new Date(response.consent_metadata.expiry), "dd MMM yy")
+            : format(new Date(expiryDate), "dd MMM yy"),
+          status: response.status || "Pending",
+          patientName: patient?.patientName || trimmedAddress.split("@")[0].toUpperCase(),
+          uhidNo: patient?.id || String(response.hiu_request_id || "3995999"),
+          hiTypes: (response.consent_metadata?.record_types || selectedRecordTypes).join(", "),
+          purpose: response.consent_metadata?.purpose || purpose,
+          abhaAddress: response.abha_address || trimmedAddress,
+          careContextId: response.care_context_id,
+          ekaOid: response.eka_oid,
+          consentInitId: response.consent_init_id,
+          periodFrom: response.consent_metadata?.period_from || periodFrom,
+          periodTo: response.consent_metadata?.period_to || periodTo,
+          recordTypes: response.consent_metadata?.record_types || selectedRecordTypes,
+        };
 
-      const now = new Date();
-      const newRecord: HiuConsentRow = {
-        consentId: response.consent_id || response.consent_init_id || `REQ-${response.hiu_request_id}`,
-        requestedOnDate: format(now, "dd MMM yy"),
-        requestedOnTime: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase(),
-        lastUpdatedDate: format(now, "dd MMM yy"),
-        lastUpdatedTime: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase(),
-        sharedFor: `${expireInQuick}`,
-        expiresInDays: `${expireInQuick}`,
-        expiresOnDate: response.consent_metadata?.expiry
-          ? format(new Date(response.consent_metadata.expiry), "dd MMM yy")
-          : format(new Date(expiryDate), "dd MMM yy"),
-        status: response.status || "Pending",
-        patientName: patient?.patientName || trimmedAddress.split("@")[0].toUpperCase(),
-        uhidNo: patient?.id || String(response.hiu_request_id || "3995999"),
-        hiTypes: (response.consent_metadata?.record_types || selectedRecordTypes).join(", "),
-        purpose: response.consent_metadata?.purpose || purpose,
-        abhaAddress: response.abha_address || trimmedAddress,
-        careContextId: response.care_context_id,
-        ekaOid: response.eka_oid,
-        consentInitId: response.consent_init_id,
-        periodFrom: response.consent_metadata?.period_from || periodFrom,
-        periodTo: response.consent_metadata?.period_to || periodTo,
-        recordTypes: response.consent_metadata?.record_types || selectedRecordTypes,
-      };
-
-      GENERATED_HIU_RECORDS.unshift(newRecord);
-      if (onSuccess) {
-        onSuccess(newRecord);
-      }
-      notify.saveSuccess(response.message || "Medical records consent request sent successfully.");
-      onClose();
-    } catch (error: any) {
-      const errorMessage = error?.message || "Unable to create consent request. Please try again.";
-      notify.serverError(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
+        GENERATED_HIU_RECORDS.unshift(newRecord);
+        if (onSuccess) {
+          onSuccess(newRecord);
+        }
+        notify.saveSuccess(response.message || "Medical records consent request sent successfully.");
+        onClose();
+      },
+      onError: (error: any) => {
+        const errorMessage = error?.message || "Unable to create consent request. Please try again.";
+        notify.serverError(errorMessage);
+      },
+    });
   };
 
   return (

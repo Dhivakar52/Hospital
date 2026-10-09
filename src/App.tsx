@@ -1,3 +1,5 @@
+import { QueryClientProvider } from "@tanstack/react-query"
+import { queryClient } from "@/lib/queryClient"
 import { BrowserRouter } from "react-router-dom"
 import { AppRoutes } from "@/routes"
 import { ThemeProvider } from "@/context/ThemeContext"
@@ -8,16 +10,18 @@ import "./App.css"
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <NotificationProvider>
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-          <Toaster />
-        </NotificationProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+            <Toaster />
+          </NotificationProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   )
 }
 

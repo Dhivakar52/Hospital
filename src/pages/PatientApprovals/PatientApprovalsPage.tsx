@@ -1,13 +1,6 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { type HiuConsent, type ApproveConsentPayload } from "@/types/hiu";
-import { type HipPatient } from "@/types/hip";
-import {
-  getHiuConsentList,
-  approveHiuConsent,
-  getStoredCreatedConsents,
-  findStoredConsent,
-} from "@/api/hiu";
-import { fetchHipPatients } from "@/services/hipService";
+import { usePatientApprovals, useApproveHiuConsent } from "@/hooks/useHiuQueries";
 import { ApprovalTabs } from "./components/ApprovalTabs";
 import { PatientApprovalCard } from "./components/PatientApprovalCard";
 import Pagination from "@/common/Pagination";
@@ -15,8 +8,15 @@ import { notify } from "@/lib/notify";
 import { Search, Inbox, RefreshCw, Loader2 } from "lucide-react";
 
 export default function PatientApprovalsPage() {
-  const [consents, setConsents] = useState<HiuConsent[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const {
+    data: consents = [],
+    isLoading: isQueryLoading,
+    isFetching,
+    refetch,
+  } = usePatientApprovals();
+
+  const approveMutation = useApproveHiuConsent();
+  const isLoading = isQueryLoading || isFetching;
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<string>("REQUESTED");
@@ -77,128 +77,6 @@ export default function PatientApprovalsPage() {
       expiryIso: expiryDate.toISOString(),
     };
   };
-
-  // Load consents and patients from centralized backend APIs
-  const loadData = useCallback(async (isRefresh = false) => {
-    if (!isRefresh) setIsLoading(true);
-    try {
-      // Fetch patients to have real OID and patient identity mapping
-      let patientList: HipPatient[] = [];
-      try {
-        patientList = await fetchHipPatients();
-      } catch (e) {
-        console.warn("Could not fetch patients for OID mapping:", e);
-      }
-
-      // Fetch live consent list from backend
-      const response = await getHiuConsentList();
-      const rawConsents = response.consents || [];
-
-      // Enrich consents with patient information (stored eka_oid, care context, etc.)
-      const enriched: HiuConsent[] = rawConsents.map((c) => {
-        // 1. Look up any stored created consent for this consentId or initId
-        const stored = findStoredConsent({
-          consentId: c.consent_id || undefined,
-          consentInitId: c.consent_init_id,
-          abhaAddress: c.abha_address,
-        });
-
-        const abha = stored?.abha_address || c.abha_address || "testinguser12@sbx";
-
-        // 2. Try to match patient from database
-        const matched = patientList.find(
-          (p) =>
-            p.abhaaddress === abha ||
-            (stored?.care_context_id && p.carecontextid === stored.care_context_id) ||
-            (c.care_context_id && p.carecontextid === c.care_context_id)
-        );
-
-        // Dynamic eka_oid: priority given to start consent response's eka_oid, then matched patient ekaoid
-        const dynamicOid = stored?.eka_oid || matched?.ekaoid || c.eka_oid || c.patient_oid || patientList[0]?.ekaoid;
-        const patientName = matched?.patientname || c.patient_name || abha.split("@")[0].toUpperCase();
-        const careContextId = stored?.care_context_id || c.care_context_id || matched?.carecontextid;
-
-        return {
-          ...c,
-          expiry: c.period?.expiry || "",
-          from: c.period?.from || "",
-          to: c.period?.to || "",
-          is_granted: (c.status || "").toUpperCase() === "GRANTED",
-          uhid: String(matched?.uhid || "3995999"),
-          patient_name: patientName,
-          patient_oid: dynamicOid ? String(dynamicOid) : undefined,
-          eka_oid: dynamicOid ? String(dynamicOid) : undefined,
-          care_context_id: careContextId,
-          abha_address: abha,
-          consent_metadata: stored?.consent_metadata,
-        };
-      });
-
-      // 3. Include any stored created consent that is pending and not yet present in rawConsents
-      const storedConsents = getStoredCreatedConsents();
-      storedConsents.forEach((sc) => {
-        const alreadyExists = enriched.some(
-          (e) =>
-            (sc.consent_id && e.consent_id === sc.consent_id) ||
-            (sc.consent_init_id && e.consent_init_id === sc.consent_init_id)
-        );
-        if (!alreadyExists) {
-          const matched = patientList.find(
-            (p) =>
-              p.abhaaddress === sc.abha_address ||
-              (sc.care_context_id && p.carecontextid === sc.care_context_id)
-          );
-          const now = new Date().toISOString();
-          enriched.unshift({
-            c_at: now,
-            consent_id: sc.consent_id || `REQ-${sc.hiu_request_id || Date.now()}`,
-            consent_init_id: sc.consent_init_id || "",
-            hi_types: sc.consent_metadata?.record_types || [
-              "OPConsultation",
-              "Prescription",
-              "DiagnosticReport",
-            ],
-            period: {
-              from: sc.consent_metadata?.period_from || "2026-09-03",
-              to: sc.consent_metadata?.period_to || "2026-09-09",
-              expiry: sc.consent_metadata?.expiry || "2027-03-09",
-            },
-            from: sc.consent_metadata?.period_from || "2026-09-03",
-            to: sc.consent_metadata?.period_to || "2026-09-09",
-            expiry: sc.consent_metadata?.expiry || "2027-03-09",
-            is_granted: (sc.status || "").toUpperCase() === "GRANTED",
-            uhid: String(matched?.uhid || sc.hiu_request_id || "3995999"),
-            status: (sc.status || "REQUESTED").toUpperCase(),
-            u_at: now,
-            patient_name:
-              matched?.patientname ||
-              sc.abha_address?.split("@")[0].toUpperCase() ||
-              "Suresh Babu",
-            patient_oid: sc.eka_oid || matched?.ekaoid,
-            eka_oid: sc.eka_oid || matched?.ekaoid,
-            care_context_id: sc.care_context_id || matched?.carecontextid,
-            abha_address: sc.abha_address,
-            consent_metadata: sc.consent_metadata,
-          });
-        }
-      });
-
-      setConsents(enriched);
-      if (isRefresh) {
-        notify.saveSuccess("Consent list refreshed.");
-      }
-    } catch (error: any) {
-      console.error("Error loading consent requests:", error);
-      const message = error?.message || "Unable to load consent requests. Please try again.";
-      notify.serverError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   // Tab counts
   const tabCounts = useMemo<Record<string, number>>(() => {
@@ -333,20 +211,23 @@ export default function PatientApprovalsPage() {
     };
 
     setApprovingId(consentId);
-    try {
-      const response = await approveHiuConsent(oid, payload);
-      notify.approveSuccess(response.message || "Consent approved successfully.");
-
-      // Refresh consent list from backend immediately so status becomes GRANTED
-      await loadData(false);
-    } catch (error: any) {
-      console.error("Error approving consent:", error);
-      const message =
-        error?.message || "Unable to approve consent. Please try again.";
-      notify.serverError(message);
-    } finally {
-      setApprovingId(null);
-    }
+    approveMutation.mutate(
+      { oid, payload },
+      {
+        onSuccess: (response) => {
+          notify.approveSuccess(response.message || "Consent approved successfully.");
+        },
+        onError: (error: any) => {
+          console.error("Error approving consent:", error);
+          const message =
+            error?.message || "Unable to approve consent. Please try again.";
+          notify.serverError(message);
+        },
+        onSettled: () => {
+          setApprovingId(null);
+        },
+      }
+    );
   };
 
   return (
@@ -365,7 +246,10 @@ export default function PatientApprovalsPage() {
         <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
           <button
             type="button"
-            onClick={() => loadData(true)}
+            onClick={async () => {
+              await refetch();
+              notify.saveSuccess("Consent list refreshed.");
+            }}
             disabled={isLoading}
             title="Refresh consent requests from backend"
             className="blue-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white cursor-pointer shadow-2xs disabled:opacity-60"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -10,11 +10,13 @@ import { DateField } from "@/components/FormPrimitives";
 import { notify } from "@/lib/notify";
 import { FhirParsedViewer } from "./FhirParsedViewer";
 import {
-    startHiuConsent,
-    getHiuConsentListFromDB,
-    getHealthRecords,
-    getPatientByUhid,
-} from "@/api/hiu";
+    useHiuConsentsFromDB,
+    useStartHiuConsent,
+    useFetchPatientByUhidMutation,
+} from "@/hooks/useHiuQueries";
+import { getHealthRecords } from "@/api/hiu";
+import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/api/queryKeys";
 import type { StartConsentPayload, StartConsentResponse, HiuConsent } from "@/types/hiu";
 import {
     FileKey,
@@ -44,11 +46,23 @@ const ALL_RECORD_TYPES = [
 export default function HiuModule() {
     const location = useLocation();
     const locationState = location.state as { openRequestModal?: boolean; patient?: any } | null;
-    const [records, setRecords] = useState<HiuConsent[]>([]);
-    const [isLoadingConsents, setIsLoadingConsents] = useState<boolean>(true);
-    const [, setTotalCount] = useState<number>(0);
+
+    const {
+        data: dbConsentsResponse,
+        isLoading: isQueryLoading,
+        isFetching,
+        refetch: loadConsents,
+    } = useHiuConsentsFromDB();
+
+    const startConsentMutation = useStartHiuConsent();
+    const fetchPatientMutation = useFetchPatientByUhidMutation();
+
+    const records = Array.isArray(dbConsentsResponse?.data) ? dbConsentsResponse.data : [];
+    const isLoadingConsents = isQueryLoading || isFetching;
+    const isSubmitting = startConsentMutation.isPending;
+    const isFetchingPatient = fetchPatientMutation.isPending;
+
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [createdConsentResponse, setCreatedConsentResponse] = useState<StartConsentResponse | null>(null);
     const [viewingConsent, setViewingConsent] = useState<HiuConsent | null>(null);
     const [viewingFhirData, setViewingFhirData] = useState<any>(null);
@@ -56,7 +70,6 @@ export default function HiuModule() {
 
     // Request Consent Form States matching screenshot
     const [uhidInput, setUhidInput] = useState("");
-    const [isFetchingPatient, setIsFetchingPatient] = useState(false);
     const [requestTo, setRequestTo] = useState("");
     const [recordRangeQuick, setRecordRangeQuick] = useState("Last 6 months");
     const [startDate, setStartDate] = useState<Date | undefined>(() => {
@@ -124,27 +137,6 @@ export default function HiuModule() {
         return dateStr;
     };
 
-    // Load live consents from centralized database API (GET /api/hiu/ConsentListFromDB)
-    const loadConsents = useCallback(async () => {
-        setIsLoadingConsents(true);
-        try {
-            const response = await getHiuConsentListFromDB();
-            const list = Array.isArray(response?.data) ? response.data : [];
-            setRecords(list);
-            setTotalCount(response?.count ?? list.length);
-        } catch (error: any) {
-            console.error("Error loading backend consents from DB:", error);
-            const msg = error?.message || "Failed to load consents from database.";
-            notify.serverError(msg);
-        } finally {
-            setIsLoadingConsents(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        loadConsents();
-    }, [loadConsents]);
-
     // Helper to calculate expiry date based on quick pills (e.g. "6 months" -> "2027-03-09")
     const computeExpiryDate = (expireStr: string): string => {
         const d = new Date();
@@ -165,7 +157,7 @@ export default function HiuModule() {
     };
 
     // Handle fetching patient ABHA Address by UHID
-    const handleGetPatientDetails = async () => {
+    const handleGetPatientDetails = () => {
         const trimmedUhid = uhidInput.trim();
         if (!trimmedUhid) {
             notify.validationError("Please enter a valid UHID.");
@@ -173,25 +165,24 @@ export default function HiuModule() {
         }
         if (isFetchingPatient) return;
 
-        setIsFetchingPatient(true);
-        try {
-            const res = await getPatientByUhid(trimmedUhid);
-            const abhaAddress = res?.data?.abha_address?.trim();
-            if (res?.success && abhaAddress) {
-                setRequestTo(abhaAddress);
-                notify.saveSuccess("ABHA Address fetched successfully.");
-            } else {
-                notify.serverError(res?.message || "No ABHA Address found for the given UHID.");
-            }
-        } catch (err: any) {
-            notify.serverError(err?.message || "Failed to fetch patient details. Please try again.");
-        } finally {
-            setIsFetchingPatient(false);
-        }
+        fetchPatientMutation.mutate(trimmedUhid, {
+            onSuccess: (res) => {
+                const abhaAddress = res?.data?.abha_address?.trim();
+                if (res?.success && abhaAddress) {
+                    setRequestTo(abhaAddress);
+                    notify.saveSuccess("ABHA Address fetched successfully.");
+                } else {
+                    notify.serverError(res?.message || "No ABHA Address found for the given UHID.");
+                }
+            },
+            onError: (err: any) => {
+                notify.serverError(err?.message || "Failed to fetch patient details. Please try again.");
+            },
+        });
     };
 
-    // Handle New Consent Request via centralized Axios API
-    const handleRequestSubmit = async () => {
+    // Handle New Consent Request via centralized Axios API & TanStack Query mutation
+    const handleRequestSubmit = () => {
         if (isSubmitting) return;
 
         const trimmedAddress = requestTo.trim();
@@ -239,22 +230,18 @@ export default function HiuModule() {
             record_types: selectedRecordTypes,
         };
 
-        setIsSubmitting(true);
-        try {
-            const response = await startHiuConsent(payload);
-
-            setIsRequestModalOpen(false);
-            setCreatedConsentResponse(response);
-            notify.saveSuccess(response.message || "Consent request created successfully.");
-
-            // Refresh backend consent list immediately so created consent appears in Consent Management
-            await loadConsents();
-        } catch (error: any) {
-            const errorMessage = error?.message || "Unable to create consent request. Please try again.";
-            notify.serverError(errorMessage);
-        } finally {
-            setIsSubmitting(false);
-        }
+        startConsentMutation.mutate(payload, {
+            onSuccess: (response) => {
+                setIsRequestModalOpen(false);
+                setCreatedConsentResponse(response);
+                notify.saveSuccess(response.message || "Consent request created successfully.");
+                // Automatic cache invalidation in hook refreshes the list without manual reload
+            },
+            onError: (error: any) => {
+                const errorMessage = error?.message || "Unable to create consent request. Please try again.";
+                notify.serverError(errorMessage);
+            },
+        });
     };
 
     const handleView = async (row: HiuConsent) => {
@@ -269,7 +256,11 @@ export default function HiuModule() {
 
         setLoadingConsentId(consentId);
         try {
-            const fhirResponse = await getHealthRecords(consentId);
+            const fhirResponse = await queryClient.fetchQuery({
+                queryKey: queryKeys.hiu.healthRecords(consentId),
+                queryFn: () => getHealthRecords(consentId),
+                staleTime: 1000 * 60 * 5,
+            });
 
             const recordsList = fhirResponse?.records;
             if (!recordsList || !Array.isArray(recordsList) || recordsList.length === 0) {
@@ -525,6 +516,18 @@ export default function HiuModule() {
                 }
                 headerExtra={
                     <div className="flex items-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                                loadConsents();
+                            }}
+                            disabled={isLoadingConsents}
+                            className="h-9 w-9 p-0 shrink-0 cursor-pointer shadow-xs rounded-md"
+                            title="Refresh Consents"
+                        >
+                            <Loader2 className={`h-4 w-4 ${isLoadingConsents ? "animate-spin" : ""}`} />
+                        </Button>
                         <Button
                             size="sm"
                             onClick={() => setIsRequestModalOpen(true)}
@@ -897,7 +900,7 @@ export default function HiuModule() {
             {/* Success Consent Response Modal */}
             {createdConsentResponse && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-                    <div className="w-full max-w-lg rounded-xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+                    <div className="w-full max-w-[600px] rounded-xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
                         <div className="px-6 py-4 bg-amber-50/90 border-b border-amber-200/80 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
@@ -920,11 +923,10 @@ export default function HiuModule() {
                             <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">Status</span>
                                 <span className="col-span-2">
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${
-                                        (createdConsentResponse.status || "").toLowerCase() === "granted"
-                                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                            : "bg-amber-100 text-amber-800 border border-amber-200"
-                                    }`}>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${(createdConsentResponse.status || "").toLowerCase() === "granted"
+                                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                        : "bg-amber-100 text-amber-800 border border-amber-200"
+                                        }`}>
                                         {createdConsentResponse.status || "Pending"}
                                     </span>
                                 </span>
@@ -1001,12 +1003,12 @@ export default function HiuModule() {
                                     </div>
                                 </>
                             )}
-                            <div className="pt-1.5">
+                            {/* <div className="pt-1.5">
                                 <span className="text-slate-500 font-medium block mb-1">Message</span>
                                 <p className="bg-slate-50 rounded-lg p-2.5 text-slate-700 border border-slate-200/80 leading-relaxed text-[11.5px]">
                                     {createdConsentResponse.message}
                                 </p>
-                            </div>
+                            </div> */}
                         </div>
                         <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
                             <Button

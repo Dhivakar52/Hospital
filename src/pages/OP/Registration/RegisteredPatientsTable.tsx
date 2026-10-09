@@ -36,7 +36,7 @@ import type { RegistrationDraft } from "./Registration"
 
 // ✅ Import types and mock data
 import { type Patient, type PatientFormData, resolvePatientDetails } from "@/types/op_register"
-import { mockPatients } from "@/data/mockPatients"
+import { useRegisteredPatients } from "@/hooks/useRegisteredPatients"
 
 import { BarcodePreviewModal } from "@/components/BarcodePreviewModal"
 import { PatientPrintPreviewModal } from "@/components/PatientPrintPreviewModal"
@@ -50,9 +50,10 @@ interface RegisteredPatientsTableProps {
 
 export default function RegisteredPatientsTable({ newPatient }: RegisteredPatientsTableProps) {
   const navigate = useNavigate()
+  const { data: initialPatients = [], isLoading: isQueryLoading, isFetching } = useRegisteredPatients()
   const [data, setData] = useState<Patient[]>([])
   const [filteredData, setFilteredData] = useState<Patient[]>([])
-  const [loading, setLoading] = useState(true)
+  const loading = isQueryLoading || isFetching
   const [search, setSearch] = useState("")
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
 
@@ -124,27 +125,13 @@ export default function RegisteredPatientsTable({ newPatient }: RegisteredPatien
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  // Load data - using mock data from separate file
+  // Sync loaded patients from TanStack Query
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1500))
-
-        // Use mock data from the separate file
-        setData(mockPatients)
-        setFilteredData(mockPatients)
-      } catch (error) {
-        console.error("Error fetching data:", error)
-        notify.serverError("Failed to load patient data")
-      } finally {
-        setLoading(false)
-      }
+    if (initialPatients.length > 0 && data.length === 0) {
+      setData(initialPatients)
+      setFilteredData(initialPatients)
     }
-
-    fetchData()
-  }, [])
+  }, [initialPatients, data.length])
 
   // Handle new patient from registration
   useEffect(() => {
