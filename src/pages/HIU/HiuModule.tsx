@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { type ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { StandardModuleTable } from "@/common/StandardModuleTable";
@@ -7,19 +7,17 @@ import { ActionMenu } from "@/common/ActionMenu";
 import CustomPanel from "@/common/CustomPanel";
 import { Button } from "@/components/ui/button";
 import { DateField } from "@/components/FormPrimitives";
-import { type HiuConsentRow } from "@/data/sampleData";
 import { notify } from "@/lib/notify";
 import { FhirParsedViewer } from "./FhirParsedViewer";
 import {
-    startHiuConsent,
-    getHiuConsentList,
-    getStoredCreatedConsents,
-    findStoredConsent,
-    getPatientByUhid,
-} from "@/api/hiu";
-import { fetchHipPatients } from "@/services/hipService";
-import type { HipPatient } from "@/types/hip";
-import type { StartConsentPayload, StartConsentResponse } from "@/types/hiu";
+    useHiuConsentsFromDB,
+    useStartHiuConsent,
+    useFetchPatientByUhidMutation,
+} from "@/hooks/useHiuQueries";
+import { getHealthRecords } from "@/api/hiu";
+import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/api/queryKeys";
+import type { StartConsentPayload, StartConsentResponse, HiuConsent } from "@/types/hiu";
 import {
     FileKey,
     Calendar,
@@ -29,6 +27,7 @@ import {
     CreditCard,
     X,
     Check,
+    Clock,
     Search,
     Loader2,
     User,
@@ -45,23 +44,40 @@ const ALL_RECORD_TYPES = [
 ];
 
 export default function HiuModule() {
-    const navigate = useNavigate();
     const location = useLocation();
     const locationState = location.state as { openRequestModal?: boolean; patient?: any } | null;
-    const [records, setRecords] = useState<HiuConsentRow[]>([]);
-    const [isLoadingConsents, setIsLoadingConsents] = useState<boolean>(true);
+
+    const {
+        data: dbConsentsResponse,
+        isLoading: isQueryLoading,
+        isFetching,
+        refetch: loadConsents,
+    } = useHiuConsentsFromDB();
+
+    const startConsentMutation = useStartHiuConsent();
+    const fetchPatientMutation = useFetchPatientByUhidMutation();
+
+    const records = Array.isArray(dbConsentsResponse?.data) ? dbConsentsResponse.data : [];
+    const isLoadingConsents = isQueryLoading || isFetching;
+    const isSubmitting = startConsentMutation.isPending;
+    const isFetchingPatient = fetchPatientMutation.isPending;
+
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [createdConsentResponse, setCreatedConsentResponse] = useState<StartConsentResponse | null>(null);
-    const [viewingConsent, setViewingConsent] = useState<HiuConsentRow | null>(null);
+    const [viewingConsent, setViewingConsent] = useState<HiuConsent | null>(null);
+    const [viewingFhirData, setViewingFhirData] = useState<any>(null);
+    const [loadingConsentId, setLoadingConsentId] = useState<string | null>(null);
 
     // Request Consent Form States matching screenshot
     const [uhidInput, setUhidInput] = useState("");
-    const [isFetchingPatient, setIsFetchingPatient] = useState(false);
     const [requestTo, setRequestTo] = useState("");
     const [recordRangeQuick, setRecordRangeQuick] = useState("Last 6 months");
-    const [startDate, setStartDate] = useState<Date | undefined>(new Date(2026, 2, 9));
-    const [endDate, setEndDate] = useState<Date | undefined>(new Date(2026, 8, 9));
+    const [startDate, setStartDate] = useState<Date | undefined>(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 6);
+        return d;
+    });
+    const [endDate, setEndDate] = useState<Date | undefined>(() => new Date());
 
     useEffect(() => {
         if (locationState?.openRequestModal) {
@@ -112,7 +128,7 @@ export default function HiuModule() {
         }
     };
 
-    const formatDateSafe = (dateStr?: string, fmt = "dd MMM yy") => {
+    const formatDateSafe = (dateStr?: string, fmt = "dd MMM yyyy") => {
         if (!dateStr) return "-";
         try {
             const d = new Date(dateStr);
@@ -120,117 +136,6 @@ export default function HiuModule() {
         } catch { }
         return dateStr;
     };
-
-    // Load live consents from centralized backend API
-    const loadConsents = useCallback(async () => {
-        setIsLoadingConsents(true);
-        try {
-            let patientList: HipPatient[] = [];
-            try {
-                patientList = await fetchHipPatients();
-            } catch (err) {
-                console.warn("Could not load patients list for mapping:", err);
-            }
-
-            const storedConsents = getStoredCreatedConsents();
-            const response = await getHiuConsentList();
-            const rawConsents = response.consents || [];
-
-            // Map backend consents and enrich with stored created details
-            const mapped: HiuConsentRow[] = rawConsents.map((c) => {
-                const stored = findStoredConsent({
-                    consentId: c.consent_id,
-                    consentInitId: c.consent_init_id,
-                    abhaAddress: c.abha_address,
-                });
-
-                const abha = stored?.abha_address || c.abha_address || "testinguser12@sbx";
-
-                const matched = patientList.find(
-                    (p) =>
-                        p.abhaaddress === abha ||
-                        (stored?.care_context_id && p.carecontextid === stored.care_context_id) ||
-                        (c.care_context_id && p.carecontextid === c.care_context_id)
-                );
-                const pName = matched?.patientname || c.patient_name || abha.split("@")[0].toUpperCase();
-                const uhid = String(matched?.uhid || stored?.hiu_request_id || "3995999");
-                const careCtx = stored?.care_context_id || c.care_context_id || matched?.carecontextid;
-                const ekaOid = stored?.eka_oid || matched?.ekaoid;
-
-                return {
-                    consentId: c.consent_id,
-                    consentInitId: c.consent_init_id || stored?.consent_init_id,
-                    requestedOnDate: formatDateSafe(c.c_at, "dd MMM yy"),
-                    requestedOnTime: formatDateSafe(c.c_at, "hh:mm a").toLowerCase(),
-                    lastUpdatedDate: formatDateSafe(c.u_at || c.c_at, "dd MMM yy"),
-                    lastUpdatedTime: formatDateSafe(c.u_at || c.c_at, "hh:mm a").toLowerCase(),
-                    sharedFor: "6 months",
-                    expiresInDays: formatDateSafe(c.period?.expiry || stored?.consent_metadata?.expiry, "dd MMM yy"),
-                    expiresOnDate: formatDateSafe(c.period?.expiry || stored?.consent_metadata?.expiry, "dd MMM yy"),
-                    status: (c.status || stored?.status || "REQUESTED").toUpperCase(),
-                    patientName: pName,
-                    uhidNo: uhid,
-                    hiTypes: (c.hi_types && c.hi_types.length > 0 ? c.hi_types : stored?.consent_metadata?.record_types || []).join(", "),
-                    purpose: stored?.consent_metadata?.purpose || "Care management",
-                    abhaAddress: abha,
-                    careContextId: careCtx,
-                    ekaOid: ekaOid,
-                    periodFrom: c.period?.from || stored?.consent_metadata?.period_from,
-                    periodTo: c.period?.to || stored?.consent_metadata?.period_to,
-                    recordTypes: c.hi_types && c.hi_types.length > 0 ? c.hi_types : stored?.consent_metadata?.record_types,
-                };
-            });
-
-            // Include any stored created consent that has not yet appeared in backend list
-            storedConsents.forEach((sc) => {
-                const alreadyExists = mapped.some(
-                    (m) =>
-                        (sc.consent_id && m.consentId === sc.consent_id) ||
-                        (sc.consent_init_id && m.consentInitId === sc.consent_init_id)
-                );
-                if (!alreadyExists) {
-                    const matched = patientList.find(
-                        (p) =>
-                            p.abhaaddress === sc.abha_address ||
-                            (sc.care_context_id && p.carecontextid === sc.care_context_id)
-                    );
-                    const now = new Date();
-                    mapped.unshift({
-                        consentId: sc.consent_id || `REQ-${sc.hiu_request_id || Date.now()}`,
-                        consentInitId: sc.consent_init_id,
-                        requestedOnDate: formatDateSafe(now.toISOString(), "dd MMM yy"),
-                        requestedOnTime: formatDateSafe(now.toISOString(), "hh:mm a").toLowerCase(),
-                        lastUpdatedDate: formatDateSafe(now.toISOString(), "dd MMM yy"),
-                        lastUpdatedTime: formatDateSafe(now.toISOString(), "hh:mm a").toLowerCase(),
-                        sharedFor: "6 months",
-                        expiresInDays: formatDateSafe(sc.consent_metadata?.expiry, "dd MMM yy"),
-                        expiresOnDate: formatDateSafe(sc.consent_metadata?.expiry, "dd MMM yy"),
-                        status: (sc.status || "REQUESTED").toUpperCase(),
-                        patientName: matched?.patientname || sc.abha_address?.split("@")[0].toUpperCase() || "Suresh Babu",
-                        uhidNo: String(matched?.uhid || sc.hiu_request_id || "3995999"),
-                        hiTypes: (sc.consent_metadata?.record_types || []).join(", "),
-                        purpose: sc.consent_metadata?.purpose || "Care management",
-                        abhaAddress: sc.abha_address,
-                        careContextId: sc.care_context_id,
-                        ekaOid: sc.eka_oid || matched?.ekaoid,
-                        periodFrom: sc.consent_metadata?.period_from,
-                        periodTo: sc.consent_metadata?.period_to,
-                        recordTypes: sc.consent_metadata?.record_types,
-                    });
-                }
-            });
-
-            setRecords(mapped);
-        } catch (error) {
-            console.error("Error loading backend consents:", error);
-        } finally {
-            setIsLoadingConsents(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        loadConsents();
-    }, [loadConsents]);
 
     // Helper to calculate expiry date based on quick pills (e.g. "6 months" -> "2027-03-09")
     const computeExpiryDate = (expireStr: string): string => {
@@ -252,7 +157,7 @@ export default function HiuModule() {
     };
 
     // Handle fetching patient ABHA Address by UHID
-    const handleGetPatientDetails = async () => {
+    const handleGetPatientDetails = () => {
         const trimmedUhid = uhidInput.trim();
         if (!trimmedUhid) {
             notify.validationError("Please enter a valid UHID.");
@@ -260,28 +165,49 @@ export default function HiuModule() {
         }
         if (isFetchingPatient) return;
 
-        setIsFetchingPatient(true);
-        try {
-            const res = await getPatientByUhid(trimmedUhid);
-            const abhaAddress = res?.data?.abha_address?.trim();
-            if (res?.success && abhaAddress) {
-                setRequestTo(abhaAddress);
-                notify.saveSuccess("ABHA Address fetched successfully.");
-            } else {
-                notify.serverError(res?.message || "No ABHA Address found for the given UHID.");
-            }
-        } catch (err: any) {
-            notify.serverError(err?.message || "Failed to fetch patient details. Please try again.");
-        } finally {
-            setIsFetchingPatient(false);
-        }
+        fetchPatientMutation.mutate(trimmedUhid, {
+            onSuccess: (res) => {
+                const abhaAddress = res?.data?.abha_address?.trim();
+                if (res?.success && abhaAddress) {
+                    setRequestTo(abhaAddress);
+                    notify.saveSuccess("ABHA Address fetched successfully.");
+                } else {
+                    notify.serverError(res?.message || "No ABHA Address found for the given UHID.");
+                }
+            },
+            onError: (err: any) => {
+                notify.serverError(err?.message || "Failed to fetch patient details. Please try again.");
+            },
+        });
     };
 
-    // Handle New Consent Request via centralized Axios API
-    const handleRequestSubmit = async () => {
+    // Handle New Consent Request via centralized Axios API & TanStack Query mutation
+    const handleRequestSubmit = () => {
+        if (isSubmitting) return;
+
         const trimmedAddress = requestTo.trim();
         if (!trimmedAddress) {
             notify.validationError("Please enter ABHA address / Request To user.");
+            return;
+        }
+
+        if (!startDate) {
+            notify.validationError("Please select a start date for the record period.");
+            return;
+        }
+
+        if (!endDate) {
+            notify.validationError("Please select an end date for the record period.");
+            return;
+        }
+
+        if (startDate > endDate) {
+            notify.validationError("Start date cannot be after end date.");
+            return;
+        }
+
+        if (!expireInQuick) {
+            notify.validationError("Please select consent expiration period.");
             return;
         }
 
@@ -290,8 +216,8 @@ export default function HiuModule() {
             return;
         }
 
-        const periodFrom = startDate ? format(startDate, "yyyy-MM-dd") : "2026-09-03";
-        const periodTo = endDate ? format(endDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
+        const periodFrom = format(startDate, "yyyy-MM-dd");
+        const periodTo = format(endDate, "yyyy-MM-dd");
         const expiryDate = computeExpiryDate(expireInQuick);
 
         const payload: StartConsentPayload = {
@@ -304,114 +230,186 @@ export default function HiuModule() {
             record_types: selectedRecordTypes,
         };
 
-        setIsSubmitting(true);
+        startConsentMutation.mutate(payload, {
+            onSuccess: (response) => {
+                setIsRequestModalOpen(false);
+                setCreatedConsentResponse(response);
+                notify.saveSuccess(response.message || "Consent request created successfully.");
+                // Automatic cache invalidation in hook refreshes the list without manual reload
+            },
+            onError: (error: any) => {
+                const errorMessage = error?.message || "Unable to create consent request. Please try again.";
+                notify.serverError(errorMessage);
+            },
+        });
+    };
+
+    const handleView = async (row: HiuConsent) => {
+        const consentId = row.consent_id;
+        if (!consentId) {
+            notify.validationError("Missing consent ID for this record.");
+            return;
+        }
+
+        // Prevent duplicate calls
+        if (loadingConsentId) return;
+
+        setLoadingConsentId(consentId);
         try {
-            const response = await startHiuConsent(payload);
+            const fhirResponse = await queryClient.fetchQuery({
+                queryKey: queryKeys.hiu.healthRecords(consentId),
+                queryFn: () => getHealthRecords(consentId),
+                staleTime: 1000 * 60 * 5,
+            });
 
-            setIsRequestModalOpen(false);
-            setCreatedConsentResponse(response);
-            notify.saveSuccess(response.message || "Consent request created successfully.");
+            const recordsList = fhirResponse?.records;
+            if (!recordsList || !Array.isArray(recordsList) || recordsList.length === 0) {
+                notify.serverError("No FHIR health records are available for this consent.");
+                return;
+            }
 
-            // Refresh backend consent list immediately so created consent appears in Consent Management
-            await loadConsents();
+            const fhirBundleData =
+                recordsList.length === 1 && recordsList[0].bundle
+                    ? recordsList[0].bundle
+                    : recordsList;
+
+            setViewingFhirData(fhirBundleData);
+            setViewingConsent(row);
         } catch (error: any) {
-            const errorMessage = error?.message || "Unable to create consent request. Please try again.";
-            notify.serverError(errorMessage);
+            console.error("Failed to fetch FHIR records:", error);
+            const msg = error?.message || "Failed to fetch FHIR Bundles";
+            notify.serverError(msg);
         } finally {
-            setIsSubmitting(false);
+            setLoadingConsentId(null);
         }
     };
 
-    const columns: ColumnDef<HiuConsentRow>[] = [
+    const columns: ColumnDef<HiuConsent>[] = [
         {
-            accessorKey: "consentId",
-            header: "CONSENT ID",
+            accessorKey: "uhid",
+            header: "UHID",
             cell: ({ row }) => (
-                <div className="space-y-0.5 max-w-[260px]">
-                    <span className="text-[12.5px] text-slate-800 select-all font-mono font-medium block truncate" title={row.original.consentId}>
-                        {row.original.consentId}
-                    </span>
-                    {/* {row.original.abhaAddress && (
-                        <span className="text-[11px] text-blue-600 font-mono block truncate" title={row.original.abhaAddress}>
-                            {row.original.abhaAddress}
-                        </span>
-                    )} */}
-                </div>
-            ),
-        },
-        {
-            accessorKey: "requestedOnDate",
-            header: "REQUESTED ON",
-            cell: ({ row }) => (
-                <div>
-                    <div className="font-semibold text-slate-800 text-[13px]">
-                        {row.original.requestedOnDate}
-                    </div>
-                    <div className="text-[11.5px] text-slate-400">
-                        {row.original.requestedOnTime}
-                    </div>
-                </div>
-            ),
-        },
-        {
-            accessorKey: "lastUpdatedDate",
-            header: "LAST UPDATED",
-            cell: ({ row }) => (
-                <div>
-                    <div className="font-semibold text-slate-800 text-[13px]">
-                        {row.original.lastUpdatedDate}
-                    </div>
-                    <div className="text-[11.5px] text-slate-400">
-                        {row.original.lastUpdatedTime}
-                    </div>
-                </div>
-            ),
-        },
-        {
-            accessorKey: "sharedFor",
-            header: "SHARED FOR",
-            cell: ({ row }) => (
-                <span className="text-[13px] text-slate-700 font-medium">
-                    {row.original.sharedFor}
+                <span className="font-semibold text-slate-800 text-[13px]">
+                    {row.original.uhid || "-"}
                 </span>
             ),
         },
         {
-            accessorKey: "expiresInDays",
-            header: "EXPIRES IN",
+            accessorKey: "patient_name",
+            header: "PATIENT NAME",
             cell: ({ row }) => (
-                <div>
-                    <div className="font-semibold text-emerald-600 text-[13px]">
-                        {row.original.expiresInDays}
-                    </div>
-                    {/* <div className="text-[11.5px] text-slate-400">
-                        {row.original.expiresOnDate}
-                    </div> */}
+                <span className="text-[13px] text-slate-800 font-medium capitalize">
+                    {row.original.patient_name || "-"}
+                </span>
+            ),
+        },
+        {
+            accessorKey: "abha_address",
+            header: "ABHA ADDRESS",
+            cell: ({ row }) => (
+                <span className="text-[12.5px] text-blue-600 font-mono font-medium block truncate max-w-[220px]" title={row.original.abha_address}>
+                    {row.original.abha_address || "-"}
+                </span>
+            ),
+        },
+        {
+            accessorKey: "consent_id",
+            header: "CONSENT ID",
+            cell: ({ row }) => (
+                <div className="space-y-0.5 max-w-[260px]">
+                    <span className="text-[12.5px] text-slate-800 select-all font-mono font-medium block truncate" title={row.original.consent_id || ""}>
+                        {row.original.consent_id || "—"}
+                    </span>
                 </div>
+            ),
+        },
+        {
+            accessorKey: "from",
+            header: "FROM",
+            cell: ({ row }) => (
+                <span className="text-[13px] text-slate-700 font-medium">
+                    {formatDateSafe(row.original.from, "dd MMM yyyy")}
+                </span>
+            ),
+        },
+        {
+            accessorKey: "to",
+            header: "TO",
+            cell: ({ row }) => (
+                <span className="text-[13px] text-slate-700 font-medium">
+                    {formatDateSafe(row.original.to, "dd MMM yyyy")}
+                </span>
+            ),
+        },
+        {
+            accessorKey: "expiry",
+            header: "EXPIRY",
+            cell: ({ row }) => (
+                <span className="font-semibold text-emerald-600 text-[13px]">
+                    {formatDateSafe(row.original.expiry, "dd MMM yyyy")}
+                </span>
             ),
         },
         {
             accessorKey: "status",
             header: "STATUS",
             cell: ({ row }) => {
-                const status = (row.original.status || "").toUpperCase();
-                if (status === "REQUESTED" || status === "PENDING") {
+                const rawStatus = (row.original.status || "").trim();
+                const status = rawStatus.toUpperCase();
+
+                // Specific badge for INIT_ERROR PENDING / INIT_ERROR_PENDING
+                if (
+                    status === "INIT_ERROR PENDING" ||
+                    status === "INIT_ERROR_PENDING" ||
+                    status === "INIT ERROR PENDING" ||
+                    (status.includes("INIT") && status.includes("ERROR") && status.includes("PENDING"))
+                ) {
                     return (
-                        <span className="inline-flex items-center px-3 py-1 rounded text-[11px] font-medium bg-[#feefeb] text-[#f97316]">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#ede9fe] text-[#6d28d9] border border-[#ddd6fe]">
+                            {rawStatus || "INIT_ERROR PENDING"}
+                        </span>
+                    );
+                }
+
+                // Match INIT_ERROR
+                if (status === "INIT_ERROR" || status === "INIT ERROR" || status.startsWith("INIT_ERR")) {
+                    return (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#fee2e2] text-[#dc2626] border border-[#fca5a5]">
+                            {rawStatus || "INIT_ERROR"}
+                        </span>
+                    );
+                }
+
+                // Match PENDING
+                if (status === "PENDING") {
+                    return (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#fef9c3] text-[#a16207] border border-[#fef08a]">
+                            PENDING
+                        </span>
+                    );
+                }
+
+                // Match REQUESTED
+                if (status === "REQUESTED") {
+                    return (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#feefeb] text-[#ea580c] border border-[#fed7aa]">
                             REQUESTED
                         </span>
                     );
                 }
-                if (status === "GRANTED" || status === "SUCCESS") {
+
+                // Match GRANTED / SUCCESS / APPROVED
+                if (status === "GRANTED" || status === "SUCCESS" || status === "APPROVED") {
                     return (
-                        <span className="inline-flex items-center px-3 py-1 rounded text-[11px] font-medium bg-[#e6f4ea] text-[#16a34a]">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#e6f4ea] text-[#16a34a] border border-[#bbf7d0]">
                             GRANTED
                         </span>
                     );
                 }
+
                 return (
-                    <span className="inline-flex items-center px-3 py-1 rounded text-[11px] font-medium bg-[#fee2e2] text-[#ef4444]">
-                        {status || "INIT_ERROR"}
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#fee2e2] text-[#dc2626] border border-[#fca5a5]">
+                        {rawStatus || "UNKNOWN"}
                     </span>
                 );
             },
@@ -421,21 +419,14 @@ export default function HiuModule() {
             header: "ACTION",
             enableSorting: false,
             cell: ({ row }) => {
-                const status = (row.original.status || "").toUpperCase();
-                if (status === "GRANTED" || status === "SUCCESS") {
-                    return (
-                        <ActionMenu
-                            item={row.original}
-                            onView={() => {
-                                const consentId = row.original.consentId || row.original.consentInitId;
-                                if (consentId) {
-                                    navigate(`/approved?consent_id=${encodeURIComponent(consentId)}`);
-                                }
-                            }}
-                        />
-                    );
-                }
-                return <span className="text-slate-400 text-[13px]">-</span>;
+                const isGranted = (row.original.status || "").toUpperCase() === "GRANTED" && Boolean(row.original.consent_id);
+                return (
+                    <ActionMenu
+                        item={row.original}
+                        onView={isGranted ? () => handleView(row.original) : undefined}
+                        isViewLoading={loadingConsentId === row.original.consent_id}
+                    />
+                );
             },
         },
     ];
@@ -448,7 +439,10 @@ export default function HiuModule() {
                     <span className="text-slate-400">/</span>
                     <button
                         type="button"
-                        onClick={() => setViewingConsent(null)}
+                        onClick={() => {
+                            setViewingConsent(null);
+                            setViewingFhirData(null);
+                        }}
                         className="text-blue-600 hover:underline cursor-pointer font-medium"
                     >
                         Consent Management
@@ -458,8 +452,24 @@ export default function HiuModule() {
                 </nav>
 
                 <FhirParsedViewer
-                    consentDetails={viewingConsent}
-                    onBack={() => setViewingConsent(null)}
+                    consentDetails={{
+                        consentId: viewingConsent.consent_id || "",
+                        patientName: viewingConsent.patient_name,
+                        uhidNo: String(viewingConsent.uhid || ""),
+                        status: viewingConsent.status,
+                        expiresOnDate: formatDateSafe(viewingConsent.expiry, "dd MMM yyyy"),
+                        sharedFor: "6 months",
+                    }}
+                    patientDetails={{
+                        patientname: viewingConsent.patient_name,
+                        uhid: viewingConsent.uhid,
+                        abhaaddress: viewingConsent.abha_address,
+                    }}
+                    initialData={viewingFhirData}
+                    onBack={() => {
+                        setViewingConsent(null);
+                        setViewingFhirData(null);
+                    }}
                 />
             </div>
         );
@@ -467,6 +477,18 @@ export default function HiuModule() {
 
     return (
         <div>
+            {/* Loading overlay during FHIR fetch */}
+            {loadingConsentId && (
+                <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-xs flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-5 shadow-xl border border-slate-200 flex items-center gap-3">
+                        <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                        <span className="text-sm font-medium text-slate-800">
+                            Fetching FHIR Health Records...
+                        </span>
+                    </div>
+                </div>
+            )}
+
             {/* Standardized Card & Table */}
             <StandardModuleTable
                 title="Consent Management"
@@ -482,17 +504,30 @@ export default function HiuModule() {
                         label: "Status",
                         key: "status",
                         type: "select",
-                        options: ["REQUESTED", "GRANTED", "INIT_ERROR"],
+                        options: ["REQUESTED", "GRANTED", "PENDING", "INIT_ERROR", "INIT_ERROR PENDING"],
                     },
-                    { label: "Consent ID", key: "consentId", type: "text" },
-                    { label: "ABHA Address", key: "abhaAddress", type: "text" },
-                    { label: "Patient Name", key: "patientName", type: "text" },
+                    { label: "Consent ID", key: "consent_id", type: "text" },
+                    { label: "ABHA Address", key: "abha_address", type: "text" },
+                    { label: "Patient Name", key: "patient_name", type: "text" },
+                    { label: "UHID", key: "uhid", type: "text" },
                 ]}
                 searchField={(r) =>
-                    `${r.consentId} ${r.consentInitId || ""} ${r.status} ${r.requestedOnDate} ${r.lastUpdatedDate} ${r.expiresOnDate} ${r.patientName || ""} ${r.uhidNo || ""} ${r.abhaAddress || ""} ${r.ekaOid || ""}`
+                    `${r.uhid || ""} ${r.patient_name || ""} ${r.abha_address || ""} ${r.consent_id || ""} ${r.status || ""} ${r.from || ""} ${r.to || ""} ${r.expiry || ""}`
                 }
                 headerExtra={
                     <div className="flex items-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                                loadConsents();
+                            }}
+                            disabled={isLoadingConsents}
+                            className="h-9 w-9 p-0 shrink-0 cursor-pointer shadow-xs rounded-md"
+                            title="Refresh Consents"
+                        >
+                            <Loader2 className={`h-4 w-4 ${isLoadingConsents ? "animate-spin" : ""}`} />
+                        </Button>
                         <Button
                             size="sm"
                             onClick={() => setIsRequestModalOpen(true)}
@@ -865,15 +900,15 @@ export default function HiuModule() {
             {/* Success Consent Response Modal */}
             {createdConsentResponse && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-                    <div className="w-full max-w-lg rounded-xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
-                        <div className="px-6 py-4 bg-emerald-50/90 border-b border-emerald-100 flex items-center justify-between">
+                    <div className="w-full max-w-[600px] rounded-xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-4 bg-amber-50/90 border-b border-amber-200/80 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                    <Check className="h-5 w-5 stroke-[2.5]" />
+                                <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
+                                    <Clock className="h-5 w-5 stroke-[2.5]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold text-emerald-950">Consent Request Created</h3>
-                                    <p className="text-xs text-emerald-700">Waiting for patient to approve</p>
+                                    <h3 className="text-sm font-bold text-amber-950">Consent Request Created</h3>
+                                    <p className="text-xs text-amber-800">Waiting for patient to approve</p>
                                 </div>
                             </div>
                             <button
@@ -888,8 +923,11 @@ export default function HiuModule() {
                             <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
                                 <span className="text-slate-500 font-medium">Status</span>
                                 <span className="col-span-2">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 uppercase">
-                                        {createdConsentResponse.status}
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold uppercase ${(createdConsentResponse.status || "").toLowerCase() === "granted"
+                                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                        : "bg-amber-100 text-amber-800 border border-amber-200"
+                                        }`}>
+                                        {createdConsentResponse.status || "Pending"}
                                     </span>
                                 </span>
                             </div>
@@ -933,18 +971,50 @@ export default function HiuModule() {
                                     </span>
                                 </div>
                             )}
-                            <div className="pt-1.5">
+                            {createdConsentResponse.consent_metadata && (
+                                <>
+                                    <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                        <span className="text-slate-500 font-medium">Purpose</span>
+                                        <span className="col-span-2 text-slate-800">
+                                            {createdConsentResponse.consent_metadata.purpose || "-"}
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                        <span className="text-slate-500 font-medium">Record Period</span>
+                                        <span className="col-span-2 text-slate-800 font-mono text-[11px]">
+                                            {createdConsentResponse.consent_metadata.period_from} to {createdConsentResponse.consent_metadata.period_to}
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                        <span className="text-slate-500 font-medium">Expiry</span>
+                                        <span className="col-span-2 text-slate-800 font-mono text-[11px]">
+                                            {createdConsentResponse.consent_metadata.expiry}
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-100">
+                                        <span className="text-slate-500 font-medium">Record Types</span>
+                                        <div className="col-span-2 flex flex-wrap gap-1">
+                                            {createdConsentResponse.consent_metadata.record_types?.map((type) => (
+                                                <span key={type} className="inline-block px-1.5 py-0.5 text-[10px] bg-slate-100 text-slate-700 rounded border border-slate-200">
+                                                    {type}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                            {/* <div className="pt-1.5">
                                 <span className="text-slate-500 font-medium block mb-1">Message</span>
                                 <p className="bg-slate-50 rounded-lg p-2.5 text-slate-700 border border-slate-200/80 leading-relaxed text-[11.5px]">
                                     {createdConsentResponse.message}
                                 </p>
-                            </div>
+                            </div> */}
                         </div>
                         <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
                             <Button
                                 size="sm"
                                 onClick={() => setCreatedConsentResponse(null)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer text-xs font-semibold px-4"
+                                className="blue-btn text-white cursor-pointer text-xs font-semibold px-4"
                             >
                                 Done
                             </Button>

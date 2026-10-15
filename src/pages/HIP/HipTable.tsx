@@ -32,25 +32,35 @@ import { toast } from "@/components/ui/toast";
 import { notify } from "@/lib/notify";
 import type { HipPatient } from "@/types/hip";
 import {
-  fetchHipPatients,
   hasValidFhirData,
   parseFhirBundleData,
-  linkSelectedCareContext,
-  type CareContextVisitItem,
 } from "@/services/hipService";
+import { useHipPatients, useLinkCareContextBatch } from "@/hooks/useHipQueries";
 import { FhirParsedViewer } from "@/pages/HIU/FhirParsedViewer";
 import { CareContextPayloadModal } from "./CareContextPayloadModal";
 
 export default function HipTable() {
-  const [data, setData] = useState<HipPatient[]>([]);
+  const {
+    data = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch: loadPatients,
+  } = useHipPatients();
+
+  const linkBatchMutation = useLinkCareContextBatch();
+  const loading = isLoading || isFetching;
+  const isLinkingBatch = linkBatchMutation.isPending;
+  const apiError = isError
+    ? error?.message || "Unable to load patient data. Please try again."
+    : null;
+
   const [filteredData, setFilteredData] = useState<HipPatient[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   // Multi-select state for eligible patients by unique row id (Max 50)
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
-  const [isLinkingBatch, setIsLinkingBatch] = useState<boolean>(false);
 
   // Care Context payload preview modal states (for testing / debugging payload)
   const [isPayloadModalOpen, setIsPayloadModalOpen] = useState(false);
@@ -110,36 +120,6 @@ export default function HipTable() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  // Fetch Patients from API
-  const loadPatients = useCallback(async () => {
-    setLoading(true);
-    setApiError(null);
-    try {
-      const patients = await fetchHipPatients();
-      const withUniqueIds = patients.map((patient, index) => ({
-        ...patient,
-        id:
-          patient.id ||
-          (patient.carecontextid
-            ? `hip_${patient.carecontextid}_${index}`
-            : `hip_row_${patient.uhid ?? "pt"}_${index + 1}`),
-      }));
-      setData(withUniqueIds);
-      setFilteredData(withUniqueIds);
-    } catch (error) {
-      console.error("Error fetching HIP patients:", error);
-      const friendlyMessage = "Unable to load patient data. Please try again.";
-      setApiError(friendlyMessage);
-      notify.serverError(friendlyMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadPatients();
-  }, [loadPatients]);
 
   // Search and Filter logic
   useEffect(() => {
@@ -408,18 +388,12 @@ export default function HipTable() {
       return;
     }
 
-    if (visits.length < eligibleRows.length) {
-      const skippedCount = eligibleRows.length - visits.length;
-      notify.warning(
-        `${skippedCount} patient(s) skipped due to missing UHID or Care Context ID.`
-      );
-    }
-
-    // Open modal to show payload for testing/preview
-    setPayloadModalVisits(visits);
-    setPayloadModalPatients(eligibleRows);
-    setIsPayloadModalOpen(true);
-  }, [selectedRowIds, data, isPatientLinked]);
+    linkBatchMutation.mutate(cleanUhids, {
+      onSuccess: () => {
+        setSelectedRowIds([]);
+      },
+    });
+  }, [selectedRowIds, data, isPatientLinked, linkBatchMutation]);
 
   // Confirm Linking handler executed from the Payload modal
   const handleConfirmLinking = useCallback(
@@ -1036,7 +1010,9 @@ export default function HipTable() {
             <Button
               size="sm"
               variant="outline"
-              onClick={loadPatients}
+              onClick={() => {
+                loadPatients();
+              }}
               disabled={loading}
               className="h-9 w-9 p-0 shrink-0 cursor-pointer"
               title="Refresh Records"
@@ -1061,7 +1037,9 @@ export default function HipTable() {
             <Button
               size="sm"
               variant="outline"
-              onClick={loadPatients}
+              onClick={() => {
+                loadPatients();
+              }}
               className="border-red-300 text-red-700 hover:bg-red-100 self-start sm:self-auto cursor-pointer"
             >
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
@@ -1089,7 +1067,9 @@ export default function HipTable() {
             <Button
               size="sm"
               variant="outline"
-              onClick={loadPatients}
+              onClick={() => {
+                loadPatients();
+              }}
               className="mt-4 cursor-pointer"
             >
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />

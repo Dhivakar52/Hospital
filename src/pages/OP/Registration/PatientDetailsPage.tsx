@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -20,8 +20,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockPatients } from "@/data/mockPatients";
-import { resolvePatientDetails, type Patient } from "@/types/op_register";
+import { usePatientDetail } from "@/hooks/useRegisteredPatients";
+import { type Patient } from "@/types/op_register";
 import { cn } from "@/lib/utils";
 
 type StepTab = "all" | 1 | 2 | 3 | 4;
@@ -37,37 +37,17 @@ export default function PatientDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const statePatient = (location.state as { patient?: Patient } | null)?.patient;
 
-  const [patient, setPatient] = useState<ReturnType<typeof resolvePatientDetails> | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: patient,
+    isLoading: loading,
+    isError,
+    error: queryError,
+  } = usePatientDetail(id, statePatient);
+
+  const error = isError ? (queryError?.message || "Failed to load patient record.") : null;
   const [activeTab, setActiveTab] = useState<StepTab>("all");
-
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-
-    // 1. Check if patient was passed via router state
-    const statePatient = (location.state as { patient?: Patient } | null)?.patient;
-    if (statePatient && statePatient.id === id) {
-      setPatient(resolvePatientDetails(statePatient));
-      setLoading(false);
-      return;
-    }
-
-    // 2. Fallback lookup from mockPatients by :id
-    const timer = setTimeout(() => {
-      const found = mockPatients.find((p) => p.id === id || p.opNo === id);
-      if (found) {
-        setPatient(resolvePatientDetails(found));
-      } else {
-        setError(`No patient record found for UHID: "${id}".`);
-      }
-      setLoading(false);
-    }, 200);
-
-    return () => clearTimeout(timer);
-  }, [id, location.state]);
 
   if (loading) {
     return (
