@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchHipPatients, linkCareContextBatch } from "@/services/hipService";
+import {
+  fetchHipPatients,
+  linkCareContextBatch,
+  linkSelectedCareContext,
+  type CareContextVisitItem,
+} from "@/services/hipService";
 import { queryKeys } from "@/api/queryKeys";
 import type { HipPatient } from "@/types/hip";
 import { notify } from "@/lib/notify";
@@ -28,22 +33,43 @@ export function useHipPatients(options?: { refetchInterval?: number | false }) {
 }
 
 /**
- * Mutation hook for batch Care Context linking (POST /api/care-context/link-multiple).
+ * Mutation hook for Care Context linking (POST /api/care-context/link-selected).
+ * Supports visits array and dry_run option.
  * Automatically invalidates the patients cache to reflect new linking statuses.
  */
 export function useLinkCareContextBatch() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (uhids: string[]) => {
-      return await linkCareContextBatch(uhids);
+    mutationFn: async (
+      args:
+        | { visits: CareContextVisitItem[]; dryRun?: boolean }
+        | CareContextVisitItem[]
+        | string[]
+    ) => {
+      if (args && typeof args === "object" && !Array.isArray(args) && "visits" in args) {
+        return await linkSelectedCareContext(args.visits, args.dryRun ?? false);
+      }
+      return await linkCareContextBatch(args as any);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       // Invalidate patient list so UI updates without manual browser refresh
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.all });
-      toast.success(
-        "Care Context linking request accepted and submitted successfully (202)."
-      );
+      const isDryRun =
+        variables &&
+        typeof variables === "object" &&
+        !Array.isArray(variables) &&
+        "dryRun" in variables
+          ? Boolean(variables.dryRun)
+          : false;
+
+      if (isDryRun) {
+        toast.success("Dry run preview completed successfully (validated without sending to Eka).");
+      } else {
+        toast.success(
+          "Care Context linking request accepted and submitted successfully (202)."
+        );
+      }
     },
     onError: (err: any) => {
       console.error("Care Context linking batch error:", err);
@@ -55,3 +81,4 @@ export function useLinkCareContextBatch() {
     },
   });
 }
+

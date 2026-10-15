@@ -34,6 +34,7 @@ import type { HipPatient } from "@/types/hip";
 import {
   hasValidFhirData,
   parseFhirBundleData,
+  type CareContextVisitItem,
 } from "@/services/hipService";
 import { useHipPatients, useLinkCareContextBatch } from "@/hooks/useHipQueries";
 import { FhirParsedViewer } from "@/pages/HIU/FhirParsedViewer";
@@ -388,40 +389,35 @@ export default function HipTable() {
       return;
     }
 
-    linkBatchMutation.mutate(cleanUhids, {
-      onSuccess: () => {
-        setSelectedRowIds([]);
-      },
-    });
-  }, [selectedRowIds, data, isPatientLinked, linkBatchMutation]);
+    if (visits.length < eligibleRows.length) {
+      const skippedCount = eligibleRows.length - visits.length;
+      notify.warning(
+        `${skippedCount} patient(s) skipped due to missing UHID or Care Context ID.`
+      );
+    }
+
+    // Open modal to show payload for testing/preview
+    setPayloadModalVisits(visits);
+    setPayloadModalPatients(eligibleRows);
+    setIsPayloadModalOpen(true);
+  }, [selectedRowIds, data, isPatientLinked]);
 
   // Confirm Linking handler executed from the Payload modal
   const handleConfirmLinking = useCallback(
     async (dryRun: boolean) => {
-      setIsLinkingBatch(true);
-      try {
-        await linkSelectedCareContext(payloadModalVisits, dryRun);
-        if (dryRun) {
-          toast.success("Dry run preview completed successfully (validated without sending to Eka).");
-        } else {
-          // 202 Accepted: treat as request accepted/submitted (final result received later via webhook /webhooks/eka)
-          toast.success("Care Context linking request accepted and submitted successfully (202).");
-          // Clear selected checkboxes, keep table data unchanged
-          setSelectedRowIds([]);
-          setIsPayloadModalOpen(false);
+      linkBatchMutation.mutate(
+        { visits: payloadModalVisits, dryRun },
+        {
+          onSuccess: () => {
+            if (!dryRun) {
+              setSelectedRowIds([]);
+              setIsPayloadModalOpen(false);
+            }
+          },
         }
-      } catch (err: any) {
-        console.error("Care Context linking batch error:", err);
-        const msg =
-          err?.response?.data?.message ||
-          err?.message ||
-          "Failed to submit Care Context linking request.";
-        notify.serverError(msg);
-      } finally {
-        setIsLinkingBatch(false);
-      }
+      );
     },
-    [payloadModalVisits]
+    [payloadModalVisits, linkBatchMutation]
   );
 
   // Table Columns
