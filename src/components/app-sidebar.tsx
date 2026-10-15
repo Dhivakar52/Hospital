@@ -141,7 +141,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       {/* Header */}
       <SidebarHeader
-        className="px-4 py-3 font-bold border-b flex justify-start items-center gap-2 overflow-hidden h-14"
+        className="px-4 py-3 font-bold border-b flex justify-start items-start px-7 gap-2 overflow-hidden h-14"
         style={{ background: "var(--sidebar-top-bg)", color: "white" }}
       >
         <div className="flex items-center gap-2">

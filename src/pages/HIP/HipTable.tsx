@@ -37,6 +37,7 @@ import {
 } from "@/services/hipService";
 import { useHipPatients, useLinkCareContextBatch } from "@/hooks/useHipQueries";
 import { FhirParsedViewer } from "@/pages/HIU/FhirParsedViewer";
+import { CareContextPayloadModal } from "./CareContextPayloadModal";
 
 export default function HipTable() {
   const {
@@ -60,6 +61,11 @@ export default function HipTable() {
 
   // Multi-select state for eligible patients by unique row id (Max 50)
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+
+  // Care Context payload preview modal states (for testing / debugging payload)
+  const [isPayloadModalOpen, setIsPayloadModalOpen] = useState(false);
+  const [payloadModalVisits, setPayloadModalVisits] = useState<CareContextVisitItem[]>([]);
+  const [payloadModalPatients, setPayloadModalPatients] = useState<HipPatient[]>([]);
 
   // Viewing FHIR Patient state
   const [viewingFhirPatient, setViewingFhirPatient] = useState<HipPatient | null>(null);
@@ -281,12 +287,26 @@ export default function HipTable() {
     return rawLinked === "yes";
   }, []);
 
-  // Eligible patients for Care Context linking (where Link !== "Yes" and valid unique row id exists)
+  // Helper to check if a patient has a valid Care Context ID
+  const hasPatientCareContextId = useCallback((p: HipPatient) => {
+    return Boolean(
+      String(p.carecontextid ?? (p as any).care_context_id ?? (p as any).careContextId ?? "").trim()
+    );
+  }, []);
+
+  // Eligible patients for Care Context linking (where Link !== "Yes", valid UHID, valid Care Context ID, and valid row id)
   const eligiblePatients = useMemo(() => {
     return filteredData.filter(
-      (p) => !isPatientLinked(p) && p.id !== undefined && p.id !== ""
+      (p) =>
+        !isPatientLinked(p) &&
+        hasPatientCareContextId(p) &&
+        p.uhid !== undefined &&
+        p.uhid !== null &&
+        String(p.uhid).trim() !== "" &&
+        p.id !== undefined &&
+        p.id !== ""
     );
-  }, [filteredData, isPatientLinked]);
+  }, [filteredData, isPatientLinked, hasPatientCareContextId]);
 
   // Is all eligible selected (up to max limit of 50)
   const isAllEligibleSelected = useMemo(() => {
@@ -330,8 +350,8 @@ export default function HipTable() {
     });
   }, []);
 
-  // Batch Care Context Linking handler (POST /api/care-context/link-batch)
-  const handleLinkCareContextBatch = useCallback(async () => {
+  // Selected Care Context Linking handler (opens payload preview modal)
+  const handleLinkCareContextBatch = useCallback(() => {
     if (!selectedRowIds || selectedRowIds.length === 0) {
       notify.warning("Please select at least one eligible patient to link Care Context.");
       return;
@@ -345,23 +365,26 @@ export default function HipTable() {
     // Collect corresponding rows from table data
     const selectedRows = data.filter((p) => p.id && selectedRowIds.includes(p.id));
 
-    // Extract valid UHIDs from the selected rows, excluding Link = Yes, deduplicated strings
-    const cleanUhids = Array.from(
-      new Set(
-        selectedRows
-          .filter(
-            (p) =>
-              !isPatientLinked(p) &&
-              p.uhid !== undefined &&
-              p.uhid !== null &&
-              String(p.uhid).trim() !== ""
-          )
-          .map((p) => String(p.uhid).trim())
-      )
-    );
+    // Extract valid visits from the selected rows, excluding Link = Yes
+    const eligibleRows = selectedRows.filter((p) => !isPatientLinked(p));
 
-    if (cleanUhids.length === 0) {
-      notify.info("Selected patients do not have valid UHIDs or are already linked.");
+    const visits: CareContextVisitItem[] = eligibleRows
+      .map((p) => {
+        const uhid = String(p.uhid ?? "").trim();
+        const careContextId = String(
+          p.carecontextid ?? (p as any).care_context_id ?? (p as any).careContextId ?? ""
+        ).trim();
+        return {
+          uhid,
+          care_context_id: careContextId,
+        };
+      })
+      .filter((v) => v.uhid !== "" && v.care_context_id !== "");
+
+    if (visits.length === 0) {
+      notify.info(
+        "Selected patients do not have valid UHID and Care Context ID, or are already linked."
+      );
       return;
     }
 
@@ -371,6 +394,35 @@ export default function HipTable() {
       },
     });
   }, [selectedRowIds, data, isPatientLinked, linkBatchMutation]);
+
+  // Confirm Linking handler executed from the Payload modal
+  const handleConfirmLinking = useCallback(
+    async (dryRun: boolean) => {
+      setIsLinkingBatch(true);
+      try {
+        await linkSelectedCareContext(payloadModalVisits, dryRun);
+        if (dryRun) {
+          toast.success("Dry run preview completed successfully (validated without sending to Eka).");
+        } else {
+          // 202 Accepted: treat as request accepted/submitted (final result received later via webhook /webhooks/eka)
+          toast.success("Care Context linking request accepted and submitted successfully (202).");
+          // Clear selected checkboxes, keep table data unchanged
+          setSelectedRowIds([]);
+          setIsPayloadModalOpen(false);
+        }
+      } catch (err: any) {
+        console.error("Care Context linking batch error:", err);
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to submit Care Context linking request.";
+        notify.serverError(msg);
+      } finally {
+        setIsLinkingBatch(false);
+      }
+    },
+    [payloadModalVisits]
+  );
 
   // Table Columns
   const columns: ColumnDef<HipPatient>[] = useMemo(
@@ -397,6 +449,11 @@ export default function HipTable() {
         cell: ({ row }) => {
           const patient = row.original;
           const isLinked = isPatientLinked(patient);
+          const hasCareContext = hasPatientCareContextId(patient);
+          const hasUhid =
+            patient.uhid !== undefined &&
+            patient.uhid !== null &&
+            String(patient.uhid).trim() !== "";
           const rowId = patient.id || `row_${row.index}`;
           const isSelected = selectedRowIds.includes(rowId);
 
@@ -411,6 +468,23 @@ export default function HipTable() {
                   disabled
                   checked={false}
                   aria-label={`Row disabled - ${patient.patientname || "Patient"} already linked`}
+                  className="h-4 w-4 rounded border-slate-300 text-slate-300 opacity-40 cursor-not-allowed"
+                />
+              </div>
+            );
+          }
+
+          if (!hasCareContext || !hasUhid) {
+            return (
+              <div
+                className="flex items-center justify-center"
+                title="Cannot link: Missing Care Context ID or UHID"
+              >
+                <input
+                  type="checkbox"
+                  disabled
+                  checked={false}
+                  aria-label={`Row disabled - ${patient.patientname || "Patient"} missing Care Context ID or UHID`}
                   className="h-4 w-4 rounded border-slate-300 text-slate-300 opacity-40 cursor-not-allowed"
                 />
               </div>
@@ -596,6 +670,7 @@ export default function HipTable() {
       handleRequestConsent,
       handleFhirViewer,
       isPatientLinked,
+      hasPatientCareContextId,
       selectedRowIds,
       isAllEligibleSelected,
       isSomeEligibleSelected,
@@ -1191,6 +1266,16 @@ export default function HipTable() {
             }
             : null
         }
+      />
+
+      {/* Care Context Linking Payload Preview Modal (for testing & verification) */}
+      <CareContextPayloadModal
+        isOpen={isPayloadModalOpen}
+        onClose={() => setIsPayloadModalOpen(false)}
+        visits={payloadModalVisits}
+        selectedPatients={payloadModalPatients}
+        onConfirm={handleConfirmLinking}
+        isSubmitting={isLinkingBatch}
       />
     </div>
   );

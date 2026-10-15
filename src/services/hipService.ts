@@ -95,16 +95,49 @@ export async function fetchHipPatients(): Promise<HipPatient[]> {
   }));
 }
 
-export interface LinkCareContextBatchPayload {
-  uhids: string[];
-  dry_run: boolean;
+export interface CareContextVisitItem {
+  care_context_id: string;
+  uhid: string;
 }
 
-export async function linkCareContextBatch(uhids: string[]): Promise<any> {
-  const payload: LinkCareContextBatchPayload = {
-    uhids: Array.from(new Set(uhids.map(String))),
-    dry_run: false,
+export interface LinkSelectedCareContextPayload {
+  dry_run: boolean;
+  visits: CareContextVisitItem[];
+}
+
+export type LinkCareContextBatchPayload = LinkSelectedCareContextPayload;
+
+/**
+ * Links Care Contexts for selected visits using UHID and CareContextID.
+ * @param visits List of visits containing care_context_id and uhid
+ * @param dryRun true to validate and preview without calling Eka, false to submit
+ */
+export async function linkSelectedCareContext(
+  visits: CareContextVisitItem[],
+  dryRun: boolean = false
+): Promise<any> {
+  const payload: LinkSelectedCareContextPayload = {
+    dry_run: dryRun,
+    visits,
   };
-  const response = await api.post(API_ENDPOINTS.CARE_CONTEXT.LINK_BATCH, payload);
+  const response = await api.post(API_ENDPOINTS.CARE_CONTEXT.LINK_SELECTED, payload);
+  console.log(response, "CC");
   return response.data;
+}
+
+/**
+ * Backward compatible helper for batch linking
+ */
+export async function linkCareContextBatch(
+  visitsOrUhids: CareContextVisitItem[] | string[],
+  dryRun: boolean = false
+): Promise<any> {
+  if (Array.isArray(visitsOrUhids) && visitsOrUhids.length > 0 && typeof visitsOrUhids[0] === "object") {
+    return linkSelectedCareContext(visitsOrUhids as CareContextVisitItem[], dryRun);
+  }
+  const visits: CareContextVisitItem[] = (visitsOrUhids as string[]).map((uhid) => ({
+    uhid: String(uhid),
+    care_context_id: "",
+  }));
+  return linkSelectedCareContext(visits, dryRun);
 }
