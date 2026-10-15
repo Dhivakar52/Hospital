@@ -9,7 +9,8 @@ export const API_ENDPOINTS = {
       `/api/hiu/consent/patient/${encodeURIComponent(uhid)}`,
   },
   CARE_CONTEXT: {
-    LINK_BATCH: "/api/care-context/link-multiple",
+    LINK_SELECTED: "/api/care-context/link-selected",
+    LINK_BATCH: "/api/care-context/link-selected",
   },
   PATIENTS: "/api/patients",
 };
