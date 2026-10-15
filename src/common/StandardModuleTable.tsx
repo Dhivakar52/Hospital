@@ -13,7 +13,7 @@ import {
   Plus,
   UsersRound,
   UserPlus,
-  // RotateCcw,
+  RotateCcw,
   Stethoscope,
   Ban,
   CalendarClock,
@@ -91,6 +91,7 @@ interface StandardModuleTableProps<TData> {
   filterFields?: FilterOption[];
   hideDateFilters?: boolean;
   onAdd?: () => void;
+  onRefresh?: () => void;
   headerExtra?: React.ReactNode;
 }
 
@@ -107,6 +108,7 @@ export function StandardModuleTable<TData extends Record<string, any>>({
   filterFields,
   hideDateFilters = false,
   onAdd,
+  onRefresh,
   headerExtra,
 }: StandardModuleTableProps<TData>) {
   const config = HEADER_CONFIG[title];
@@ -493,9 +495,35 @@ export function StandardModuleTable<TData extends Record<string, any>>({
                 >
                   <Printer size={18} />
                 </button>
+                {onRefresh && (
+                  <button
+                    onClick={() => {
+                      setShowActions(false);
+                      onRefresh();
+                    }}
+                    className="p-2 rounded-lg hover:bg-slate-100 text-muted-foreground hover:text-slate-900 transition cursor-pointer"
+                    title="Refresh Data"
+                  >
+                    <RotateCcw size={18} />
+                  </button>
+                )}
               </div>
             )}
           </div>
+
+          {/* Refresh Button matching HIP */}
+          {onRefresh && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="h-9 w-9 p-0 shrink-0 cursor-pointer"
+              title="Refresh Records"
+            >
+              <RotateCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            </Button>
+          )}
 
           {/* Add Button */}
           {onAdd && (

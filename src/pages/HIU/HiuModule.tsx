@@ -30,6 +30,7 @@ import {
     Clock,
     Search,
     Loader2,
+    RotateCcw,
     User,
 } from "lucide-react";
 
@@ -51,6 +52,8 @@ export default function HiuModule() {
         data: dbConsentsResponse,
         isLoading: isQueryLoading,
         isFetching,
+        isError,
+        error,
         refetch: loadConsents,
     } = useHiuConsentsFromDB();
 
@@ -61,6 +64,9 @@ export default function HiuModule() {
     const isLoadingConsents = isQueryLoading || isFetching;
     const isSubmitting = startConsentMutation.isPending;
     const isFetchingPatient = fetchPatientMutation.isPending;
+    const apiError = isError
+        ? error?.message || "Unable to load HIU consent records. Please try again."
+        : null;
 
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
     const [createdConsentResponse, setCreatedConsentResponse] = useState<StartConsentResponse | null>(null);
@@ -489,6 +495,30 @@ export default function HiuModule() {
                 </div>
             )}
 
+            {/* API Error State */}
+            {apiError && !isLoadingConsents && (
+                <div className="mb-4 p-4 rounded-xl border border-red-200 bg-red-50/70 text-red-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                        <AlertTriangle className="h-5 w-5 text-red-600 shrink-0" />
+                        <div>
+                            <p className="text-sm font-semibold">{apiError}</p>
+                            <p className="text-xs text-red-600 mt-0.5">
+                                Failed to fetch HIU consent records from backend. Please check network connection and try again.
+                            </p>
+                        </div>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => loadConsents()}
+                        className="bg-white hover:bg-red-100 text-red-700 border-red-300 shrink-0 cursor-pointer text-xs"
+                    >
+                        <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                        Retry
+                    </Button>
+                </div>
+            )}
+
             {/* Standardized Card & Table */}
             <StandardModuleTable
                 title="Consent Management"
@@ -498,6 +528,7 @@ export default function HiuModule() {
                 columns={columns}
                 data={records}
                 isLoading={isLoadingConsents}
+                onRefresh={() => loadConsents()}
                 hideDateFilters={true}
                 filterFields={[
                     {
@@ -515,28 +546,14 @@ export default function HiuModule() {
                     `${r.uhid || ""} ${r.patient_name || ""} ${r.abha_address || ""} ${r.consent_id || ""} ${r.status || ""} ${r.from || ""} ${r.to || ""} ${r.expiry || ""}`
                 }
                 headerExtra={
-                    <div className="flex items-center gap-2">
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                                loadConsents();
-                            }}
-                            disabled={isLoadingConsents}
-                            className="h-9 w-9 p-0 shrink-0 cursor-pointer shadow-xs rounded-md"
-                            title="Refresh Consents"
-                        >
-                            <Loader2 className={`h-4 w-4 ${isLoadingConsents ? "animate-spin" : ""}`} />
-                        </Button>
-                        <Button
-                            size="sm"
-                            onClick={() => setIsRequestModalOpen(true)}
-                            className="h-9 w-9 p-0 shrink-0 text-blue-600 border border-blue-600 bg-white hover:bg-blue-50 cursor-pointer shadow-xs rounded-md"
-                            title="Request Consent"
-                        >
-                            <FileKey className="h-4 w-4" />
-                        </Button>
-                    </div>
+                    <Button
+                        size="sm"
+                        onClick={() => setIsRequestModalOpen(true)}
+                        className="h-9 w-9 p-0 shrink-0 text-blue-600 border border-blue-600 bg-white hover:bg-blue-50 cursor-pointer shadow-xs rounded-md"
+                        title="Request Consent"
+                    >
+                        <FileKey className="h-4 w-4" />
+                    </Button>
                 }
             />
 

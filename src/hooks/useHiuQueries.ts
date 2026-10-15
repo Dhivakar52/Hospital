@@ -26,17 +26,23 @@ import type { HipPatient } from "@/types/hip";
 
 /**
  * Hook to retrieve HIU consent list directly from database (GET /api/hiu/ConsentListFromDB).
+ * Automatically refetches on window focus, reconnect, and polls in background for real-time updates.
  */
 export function useHiuConsentsFromDB(options?: {
   refetchInterval?: number | false;
+  enabled?: boolean;
 }) {
   return useQuery<HiuConsentListResponse, Error>({
     queryKey: queryKeys.hiu.consentsFromDB(),
     queryFn: async () => {
       return await getHiuConsentListFromDB();
     },
-    staleTime: 1000 * 30, // 30 seconds
-    refetchInterval: options?.refetchInterval,
+    staleTime: 1000 * 5, // 5 seconds
+    refetchInterval: options?.refetchInterval ?? 10000, // 10s auto-polling to pick up backend updates
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: true,
+    enabled: options?.enabled ?? true,
   });
 }
 
